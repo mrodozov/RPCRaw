@@ -1,0 +1,391 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXFileReference section */
+		6E91DAEB17D3F01D0041F41F /* Chip.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = Chip.o; sourceTree = "<group>"; };
+		6E91DAEC17D3F01D0041F41F /* DataObject.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = DataObject.o; sourceTree = "<group>"; };
+		6E91DAED17D3F01D0041F41F /* ExtendedRoll.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = ExtendedRoll.o; sourceTree = "<group>"; };
+		6E91DAEE17D3F01D0041F41F /* ExtendedStrip.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = ExtendedStrip.o; sourceTree = "<group>"; };
+		6E91DAEF17D3F01D0041F41F /* Roll.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = Roll.o; sourceTree = "<group>"; };
+		6E91DAF017D3F01D0041F41F /* RPCChambersCluster.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = RPCChambersCluster.o; sourceTree = "<group>"; };
+		6E91DAF117D3F01D0041F41F /* RPCDBReader.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = RPCDBReader.o; sourceTree = "<group>"; };
+		6E91DAF217D3F01D0041F41F /* RPCLinkBoard.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = RPCLinkBoard.o; sourceTree = "<group>"; };
+		6E91DAF317D3F01D0041F41F /* RPCLinkBoardChannel.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = RPCLinkBoardChannel.o; sourceTree = "<group>"; };
+		6E91DAF417D3F01D0041F41F /* RPCLinkBoardChip.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = RPCLinkBoardChip.o; sourceTree = "<group>"; };
+		6E91DAF517D3F01D0041F41F /* RPCRawConverter.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = RPCRawConverter.o; sourceTree = "<group>"; };
+		6E91DAF617D3F01D0041F41F /* Strip.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = Strip.o; sourceTree = "<group>"; };
+		6E91DAF717D3F01D0041F41F /* UserApplications.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = UserApplications.o; sourceTree = "<group>"; };
+		6E91DAFA17D3F01D0041F41F /* Chip.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Chip.h; sourceTree = "<group>"; };
+		6E91DAFB17D3F01D0041F41F /* ChipInterface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ChipInterface.h; sourceTree = "<group>"; };
+		6E91DAFC17D3F01D0041F41F /* DataObject.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DataObject.h; sourceTree = "<group>"; };
+		6E91DAFD17D3F01D0041F41F /* ExtendedRoll.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ExtendedRoll.h; sourceTree = "<group>"; };
+		6E91DAFE17D3F01D0041F41F /* ExtendedStrip.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ExtendedStrip.h; sourceTree = "<group>"; };
+		6E91DAFF17D3F01D0041F41F /* Roll.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Roll.h; sourceTree = "<group>"; };
+		6E91DB0017D3F01D0041F41F /* RollInterface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RollInterface.h; sourceTree = "<group>"; };
+		6E91DB0117D3F01D0041F41F /* Strip.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Strip.h; sourceTree = "<group>"; };
+		6E91DB0217D3F01D0041F41F /* StripInterface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StripInterface.h; sourceTree = "<group>"; };
+		6E91DB0317D3F01D0041F41F /* ROOT.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ROOT.h; sourceTree = "<group>"; };
+		6E91DB0417D3F01D0041F41F /* RPCChambersCluster.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RPCChambersCluster.h; sourceTree = "<group>"; };
+		6E91DB0517D3F01D0041F41F /* RPCDBConstants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RPCDBConstants.h; sourceTree = "<group>"; };
+		6E91DB0617D3F01D0041F41F /* RPCDBReader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RPCDBReader.h; sourceTree = "<group>"; };
+		6E91DB0717D3F01D0041F41F /* RPCGhentRawStructure.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RPCGhentRawStructure.h; sourceTree = "<group>"; };
+		6E91DB0817D3F01D0041F41F /* RPCLinkBoard.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RPCLinkBoard.h; sourceTree = "<group>"; };
+		6E91DB0917D3F01D0041F41F /* RPCLinkBoardChannel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RPCLinkBoardChannel.h; sourceTree = "<group>"; };
+		6E91DB0A17D3F01D0041F41F /* RPCLinkBoardChip.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RPCLinkBoardChip.h; sourceTree = "<group>"; };
+		6E91DB0B17D3F01D0041F41F /* RPCRawConverter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RPCRawConverter.h; sourceTree = "<group>"; };
+		6E91DB0C17D3F01D0041F41F /* RPCRawConverterLinkDef.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RPCRawConverterLinkDef.h; sourceTree = "<group>"; };
+		6E91DB0D17D3F01D0041F41F /* RPCRawTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RPCRawTypes.h; sourceTree = "<group>"; };
+		6E91DB0E17D3F01D0041F41F /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = ../main.cpp; sourceTree = "<group>"; };
+		6E91DB0F17D3F01D0041F41F /* makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; name = makefile; path = ../makefile; sourceTree = "<group>"; };
+		6E91DB1017D3F01D0041F41F /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; name = README.md; path = ../README.md; sourceTree = "<group>"; };
+		6E91DB1317D3F01D0041F41F /* eLog1.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = eLog1.py; sourceTree = "<group>"; };
+		6E91DB1417D3F01D0041F41F /* IniFile.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = IniFile.cpp; sourceTree = "<group>"; };
+		6E91DB1517D3F01D0041F41F /* IniFile.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IniFile.h; sourceTree = "<group>"; };
+		6E91DB1617D3F01D0041F41F /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		6E91DB1717D3F01D0041F41F /* rpc_offline.C */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = rpc_offline.C; sourceTree = "<group>"; };
+		6E91DB1817D3F01D0041F41F /* rpc_offline.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = rpc_offline.h; sourceTree = "<group>"; };
+		6E91DB1B17D3F01D0041F41F /* A1.C */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = A1.C; sourceTree = "<group>"; };
+		6E91DB1C17D3F01D0041F41F /* A1.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = A1.h; sourceTree = "<group>"; };
+		6E91DB1D17D3F01D0041F41F /* A1_Mod.C */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = A1_Mod.C; sourceTree = "<group>"; };
+		6E91DB1E17D3F01D0041F41F /* A1_Mod.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = A1_Mod.h; sourceTree = "<group>"; };
+		6E91DB1F17D3F01D0041F41F /* adc_v1721_caen.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = adc_v1721_caen.cc; sourceTree = "<group>"; };
+		6E91DB2017D3F01D0041F41F /* adc_v1721_caen.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = adc_v1721_caen.hh; sourceTree = "<group>"; };
+		6E91DB2117D3F01D0041F41F /* Analysis.C */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Analysis.C; sourceTree = "<group>"; };
+		6E91DB2217D3F01D0041F41F /* Analysis.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Analysis.h; sourceTree = "<group>"; };
+		6E91DB2317D3F01D0041F41F /* BSCDataReader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = BSCDataReader.cpp; sourceTree = "<group>"; };
+		6E91DB2417D3F01D0041F41F /* BSCDataReader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BSCDataReader.h; sourceTree = "<group>"; };
+		6E91DB2517D3F01D0041F41F /* BSCModule.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = BSCModule.cpp; sourceTree = "<group>"; };
+		6E91DB2617D3F01D0041F41F /* BSCModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BSCModule.h; sourceTree = "<group>"; };
+		6E91DB2717D3F01D0041F41F /* BSCModuleV1721.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = BSCModuleV1721.cpp; sourceTree = "<group>"; };
+		6E91DB2817D3F01D0041F41F /* BSCModuleV1721.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BSCModuleV1721.h; sourceTree = "<group>"; };
+		6E91DB2917D3F01D0041F41F /* daq904.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = daq904.cc; sourceTree = "<group>"; };
+		6E91DB2A17D3F01D0041F41F /* IniFile.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = IniFile.cpp; sourceTree = "<group>"; };
+		6E91DB2B17D3F01D0041F41F /* IniFile.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IniFile.h; sourceTree = "<group>"; };
+		6E91DB2C17D3F01D0041F41F /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		6E91DB2D17D3F01D0041F41F /* ModuleV1190.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ModuleV1190.cpp; sourceTree = "<group>"; };
+		6E91DB2E17D3F01D0041F41F /* ModuleV1190.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ModuleV1190.h; sourceTree = "<group>"; };
+		6E91DB2F17D3F01D0041F41F /* ModuleV1190Data.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ModuleV1190Data.cpp; sourceTree = "<group>"; };
+		6E91DB3017D3F01D0041F41F /* ModuleV1190Data.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ModuleV1190Data.h; sourceTree = "<group>"; };
+		6E91DB3117D3F01D0041F41F /* ModuleV2718.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ModuleV2718.cpp; sourceTree = "<group>"; };
+		6E91DB3217D3F01D0041F41F /* ModuleV2718.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ModuleV2718.h; sourceTree = "<group>"; };
+		6E91DB3317D3F01D0041F41F /* ModuleVmeInterface.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ModuleVmeInterface.cpp; sourceTree = "<group>"; };
+		6E91DB3417D3F01D0041F41F /* ModuleVmeInterface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ModuleVmeInterface.h; sourceTree = "<group>"; };
+		6E91DB3517D3F01D0041F41F /* ReadData.C */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ReadData.C; sourceTree = "<group>"; };
+		6E91DB3617D3F01D0041F41F /* ReadData.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ReadData.h; sourceTree = "<group>"; };
+		6E91DB3717D3F01D0041F41F /* README */ = {isa = PBXFileReference; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
+		6E91DB3817D3F01D0041F41F /* rpc.ini */ = {isa = PBXFileReference; lastKnownFileType = text; path = rpc.ini; sourceTree = "<group>"; };
+		6E91DB3917D3F01D0041F41F /* TDC.kdev4 */ = {isa = PBXFileReference; lastKnownFileType = text; path = TDC.kdev4; sourceTree = "<group>"; };
+		6E91DB3A17D3F01D0041F41F /* trialruns.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = trialruns.sh; sourceTree = "<group>"; };
+		6E91DB3B17D3F01D0041F41F /* try_cx_oracle.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = try_cx_oracle.py; sourceTree = "<group>"; };
+		6E91DB3D17D3F01D0041F41F /* data_2013_08_03_11_15_02.log */ = {isa = PBXFileReference; lastKnownFileType = text; path = data_2013_08_03_11_15_02.log; sourceTree = "<group>"; };
+		6E91DB3E17D3F01D0041F41F /* data_2013_08_03_11_15_02.log.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = data_2013_08_03_11_15_02.log.1; sourceTree = "<group>"; };
+		6E91DB3F17D3F01D0041F41F /* Offline.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Offline.h; sourceTree = "<group>"; };
+		6E91DB4017D3F01D0041F41F /* Offline_final.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Offline_final.cc; sourceTree = "<group>"; };
+		6E91DB4117D3F01D0041F41F /* TDCChannelsToRPCstrips_inverted.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = TDCChannelsToRPCstrips_inverted.txt; sourceTree = "<group>"; };
+		6E91DB4217D3F01D0041F41F /* TDCChMapping.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = TDCChMapping.txt; sourceTree = "<group>"; };
+		6E91DB4517D3F01D0041F41F /* Chip.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Chip.cpp; sourceTree = "<group>"; };
+		6E91DB4617D3F01D0041F41F /* DataObject.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DataObject.cpp; sourceTree = "<group>"; };
+		6E91DB4717D3F01D0041F41F /* ExtendedRoll.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ExtendedRoll.cpp; sourceTree = "<group>"; };
+		6E91DB4817D3F01D0041F41F /* ExtendedStrip.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ExtendedStrip.cpp; sourceTree = "<group>"; };
+		6E91DB4917D3F01D0041F41F /* Roll.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Roll.cpp; sourceTree = "<group>"; };
+		6E91DB4A17D3F01D0041F41F /* Strip.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Strip.cpp; sourceTree = "<group>"; };
+		6E91DB4B17D3F01D0041F41F /* RPCChambersCluster.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = RPCChambersCluster.cpp; sourceTree = "<group>"; };
+		6E91DB4C17D3F01D0041F41F /* RPCDBReader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = RPCDBReader.cpp; sourceTree = "<group>"; };
+		6E91DB4D17D3F01D0041F41F /* RPCLinkBoard.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = RPCLinkBoard.cpp; sourceTree = "<group>"; };
+		6E91DB4E17D3F01D0041F41F /* RPCLinkBoardChannel.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = RPCLinkBoardChannel.cpp; sourceTree = "<group>"; };
+		6E91DB4F17D3F01D0041F41F /* RPCLinkBoardChip.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = RPCLinkBoardChip.cpp; sourceTree = "<group>"; };
+		6E91DB5017D3F01D0041F41F /* RPCRawConverter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = RPCRawConverter.cpp; sourceTree = "<group>"; };
+		6E91DB5117D3F01D0041F41F /* UserApplications.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = UserApplications.cpp; path = ../UserApplications.cpp; sourceTree = "<group>"; };
+		6E91DB5217D3F01D0041F41F /* UserApplications.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = UserApplications.h; path = ../UserApplications.h; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		6E91DAD517D3EFE50041F41F = {
+			isa = PBXGroup;
+			children = (
+				6E91DAEA17D3F01D0041F41F /* build */,
+				6E91DAF817D3F01D0041F41F /* interface */,
+				6E91DB0E17D3F01D0041F41F /* main.cpp */,
+				6E91DB0F17D3F01D0041F41F /* makefile */,
+				6E91DB1017D3F01D0041F41F /* README.md */,
+				6E91DB1117D3F01D0041F41F /* resources */,
+				6E91DB4317D3F01D0041F41F /* src */,
+				6E91DB5117D3F01D0041F41F /* UserApplications.cpp */,
+				6E91DB5217D3F01D0041F41F /* UserApplications.h */,
+			);
+			sourceTree = "<group>";
+		};
+		6E91DAEA17D3F01D0041F41F /* build */ = {
+			isa = PBXGroup;
+			children = (
+				6E91DAEB17D3F01D0041F41F /* Chip.o */,
+				6E91DAEC17D3F01D0041F41F /* DataObject.o */,
+				6E91DAED17D3F01D0041F41F /* ExtendedRoll.o */,
+				6E91DAEE17D3F01D0041F41F /* ExtendedStrip.o */,
+				6E91DAEF17D3F01D0041F41F /* Roll.o */,
+				6E91DAF017D3F01D0041F41F /* RPCChambersCluster.o */,
+				6E91DAF117D3F01D0041F41F /* RPCDBReader.o */,
+				6E91DAF217D3F01D0041F41F /* RPCLinkBoard.o */,
+				6E91DAF317D3F01D0041F41F /* RPCLinkBoardChannel.o */,
+				6E91DAF417D3F01D0041F41F /* RPCLinkBoardChip.o */,
+				6E91DAF517D3F01D0041F41F /* RPCRawConverter.o */,
+				6E91DAF617D3F01D0041F41F /* Strip.o */,
+				6E91DAF717D3F01D0041F41F /* UserApplications.o */,
+			);
+			name = build;
+			path = ../build;
+			sourceTree = "<group>";
+		};
+		6E91DAF817D3F01D0041F41F /* interface */ = {
+			isa = PBXGroup;
+			children = (
+				6E91DAF917D3F01D0041F41F /* RollCore */,
+				6E91DB0317D3F01D0041F41F /* ROOT.h */,
+				6E91DB0417D3F01D0041F41F /* RPCChambersCluster.h */,
+				6E91DB0517D3F01D0041F41F /* RPCDBConstants.h */,
+				6E91DB0617D3F01D0041F41F /* RPCDBReader.h */,
+				6E91DB0717D3F01D0041F41F /* RPCGhentRawStructure.h */,
+				6E91DB0817D3F01D0041F41F /* RPCLinkBoard.h */,
+				6E91DB0917D3F01D0041F41F /* RPCLinkBoardChannel.h */,
+				6E91DB0A17D3F01D0041F41F /* RPCLinkBoardChip.h */,
+				6E91DB0B17D3F01D0041F41F /* RPCRawConverter.h */,
+				6E91DB0C17D3F01D0041F41F /* RPCRawConverterLinkDef.h */,
+				6E91DB0D17D3F01D0041F41F /* RPCRawTypes.h */,
+			);
+			name = interface;
+			path = ../interface;
+			sourceTree = "<group>";
+		};
+		6E91DAF917D3F01D0041F41F /* RollCore */ = {
+			isa = PBXGroup;
+			children = (
+				6E91DAFA17D3F01D0041F41F /* Chip.h */,
+				6E91DAFB17D3F01D0041F41F /* ChipInterface.h */,
+				6E91DAFC17D3F01D0041F41F /* DataObject.h */,
+				6E91DAFD17D3F01D0041F41F /* ExtendedRoll.h */,
+				6E91DAFE17D3F01D0041F41F /* ExtendedStrip.h */,
+				6E91DAFF17D3F01D0041F41F /* Roll.h */,
+				6E91DB0017D3F01D0041F41F /* RollInterface.h */,
+				6E91DB0117D3F01D0041F41F /* Strip.h */,
+				6E91DB0217D3F01D0041F41F /* StripInterface.h */,
+			);
+			path = RollCore;
+			sourceTree = "<group>";
+		};
+		6E91DB1117D3F01D0041F41F /* resources */ = {
+			isa = PBXGroup;
+			children = (
+				6E91DB1217D3F01D0041F41F /* CERN */,
+				6E91DB3C17D3F01D0041F41F /* GHENT */,
+			);
+			name = resources;
+			path = ../resources;
+			sourceTree = "<group>";
+		};
+		6E91DB1217D3F01D0041F41F /* CERN */ = {
+			isa = PBXGroup;
+			children = (
+				6E91DB1317D3F01D0041F41F /* eLog1.py */,
+				6E91DB1417D3F01D0041F41F /* IniFile.cpp */,
+				6E91DB1517D3F01D0041F41F /* IniFile.h */,
+				6E91DB1617D3F01D0041F41F /* Makefile */,
+				6E91DB1717D3F01D0041F41F /* rpc_offline.C */,
+				6E91DB1817D3F01D0041F41F /* rpc_offline.h */,
+				6E91DB1917D3F01D0041F41F /* TDCcode */,
+				6E91DB3B17D3F01D0041F41F /* try_cx_oracle.py */,
+			);
+			path = CERN;
+			sourceTree = "<group>";
+		};
+		6E91DB1917D3F01D0041F41F /* TDCcode */ = {
+			isa = PBXGroup;
+			children = (
+				6E91DB1A17D3F01D0041F41F /* TDC */,
+			);
+			path = TDCcode;
+			sourceTree = "<group>";
+		};
+		6E91DB1A17D3F01D0041F41F /* TDC */ = {
+			isa = PBXGroup;
+			children = (
+				6E91DB1B17D3F01D0041F41F /* A1.C */,
+				6E91DB1C17D3F01D0041F41F /* A1.h */,
+				6E91DB1D17D3F01D0041F41F /* A1_Mod.C */,
+				6E91DB1E17D3F01D0041F41F /* A1_Mod.h */,
+				6E91DB1F17D3F01D0041F41F /* adc_v1721_caen.cc */,
+				6E91DB2017D3F01D0041F41F /* adc_v1721_caen.hh */,
+				6E91DB2117D3F01D0041F41F /* Analysis.C */,
+				6E91DB2217D3F01D0041F41F /* Analysis.h */,
+				6E91DB2317D3F01D0041F41F /* BSCDataReader.cpp */,
+				6E91DB2417D3F01D0041F41F /* BSCDataReader.h */,
+				6E91DB2517D3F01D0041F41F /* BSCModule.cpp */,
+				6E91DB2617D3F01D0041F41F /* BSCModule.h */,
+				6E91DB2717D3F01D0041F41F /* BSCModuleV1721.cpp */,
+				6E91DB2817D3F01D0041F41F /* BSCModuleV1721.h */,
+				6E91DB2917D3F01D0041F41F /* daq904.cc */,
+				6E91DB2A17D3F01D0041F41F /* IniFile.cpp */,
+				6E91DB2B17D3F01D0041F41F /* IniFile.h */,
+				6E91DB2C17D3F01D0041F41F /* Makefile */,
+				6E91DB2D17D3F01D0041F41F /* ModuleV1190.cpp */,
+				6E91DB2E17D3F01D0041F41F /* ModuleV1190.h */,
+				6E91DB2F17D3F01D0041F41F /* ModuleV1190Data.cpp */,
+				6E91DB3017D3F01D0041F41F /* ModuleV1190Data.h */,
+				6E91DB3117D3F01D0041F41F /* ModuleV2718.cpp */,
+				6E91DB3217D3F01D0041F41F /* ModuleV2718.h */,
+				6E91DB3317D3F01D0041F41F /* ModuleVmeInterface.cpp */,
+				6E91DB3417D3F01D0041F41F /* ModuleVmeInterface.h */,
+				6E91DB3517D3F01D0041F41F /* ReadData.C */,
+				6E91DB3617D3F01D0041F41F /* ReadData.h */,
+				6E91DB3717D3F01D0041F41F /* README */,
+				6E91DB3817D3F01D0041F41F /* rpc.ini */,
+				6E91DB3917D3F01D0041F41F /* TDC.kdev4 */,
+				6E91DB3A17D3F01D0041F41F /* trialruns.sh */,
+			);
+			path = TDC;
+			sourceTree = "<group>";
+		};
+		6E91DB3C17D3F01D0041F41F /* GHENT */ = {
+			isa = PBXGroup;
+			children = (
+				6E91DB3D17D3F01D0041F41F /* data_2013_08_03_11_15_02.log */,
+				6E91DB3E17D3F01D0041F41F /* data_2013_08_03_11_15_02.log.1 */,
+				6E91DB3F17D3F01D0041F41F /* Offline.h */,
+				6E91DB4017D3F01D0041F41F /* Offline_final.cc */,
+				6E91DB4117D3F01D0041F41F /* TDCChannelsToRPCstrips_inverted.txt */,
+				6E91DB4217D3F01D0041F41F /* TDCChMapping.txt */,
+			);
+			path = GHENT;
+			sourceTree = "<group>";
+		};
+		6E91DB4317D3F01D0041F41F /* src */ = {
+			isa = PBXGroup;
+			children = (
+				6E91DB4417D3F01D0041F41F /* RollCore */,
+				6E91DB4B17D3F01D0041F41F /* RPCChambersCluster.cpp */,
+				6E91DB4C17D3F01D0041F41F /* RPCDBReader.cpp */,
+				6E91DB4D17D3F01D0041F41F /* RPCLinkBoard.cpp */,
+				6E91DB4E17D3F01D0041F41F /* RPCLinkBoardChannel.cpp */,
+				6E91DB4F17D3F01D0041F41F /* RPCLinkBoardChip.cpp */,
+				6E91DB5017D3F01D0041F41F /* RPCRawConverter.cpp */,
+			);
+			name = src;
+			path = ../src;
+			sourceTree = "<group>";
+		};
+		6E91DB4417D3F01D0041F41F /* RollCore */ = {
+			isa = PBXGroup;
+			children = (
+				6E91DB4517D3F01D0041F41F /* Chip.cpp */,
+				6E91DB4617D3F01D0041F41F /* DataObject.cpp */,
+				6E91DB4717D3F01D0041F41F /* ExtendedRoll.cpp */,
+				6E91DB4817D3F01D0041F41F /* ExtendedStrip.cpp */,
+				6E91DB4917D3F01D0041F41F /* Roll.cpp */,
+				6E91DB4A17D3F01D0041F41F /* Strip.cpp */,
+			);
+			path = RollCore;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXProject section */
+		6E91DAD617D3EFE50041F41F /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0460;
+				ORGANIZATIONNAME = "miro rodozov";
+			};
+			buildConfigurationList = 6E91DAD917D3EFE50041F41F /* Build configuration list for PBXProject "RPCRawConverter" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 6E91DAD517D3EFE50041F41F;
+			productRefGroup = 6E91DAD517D3EFE50041F41F;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+			);
+		};
+/* End PBXProject section */
+
+/* Begin XCBuildConfiguration section */
+		6E91DAE517D3EFE50041F41F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		6E91DAE617D3EFE50041F41F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		6E91DAD917D3EFE50041F41F /* Build configuration list for PBXProject "RPCRawConverter" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6E91DAE517D3EFE50041F41F /* Debug */,
+				6E91DAE617D3EFE50041F41F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 6E91DAD617D3EFE50041F41F /* Project object */;
+}

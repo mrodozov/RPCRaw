@@ -1,0 +1,48 @@
+Run Number 1163
+Number of Events: 20000
+Time Interval: 1379 seconds
+Trigger rate: 14.5033 Hz
+*** RPC Info ***
+Eta partition: All
+Software Trigger: 0
+Penv: 1017
+Tenv: 20.6326
+Henv: 45.4855
+Tgas: 20.4694
+Hgas: 58.8637
+* RPC Station 2
+RPC Number: RE4-3-Ghent-058
+Trigger Layer: Double
+Voltage top: 10000
+Voltage bottom: 10000
+Set Voltage TN: 10250
+Set Voltage TW: 10250
+Set Voltage B: 10250
+FEB threshold: 215
+Current TN: 0.127971
+Current TW: 0.0655073
+Current B: 0.161377
+* RPC Station 3
+RPC Number: RE4-3-Ghent-052
+Trigger Layer: Double
+Voltage top: 10000
+Voltage bottom: 10000
+Set Voltage TN: 10250
+Set Voltage TW: 10250
+Set Voltage B: 10250
+FEB threshold: 215
+Current TN: 0.152536
+Current TW: 0.0766666
+Current B: 0.22942
+* RPC Station 4
+RPC Number: RE4-3-Ghent-054
+Trigger Layer: Double
+Voltage top: 10000
+Voltage bottom: 10000
+Set Voltage TN: 10250
+Set Voltage TW: 10250
+Set Voltage B: 10250
+FEB threshold: 215
+Current TN: 0.215435
+Current TW: 0.102319
+Current B: 0.317681
