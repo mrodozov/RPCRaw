@@ -11,7 +11,7 @@ using namespace std;
 // strips methods
 
 void RPCLinkBoard::allocStrips(){
-  // this is a 
+  // this is the factory method used only once after the object is constructed. 
   this->strips = new RPCLinkBoardChannel[96];
   
 }
@@ -70,10 +70,7 @@ void RPCLinkBoard::insertNewChipWithNumberAndID(const int & num,const int & ID){
   this->insertNewChipToChipsMap(num,aChip);
 } // insert chip
 
-
 /**  place your costum methods here */
-
-
 
 void RPCLinkBoard::setStripsHitsDataFromSource(const vector< vector<unsigned> > & vectorSource){
   this->_vectorToStripsHits = &vectorSource;
@@ -90,3 +87,40 @@ const vector< vector<unsigned> > & RPCLinkBoard::getStripsHitsDataVector () cons
   return *this->_vectorToStripsHits;
 }
 
+
+void RPCLinkBoard::findAllClustersForTiggerTimeReferenceAndTimeWindow(int triggerTimeReference,int timeWindow){
+  
+  for (int i = 0; i < this->getClones() ; i ++ ){
+    
+    // getClones() gives the number of the so called Etha Partitions. In case of Endcap they are always 3 - A,B,C partitions
+    
+    for (int j = this->getFirstStripNumberOfClone(i+1) ; j <= this->getLastStripNumberOfClone(i+1) ; j++ ){
+      
+      // getFirst and getLast strip number of clone is returning the first and the last channel for given partition, so we could loop on the channels of a given partition
+      
+      if (
+	this->getChannel(j)->hasHit() // see if the channel has at least one hit
+	&& this->getChannel(j)->getHits().at(0) <= triggerTimeReference+timeWindow // 
+	&& this->getChannel(j)->getHits().at(0) >= triggerTimeReference-timeWindow // 
+	) {
+	
+	cout << "Cluster started from : ";
+      
+	// write only the cluster starting channel thats enough
+	this->_clusterStartingNumbers.push_back(j);
+	int k = j;
+	// increment a counter starting from the first for all consecutive hits
+	while (k <= this->getLastStripNumberOfClone(i+1) && this->getChannel(k)->hasHit()) {
+	  cout << k << " ";
+	  k++;
+	}
+	
+	cout << endl;
+	
+	j = k; // skip all strips in the cluster and continue from the next one
+	k = 0 ; // reset the internal counter
+		
+      } 
+    }
+  }
+}

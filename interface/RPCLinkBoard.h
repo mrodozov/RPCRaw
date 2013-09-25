@@ -15,6 +15,8 @@ class RPCLinkBoard : public ExRoll {
   string _uniqueConstructionID; // i.e. RE4-3-CERN-32
   const vector< vector<unsigned> > * _vectorToStripsHits;
   int _cosmicStationNumber; // station on the cosmic stand if its given. Z coordinate to be mapped with this
+  vector<int> _clusterStartingNumbers; // clusters starting strips - each entry is the starting channel for a cluster, or a single hit
+  
   
 protected:
   
@@ -53,6 +55,11 @@ public:
   
   void setConstructionID(const string & constructionID) { this->_uniqueConstructionID = constructionID; }
   const string & getConstructionID () const { return this->_uniqueConstructionID ;}
+  
+  const vector<int> & getClusterStartingChannels () { return this->_clusterStartingNumbers ;} // get vector with clusters starting strips. each entry mark channel from where a cluster starts  
+  void findAllClustersForTiggerTimeReferenceAndTimeWindow(int triggerTimeReference,int timeWindow); // this method search and mark all clusters starting strips. Later, one always 
+  
+  
   
 };
 

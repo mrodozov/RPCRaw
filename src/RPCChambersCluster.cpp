@@ -110,29 +110,51 @@ RPCLinkBoard * RPCChambersCluster::getTriggerObjectNumber(const int & triggerObj
 
 void RPCChambersCluster::findTrackInCurrentEvent(TFile * fileToSave){
   
-  // Save file 
+  // Save file is used to save all the reconstructed graphs in order to inspect them
   
   RPCLinkBoard * currentChamberObj;
   RPCLinkBoard * triggerObj;
   RPCLinkBoardChannel * currentChannelObj;
   int numberOfChambers = this->getNumberOfChambers();
   triggerObj = this->getTriggerObjectNumber(1);
-  TH2F * trackFitHisto = new TH2F("","",32,1,32,10,0,10);
-  
   TGraphErrors * graphToFit;
+  currentChamberObj = this->getChamberNumber(1);
   
-  int Yoffset = 1;
-  int Xoffset = 1;
+  // use the first hit of the scintilators as time reference 
+  int timeReference = 0;
+  int timeWindow = 200;
+  
+  for (int i = 0 ; i < 32 ; i++){
+    if(triggerObj->getChannel(i+1)->hasHit()){
+      timeReference = triggerObj->getChannel(i+1)->getHits().at(0);
+      break;
+    }
+  }
+  
+  cout << " time reference : " << timeReference << endl;
   
   for (int totalChambers = 0 ; totalChambers < numberOfChambers ; totalChambers++){
     
+    currentChamberObj = this->getChamberNumber(totalChambers+1);
     
+    for (int j=0 ; j < 96 ;j++){
+
+      currentChamberObj = this->getChamberNumber(totalChambers+1);
+      currentChannelObj = currentChamberObj->getChannel(j+1);
+      if (currentChannelObj->hasHit()){
+	
+	cout << " chamber " << totalChambers+1 << " channel " << currentChannelObj->getOnlineNumber() << " time " << currentChannelObj->getHits().at(0);
+	
+      }
+    }
+    cout << endl;
+    currentChamberObj->findAllClustersForTiggerTimeReferenceAndTimeWindow(timeReference,timeWindow);
     
   }
+  cout << endl;
   
 }
 
-void RPCChambersCluster::recursiveLoopOnAllChambers(bool searchInReferenseChambers){
-  
+void RPCChambersCluster::recursiveLoopOnAllChambers(int chambersTotal){
   
 }

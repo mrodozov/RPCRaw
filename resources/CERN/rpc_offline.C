@@ -9,6 +9,7 @@
 #include <cstdio>
 
 #include "rpc_offline.h"
+#include "../interface/ROOT.h"
 
 using namespace std;
 using std::cout;
@@ -2184,7 +2185,7 @@ TFile * hfile2 = new TFile(filename,"RECREATE");
                                             }
                                         }
                                     }
-                                     
+                                    
                                     // Track reconstruction
                                     if ( ( realcluster > 0) && ( realcluster2 > 0) && ( realcluster3 > 0) )
                                     {
@@ -4785,7 +4786,6 @@ TFile * hfile2 = new TFile(filename,"RECREATE");
                     dumpfile.close();
                 }
             }
-            
             else {
                 ofstream dumpfile;
                 dumpfile.open (hname, fstream::app);

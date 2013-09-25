@@ -17,4 +17,6 @@ void clusterObjectTester (int _argc,char * _argv[]);
 
 void firstCompleteTestApplication(int _argc,char * _argv[]);
 
+int testRecursion(int n, int m);
+
 #endif

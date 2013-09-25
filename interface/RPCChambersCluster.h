@@ -45,8 +45,8 @@ public:
   
   /** here , place some analysis methods that loop on all the chambers and retrieve some information about the tracks */
   
-  void findTrackInCurrentEvent(TFile * fileToSave); // put each 
-  void recursiveLoopOnAllChambers(bool searchInReferenceChambers);
+  void findTrackInCurrentEvent(TFile * fileToSave); // put each track on histogram along with all the rest of the hits
+  void recursiveLoopOnAllChambers(int allChambers); // try to implement function to loop all the variations without concerning the number of rolls
   
   
 };

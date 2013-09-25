@@ -147,11 +147,13 @@ void firstCompleteTestApplication(int arg_c,char * arg_v[]){
   triggerObject = aCluster->getTriggerObjectNumber(1);
   TGraphErrors * trackGraph;
   
+  TFile * aFile; // just dont do nothing now
+  
   //for( int i = 0 ; i < 1000 ; i++){  
   while(converter->nextEvent()){
   //converter->nextEvent();
-    
-    
+    cout << " event: " << converter->getEventNumber() << ", chambers data: ";
+    aCluster->findTrackInCurrentEvent(aFile);
     
   }
   
@@ -166,4 +168,13 @@ void firstCompleteTestApplication(int arg_c,char * arg_v[]){
   
 }
 
+int testRecursion(int n, int m){
+  int returnValue;
+  if ((n == 1) || (m == 0) || (n == m))
+  returnValue = 1;
+  else
+  returnValue = testRecursion(n-1,m) + testRecursion(n-1,m-1);
+  return returnValue;
+  
+}
 

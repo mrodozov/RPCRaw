@@ -185,7 +185,7 @@ void Offline_final( string name )
   mytree->SetBranchAddress("TDCNHits", &mydata.TDCNHits);
   mytree->SetBranchAddress("TDCCh", mydata.TDCCh);
   mytree->SetBranchAddress("TDCTime", mydata.TDCTime);
-  
+
   bool TopScintHit, BotScintHit;
 
   int NGoodScintTriggers = 0;
