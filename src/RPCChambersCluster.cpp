@@ -590,10 +590,7 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
 	//cout << "par1 " << params[0] << " par2 " << params[1] << " chi2 " << fitfunc->GetChisquare() << endl;
 	
 	// The resudials - difference between estimated fit value and the middle of the nearest cluster
-	
-	// now here - what to return, and how to get the hits in the chambers under test from the function
-	
-	int multiplier = 0 ; // multiplier of the sign
+		
 	int prevReference = 0 , nextReference = 0 , prevReferencePartition = 0 , nextReferencePartition = 0; 
 	int partitionDifference = 0 ;
 	bool currentChamberIsReference = false;
