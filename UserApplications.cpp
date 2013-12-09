@@ -438,6 +438,8 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   string efficiency_title ;
   string track_title ;
   
+  /** writing the results of the application */
+  
   for (unsigned chamberNum = 0 ; chamberNum < aCluster->getNumberOfChambers() ; chamberNum++){
     
     cout << " Number of all tracks chamber " << chamberNum+1 << " : " << aCluster->getChamberNumber(chamberNum+1)->getSumOfAllTracks() << endl;

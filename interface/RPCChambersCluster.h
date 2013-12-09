@@ -57,12 +57,14 @@ public:
   void variousStudyExperimentalFunction(TFile * fileToSave,TH1F * histo[10],const int & eventNum); // put each track on histogram along with all the rest of the hits
   map<int,vector<double> > getReconstructedHits(vector<int> vectorOfReferenceChambers,const int & timeWindow,const int & timeReference,const int &Chi2Goodnes = 20,const ESiteFileType & fileType = kIsCERNrawFile);
   
-  
   /** this method goes trough all the reference chambers */
-  
   
   int getTimeReferenceValueForSiteType(ESiteFileType siteType);
   int getTimeWindowForSiteType(ESiteFileType siteType);
+  
+  /** helper method to get the vector of partitions between two references, with reference vectors for 1. number of reference chambers 2. cluster numbers in the reference chambers   */
+  vector<vector<int> > getPartitionsVectorForVectorOfReferenceChambers(const int & chamberNumber,const vector<int> & vectorOfReferenceChambers,const vector<int> & vectorOfClusterNumbersCombination);
+  
   
 };
 

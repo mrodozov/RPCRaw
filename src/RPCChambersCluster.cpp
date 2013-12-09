@@ -497,126 +497,143 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
     //cout  << "Chamber is " << i+1 << endl;
   }
   
+  vector<vector<int> > vectorOfClusterNumberCombinations;  
+  
   if (fileType == kIsCERNrawFile ){
   
-  for ( int i = 0 ; i < this->getChamberNumber(vectorOfReferenceChambers[0])->getNumberOfClusters() ; i++ ){
-    for( int j = 0 ; j < this->getChamberNumber(vectorOfReferenceChambers[1])->getNumberOfClusters() ; j++ ){
-      for( int k = 0 ; k < this->getChamberNumber(vectorOfReferenceChambers[2])->getNumberOfClusters() ; k++ ){
-	
-	// check the multiplicity. use 5 as upper limit number
-	// with the test run 2202 - CERN channel 33 is noisy so there is a condition only for it here TODO - remove the channel 33 condition
-	
-	/* Hits : first , use the time to distinguish useless crap - like noisy channels 
-	 *  
-	 * 2. Check the partition plane (YZ plane) for vertical tracks. If the track is vertical don't search for consecutiveness and don't fill the YZ histo
-	 * 3. Check the partitions plane for consecutiveness - one could not expect track that passes 3 -> 1 -> 3 partitions
-	 * 
-	*/ 
-	
-	assert(vectorOfReferenceChambers.size() == 3);
-	
-	if(this->getChamberNumber(vectorOfReferenceChambers[0])->getSizeOfCluster(i+1) > 5 ||
-	  this->getChamberNumber(vectorOfReferenceChambers[1])->getSizeOfCluster(j+1) > 5 ||
-	  this->getChamberNumber(vectorOfReferenceChambers[2])->getSizeOfCluster(k+1) > 5 ) continue;
-	
-	// the partition logic start  here - track could pass more than one partition
-	
-	int direction = 0 ; // direction should describe how the partition changes from one reference chamber to another. It 
-	int RefChamberClusterPartition[3];
-	int currentDifference = 0;
-	bool positive = false;
-	bool negative = false;
-	int partitionPenetrated = 1;
-	
-	// the Y coordinate is the partition number (1 2 or 3 - A B or C)
-	
-	RefChamberClusterPartition[0] = this->getChamberNumber(vectorOfReferenceChambers[0])->getXYCoordinatesOfCluster(i+1).at(1);
-	RefChamberClusterPartition[1] = this->getChamberNumber(vectorOfReferenceChambers[1])->getXYCoordinatesOfCluster(j+1).at(1);
-	RefChamberClusterPartition[2] = this->getChamberNumber(vectorOfReferenceChambers[2])->getXYCoordinatesOfCluster(k+1).at(1);
-	
-	for ( int ii = 0; ii < 2 ; ii++ ){
-	  direction = (RefChamberClusterPartition[ii] - RefChamberClusterPartition[ii+1]);
-	  if (direction != 0) { 
-	    direction = direction/abs(direction); 
-	    partitionPenetrated++;
-	  } // get only the sign ( +1 or -1)
-	  if (direction && direction == -1)  positive = true;
-	  if (direction && direction == 1 )  negative = true;
+    assert(vectorOfReferenceChambers.size() == 3);
+    
+    for ( int i = 0 ; i < this->getChamberNumber(vectorOfReferenceChambers[0])->getNumberOfClusters() ; i++ ){
+      for( int j = 0 ; j < this->getChamberNumber(vectorOfReferenceChambers[1])->getNumberOfClusters() ; j++ ){
+	for( int k = 0 ; k < this->getChamberNumber(vectorOfReferenceChambers[2])->getNumberOfClusters() ; k++ ){
 	  
+	  vector<int> singleCombination;
+	
+	  singleCombination.push_back(i+1);
+	  singleCombination.push_back(j+1);
+	  singleCombination.push_back(k+1);
+	  
+	  for (int f = 0 ; f < singleCombination.size() ; f++){	  
+	    if(this->getChamberNumber(vectorOfReferenceChambers[f])->getSizeOfCluster(singleCombination.at(f)) > 5 ) continue;	  
+	    // don't insert combination if there is too big cluster. 
+	  }
+	  
+	  vectorOfClusterNumberCombinations.push_back(singleCombination);
+	  
+	}      
+      }
+    }
+  }
+  
+  if (fileType == kIsBARCrawFile || fileType == kIsGENTrawFile ){
+    // add implementation for BARC and Ghent stand . 
+    
+    assert(vectorOfReferenceChambers.size() == 2);
+    
+    for ( int i = 0 ; i < this->getChamberNumber(vectorOfReferenceChambers[0])->getNumberOfClusters() ; i++ ){
+      for( int j = 0 ; j < this->getChamberNumber(vectorOfReferenceChambers[1])->getNumberOfClusters() ; j++ ){
+      
+	vector<int> singleCombination;
+	singleCombination.push_back(i+1);
+	singleCombination.push_back(j+1);
+	
+	for (int f = 0 ; f < singleCombination.size() ; f++){
+	  if(this->getChamberNumber(vectorOfReferenceChambers[f])->getSizeOfCluster(singleCombination.at(f)) > 5 ) continue;
+	  // don't insert combination if there is too big cluster. 
 	}
 	
-	if ( positive && negative ) continue;
+	vectorOfClusterNumberCombinations.push_back(singleCombination);
+      
+      }
+    }
+  }
+  
+  for (int combinationsVectorElement = 0 ; combinationsVectorElement < vectorOfClusterNumberCombinations.size() ; combinationsVectorElement ++){
 	
-	// cannot have a track that goes in both direction
-	// partition logic end here
+    // the partition logic start  here - track could pass more than one partition
+    
+    int direction = 0 ; // direction should describe how the partition changes from one reference chamber to another. It 
+    vector<int> RefChamberClusterPartition;
+    bool positive = false;
+    bool negative = false;
+    int partitionPenetrated = 1;
+    
+    // the Y coordinate is the partition number (1 2 or 3 - A B or C)
+    
+    vector<int> clusterNum = vectorOfClusterNumberCombinations.at(combinationsVectorElement);
+
+    for (int ii = 0; ii < clusterNum.size() ; ii++){
+      RefChamberClusterPartition.push_back(this->getChamberNumber(vectorOfReferenceChambers[ii])->getXYCoordinatesOfCluster(clusterNum.at(ii)).at(1));
+    }
+    
+    for ( int ii = 0; ii < RefChamberClusterPartition.size() - 1 ; ii++ ){
+      direction = (RefChamberClusterPartition.at(ii) - RefChamberClusterPartition.at(ii+1));
+      if (direction != 0) { 
+	direction = direction/abs(direction); 
+	partitionPenetrated++;
+      } // get only the sign ( +1 or -1)
+      if (direction && direction == -1)  positive = true;
+      if (direction && direction == 1 )  negative = true;        
+    }
+    
+    if ( positive && negative ) continue;
+    // cannot have a track that goes in both direction
 	
-	TH1F * histXZ = new TH1F("fitHistogram","XZ plane",110,0,11);
-	histXZ->GetYaxis()->SetRangeUser(0,34);
-	histXZ->SetMarkerColor(kBlue);
-	histXZ->SetMarkerStyle(kCircle);
-	histXZ->GetXaxis()->SetTitle("Shelf number");
-	histXZ->GetYaxis()->SetTitle("Channel number");
-	
-	TF1 * fitfunc = new TF1("FitTrack","[0]+x*[1]",0,11);
-	
-	int clusterNum[3];
-	clusterNum[0] = i+1;
-	clusterNum[1] = j+1;
-	clusterNum[2] = k+1;
-	
-	vector<double> coordinates;
-	double xCoordinate = 0;
-	int yCoordinate = 0;
-	int zCoorinate = 0;
-	
-	for (int ii=0 ; ii < vectorOfReferenceChambers.size() ; ii++){
+    TH1F * histXZ = new TH1F("fitHistogram","XZ plane",110,0,11);
+    histXZ->GetYaxis()->SetRangeUser(0,34);
+    histXZ->SetMarkerColor(kBlue);
+    histXZ->SetMarkerStyle(kCircle);
+    histXZ->GetXaxis()->SetTitle("Shelf number");
+    histXZ->GetYaxis()->SetTitle("Channel number");
+    TF1 * fitfunc = new TF1("FitTrack","[0]+x*[1]",0,11);
+
+    vector<double> coordinates;
+    double xCoordinate = 0;
+    int yCoordinate = 0;
+    int zCoorinate = 0;
+    
+    for (int ii=0 ; ii < vectorOfReferenceChambers.size() ; ii++){
 	  
-	  coordinates = this->getChamberNumber(vectorOfReferenceChambers[ii])->getXYCoordinatesOfCluster(clusterNum[ii]);
-	  xCoordinate = coordinates.at(0);
-	  yCoordinate = coordinates.at(1);
-	  zCoorinate = 10*vectorOfReferenceChambers[ii];
-	  Double_t errorValue = this->getChamberNumber(vectorOfReferenceChambers[ii])->getSizeOfCluster(clusterNum[ii]);
-	  histXZ->SetBinContent(zCoorinate,xCoordinate);  
- 	  histXZ->SetBinError(zCoorinate,errorValue/2);
-	  //cout << xCoordinate << " " << yCoordinate << endl;
+      coordinates = this->getChamberNumber(vectorOfReferenceChambers[ii])->getXYCoordinatesOfCluster(clusterNum[ii]);
+      xCoordinate = coordinates.at(0);
+      yCoordinate = coordinates.at(1);
+      zCoorinate = 10*vectorOfReferenceChambers[ii];
+      Double_t errorValue = this->getChamberNumber(vectorOfReferenceChambers[ii])->getSizeOfCluster(clusterNum[ii]);
+      histXZ->SetBinContent(zCoorinate,xCoordinate);  
+      histXZ->SetBinError(zCoorinate,errorValue/2);
+      //cout << xCoordinate << " " << yCoordinate << endl;
+      
+    }
+    
+    Double_t params[2];
+    histXZ->Fit(fitfunc,"RQ");
+    fitfunc->GetParameters(params);
+    
+    //cout << "par1 " << params[0] << " par2 " << params[1] << " chi2 " << fitfunc->GetChisquare() << endl;
+    // The resudials - difference between estimated fit value and the middle of the nearest cluster
+	
+    int prevReference = 0 , nextReference = 0 , prevReferencePartition = 0 , nextReferencePartition = 0; 
+    bool currentChamberIsReference = false;
+    int startCounter = 0, endCounter = 0;
+	
+    if ( fitfunc->GetChisquare() < Chi2goodness && fitfunc->GetChisquare() < best_chi2goodnes_value ) {
+      best_chi2goodnes_value = fitfunc->GetChisquare(); // the next loop this value would be evaluated
+      // in case of only one partition, get the partition number of the first reference point
 	  
-	}
+      int referenceChambersIncrementor = 0;
+      
+      for ( int currentChNumber = 0 ; currentChNumber < this->getNumberOfChambers() ; currentChNumber++ ) {
+	// check where the chamber is according to the reference chambers
+	vector<double> vectorOfpartitionsAndHit;
+	double channelNum = fitfunc->Eval(currentChNumber+1);
 	
-	Double_t params[2];
-	
-	histXZ->Fit(fitfunc,"RQ");
-	fitfunc->GetParameters(params);
-	
-	//cout << "par1 " << params[0] << " par2 " << params[1] << " chi2 " << fitfunc->GetChisquare() << endl;
-	
-	// The resudials - difference between estimated fit value and the middle of the nearest cluster
-		
-	int prevReference = 0 , nextReference = 0 , prevReferencePartition = 0 , nextReferencePartition = 0; 
-	int partitionDifference = 0 ;
-	bool currentChamberIsReference = false;
-	int startCounter = 0, endCounter = 0;
-	
-	if ( fitfunc->GetChisquare() < Chi2goodness && fitfunc->GetChisquare() < best_chi2goodnes_value ) {
-	  best_chi2goodnes_value = fitfunc->GetChisquare(); // the next loop this value would be evaluated
-	  // in case of only one partition, get the partition number of the first reference point
-	  
-	  vector<double> vectorOfpartitionsAndHit;
-	  
-	  int referenceChambersIncrementor = 0;
-	  
-	  for ( int currentChNumber = 0 ; currentChNumber < this->getNumberOfChambers() ; currentChNumber++ ) {
-	    // check where the chamber is according to the reference chambers
-	    
-	    double channelNum = fitfunc->Eval(currentChNumber+1);
-	    
-	    for(int refCheck = 0 ; refCheck < vectorOfReferenceChambers.size(); refCheck++){
-	      // find the surounding references
-	      if (currentChNumber+1 == vectorOfReferenceChambers.at(refCheck)){
-		currentChamberIsReference = true;
-		break;
-	      }
-	      
-	      if ( vectorOfReferenceChambers.at(refCheck) > currentChNumber+1 && refCheck == 0 ){
+	for(int refCheck = 0 ; refCheck < vectorOfReferenceChambers.size(); refCheck++){
+	  // find the surounding references
+	  if (currentChNumber+1 == vectorOfReferenceChambers.at(refCheck)){
+	    currentChamberIsReference = true;
+	    break;
+	  }	      
+	  if ( vectorOfReferenceChambers.at(refCheck) > currentChNumber+1 && refCheck == 0 ){
 		// its before the first reference chamber
 		nextReference = vectorOfReferenceChambers.at(refCheck);
 		nextReferencePartition = this->getChamberNumber(nextReference)->getXYCoordinatesOfCluster(clusterNum[refCheck]).at(1);
@@ -642,7 +659,8 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
 	    
 	    if(!currentChamberIsReference){
 	      if(!positive && !negative){
-		  prevReferencePartition = nextReferencePartition; 
+		  prevReferencePartition = yCoordinate ;
+		  nextReferencePartition = yCoordinate ;
 	      }
 	      
 	      if (nextReference && prevReference == 0){
@@ -661,16 +679,18 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
 		if(negative){
 		  nextReferencePartition = 1;
 		}
-	      }      
+	      }
 	      
 	      if (positive){ startCounter = prevReferencePartition; endCounter = nextReferencePartition; }
 	      else { startCounter = nextReferencePartition ; endCounter = prevReferencePartition ; }
 	      
 	      for (int currentCounter = startCounter ; currentCounter <= endCounter; currentCounter ++ ){
+		if (currentCounter == 0 || currentCounter == 4){
+		  cout << "Problem with partition calculation" << endl;
+		}
 		vectorOfpartitionsAndHit.push_back(currentCounter);
 		
 	      }      
-	      	      
 	    }
 	    // end of 
 	    
@@ -678,9 +698,17 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
 	      vectorOfpartitionsAndHit.push_back(this->getChamberNumber(currentChNumber+1)->getXYCoordinatesOfCluster(clusterNum[referenceChambersIncrementor]).at(1));
 	      referenceChambersIncrementor += 1;
 	    }
+	    
 	    prevReference = 0 ; nextReference = 0 ; prevReferencePartition = 0 ; nextReferencePartition = 0; currentChamberIsReference = false;
 	    //cout << "Chamber " << l+1 << " " <<  coordinates.at(1) << " " << fitfunc->Eval(l+1) << " " << endl;
 	    vectorOfpartitionsAndHit.push_back(channelNum); // the last element is the number of the channel
+	    
+	    cout << "Chamber is " << currentChNumber+1 << " " ;
+	    for (int thesize = 0 ; thesize < vectorOfpartitionsAndHit.size() ; thesize++){
+	      cout << vectorOfpartitionsAndHit.at(thesize) << " " ;
+	    }
+	    cout << endl;
+	    
 	    mapOfHits[currentChNumber+1] = vectorOfpartitionsAndHit;
 	    
 	  }
@@ -689,124 +717,104 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
 	//histXZ->SaveAs("reconstructed_track.root"); // if one wants to see the track histogram
 	fitfunc->Delete();
 	histXZ->Delete();
-	
-      }
-    }
-  }
-  
-  }
-  
-  if (fileType == kIsBARCrawFile || fileType == kIsGENTrawFile ){
-    // add implementation for BARC and Ghent stand . 
-    
-    assert(vectorOfReferenceChambers.size() == 2);
-    
-    for ( int i = 0 ; i < this->getChamberNumber(vectorOfReferenceChambers[0])->getNumberOfClusters() ; i++ ){
-    for( int j = 0 ; j < this->getChamberNumber(vectorOfReferenceChambers[1])->getNumberOfClusters() ; j++ ){
-      
-      if(this->getChamberNumber(vectorOfReferenceChambers[0])->getSizeOfCluster(i+1) > 5 ||
-	  this->getChamberNumber(vectorOfReferenceChambers[1])->getSizeOfCluster(j+1) > 5) continue;
-	
-	// the partition logic start  here - track could pass more than one partition
-	
-	int direction = 0 ; // direction should describe how the partition changes from one reference chamber to another. It 
-	int RefChamberClusterPartition[2];
-	int currentDifference = 0;
-	bool positive = false;
-	bool negative = false;
-	int partitionPenetrated = 1;
-	
-	// the Y coordinate is the partition number (1 2 or 3 - A B or C)
-	
-	RefChamberClusterPartition[0] = this->getChamberNumber(vectorOfReferenceChambers[0])->getXYCoordinatesOfCluster(i+1).at(1);
-	RefChamberClusterPartition[1] = this->getChamberNumber(vectorOfReferenceChambers[1])->getXYCoordinatesOfCluster(j+1).at(1);
-	
-	for ( int ii = 0; ii < vectorOfReferenceChambers.size() - 1 ; ii++ ){
-	  direction = (RefChamberClusterPartition[ii] - RefChamberClusterPartition[ii+1]);
-	  if (direction != 0) { 
-	    direction = direction/abs(direction); // would return  ( +- int / + int )
-	    partitionPenetrated++;
-	  } // get only the sign ( +1 or -1)
-	  if (direction && direction == -1)  positive = true;
-	  if (direction && direction == 1 )  negative = true;
-	  
-	}
-	
-	if ( positive && negative ) continue;
-	
-	// cannot have a track that goes in both direction
-	// partition logic end here
-	
-	TH1F * histXZ = new TH1F("fitHistogram","XZ plane",60,0,6);
-	histXZ->GetYaxis()->SetRangeUser(0,34);
-	histXZ->SetMarkerColor(kBlue);
-	histXZ->SetMarkerStyle(kCircle);
-	histXZ->GetXaxis()->SetTitle("Shelf number");
-	histXZ->GetYaxis()->SetTitle("Channel number");
-	
-	TF1 * fitfunc = new TF1("FitTrack","[0]+x*[1]",0,6);
-	
-	int clusterNum[2];
-	clusterNum[0] = i+1;
-	clusterNum[1] = j+1;
-	
-	vector<double> coordinates;
-	double xCoordinate = 0;
-	int yCoordinate = 0;
-	int zCoorinate = 0;
-	
-	for (int ii=0 ; ii < vectorOfReferenceChambers.size() ; ii++){
-	  
-	  coordinates = this->getChamberNumber(vectorOfReferenceChambers[ii])->getXYCoordinatesOfCluster(clusterNum[ii]);
-	  xCoordinate = coordinates.at(0);
-	  yCoordinate = coordinates.at(1);
-	  zCoorinate = 10*vectorOfReferenceChambers[ii];
-	  Double_t errorValue = this->getChamberNumber(vectorOfReferenceChambers[ii])->getSizeOfCluster(clusterNum[ii]);
-	  histXZ->SetBinContent(zCoorinate,xCoordinate);  
- 	  histXZ->SetBinError(zCoorinate,errorValue/2);
-	  //cout << xCoordinate << " " << yCoordinate << endl;
-	  
-	}
-	
-	Double_t params[2];
-	
-	histXZ->Fit(fitfunc,"R");
-	fitfunc->GetParameters(params);
-	cout << "par1 " << params[0] << " par2 " << params[1] << " chi2 " << fitfunc->GetChisquare() << endl;
-	
-	// The resudials - difference between estimated fit value and the middle of the nearest cluster
-	
-	// now here - what to return, and how to get the hits in the chambers under test from the function
-	// use the vertical track only for now. 
-	
-	if ( fitfunc->GetChisquare() < Chi2goodness && fitfunc->GetChisquare() < best_chi2goodnes_value && partitionPenetrated == 1) { 
-	  best_chi2goodnes_value = fitfunc->GetChisquare(); // the next loop this value would be evaluated
-	  // in case of only one partition, get the partition number of the first reference point
-	  
-	  for ( int l = 0 ; l < this->getNumberOfChambers() ; l++ ) {
-	    // check where the chamber is according to the reference chambers
-	    
-	    vector<double> vectorOfpartitionsAndHit;
-	    //cout << "Chamber " << l+1 << " " <<  coordinates.at(1) << " " << fitfunc->Eval(l+1) << " " << endl;
-	    double channelNum = fitfunc->Eval(l+1);	    
-	    vectorOfpartitionsAndHit.push_back(coordinates.at(1));
-	    vectorOfpartitionsAndHit.push_back(channelNum); // the last element is the number of the channel
-	    mapOfHits[l+1] = vectorOfpartitionsAndHit;    
-	    
-	  }
-	}
-	
-	//histXZ->SaveAs("reconstructed_track.root"); // if one wants to see the track histogram
-	fitfunc->Delete();
-	histXZ->Delete();      
-      
-      }
-    }
     
   }
   
   return mapOfHits;
 }
+
+vector<vector<int> > RPCChambersCluster::getPartitionsVectorForVectorOfReferenceChambers(const int & chamberNumber,const vector<int> & vectorOfReferenceChambers,const vector<int> & vectorOfClusterNumbersCombination){
+  
+  int prevReference = 0 , nextReference = 0 , prevReferencePartition = 0 , nextReferencePartition = 0; 
+  bool currentChamberIsReference = false;
+  int startCounter = 0, endCounter = 0;
+  
+  int positive = 0, negative = 0;
+  int yCoordinate = 0, referenceChambersIncrementor = 0 ;
+  vector<int> clusterNum = vectorOfClusterNumbersCombination;
+  
+  vector<vector<int> > vectorOfPartitions;
+  
+  for ( int currentChNumber = 0 ; currentChNumber < this->getNumberOfChambers() ; currentChNumber++ ) {
+    // check where the chamber is according to the reference chambers
+    vector<double> vectorOfpartitionsAndHit;
+    
+    for(int refCheck = 0 ; refCheck < vectorOfReferenceChambers.size(); refCheck++){
+      // find the surounding references
+      yCoordinate = vectorOfReferenceChambers.at(0); // used when the track is vertical to assign this partition to all chambers as reference
+      
+      if (currentChNumber+1 == vectorOfReferenceChambers.at(refCheck)){
+	currentChamberIsReference = true;
+	break;
+      }
+      
+      if ( vectorOfReferenceChambers.at(refCheck) > currentChNumber+1 && refCheck == 0 ){
+	// its before the first reference chamber
+	nextReference = vectorOfReferenceChambers.at(refCheck);
+	nextReferencePartition = this->getChamberNumber(nextReference)->getXYCoordinatesOfCluster(clusterNum[refCheck]).at(1);
+	break;
+      }
+	      
+      if ( vectorOfReferenceChambers.at(refCheck) < currentChNumber+1 && refCheck == vectorOfReferenceChambers.size() - 1 ){
+	// its after the last chamber
+	prevReference = vectorOfReferenceChambers.at(refCheck);
+	prevReferencePartition = this->getChamberNumber(prevReference)->getXYCoordinatesOfCluster(clusterNum[refCheck]).at(1);
+	break;
+      }
+      
+      if ( vectorOfReferenceChambers.at(refCheck) < currentChNumber+1 && vectorOfReferenceChambers.at(refCheck+1) > currentChNumber+1 ){
+	// its between two references
+	prevReference = vectorOfReferenceChambers.at(refCheck) ;
+	nextReference = vectorOfReferenceChambers.at(refCheck+1);
+	prevReferencePartition = this->getChamberNumber(prevReference)->getXYCoordinatesOfCluster(clusterNum[refCheck]).at(1);
+	nextReferencePartition = this->getChamberNumber(nextReference)->getXYCoordinatesOfCluster(clusterNum[refCheck+1]).at(1);
+	break;
+      }      
+    }
+    
+    if(!currentChamberIsReference){
+      if(!positive && !negative){
+	  prevReferencePartition = yCoordinate ;
+	  nextReferencePartition = yCoordinate ;
+      }
+      
+      if (nextReference && prevReference == 0){
+	if (positive){
+	  prevReferencePartition = 1;
+	}
+	if(negative){
+	  prevReferencePartition = this->getChamberNumber(1)->getClones();
+	}
+      }
+      
+      if (prevReferencePartition && nextReferencePartition == 0){
+	if (positive){
+	  nextReferencePartition = this->getChamberNumber(1)->getClones();
+	}
+	if(negative){
+	  nextReferencePartition = 1;
+	}
+      }
+	      
+      if (positive){ startCounter = prevReferencePartition; endCounter = nextReferencePartition; }
+      else { startCounter = nextReferencePartition ; endCounter = prevReferencePartition ; }
+      
+      for (int currentCounter = startCounter ; currentCounter <= endCounter; currentCounter ++ ){
+	if (currentCounter == 0 || currentCounter == 4){
+	  cout << "Problem with partition calculation" << endl;
+	}
+	vectorOfpartitionsAndHit.push_back(currentCounter);
+	
+      }      
+    }
+	    // end of 	    
+    else{
+      vectorOfpartitionsAndHit.push_back(this->getChamberNumber(currentChNumber+1)->getXYCoordinatesOfCluster(clusterNum[referenceChambersIncrementor]).at(1));
+      referenceChambersIncrementor += 1;
+    }    
+  }  
+}
+
 
 int RPCChambersCluster::getTimeReferenceValueForSiteType(ESiteFileType fileType){
   
