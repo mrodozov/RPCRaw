@@ -20,6 +20,9 @@ void RPCLinkBoard::allocStrips(){
 void RPCLinkBoard::initStrips(){
   ExRoll::initStrips();
   // do additional inits
+  this->_nonPartitionEfficiencyChannelAllTracks.resize(96/this->getClones());
+  this->_nonPartitionEfficiencyChannelEfficientTracks.resize(96/this->getClones());
+  this->clearAbsoluteChannelsCounters();
   this->setIsTriggerChamber(false);
   this->setStationNumber(-1); // which means its not set
 }
@@ -50,6 +53,8 @@ RPCLinkBoard::RPCLinkBoard (const string& RollOnlineName) : ExRoll(RollOnlineNam
 
 RPCLinkBoard::~RPCLinkBoard (){
   
+  this->_nonPartitionEfficiencyChannelAllTracks.clear();
+  this->_nonPartitionEfficiencyChannelEfficientTracks.clear();
   delete [] this->getStripCollection();
   this->strips = NULL;
   //cout << " RPCLinkBoard destructor called " << endl;
@@ -277,6 +282,21 @@ void RPCLinkBoard::resetEfficiencyCounters(){
   this->totalReconstructedTracksWithHit=0;
 }
 
+void RPCLinkBoard::incrementAbsoluteChannelCounters(const bool& hitIsFound, const int& absoluteChannelNumber){
+  if(hitIsFound){
+    this->_nonPartitionEfficiencyChannelEfficientTracks[absoluteChannelNumber-1] += 1;
+  }
+  this->_nonPartitionEfficiencyChannelAllTracks[absoluteChannelNumber-1] += 1;
+}
+
+void RPCLinkBoard::clearAbsoluteChannelsCounters(){
+  for (int i = 0 ; i < this->_nonPartitionEfficiencyChannelAllTracks.size();i++){
+    this->_nonPartitionEfficiencyChannelAllTracks[i] = 0;
+    this->_nonPartitionEfficiencyChannelEfficientTracks[0] = 0;
+  }
+}
+
+
 TH1F * RPCLinkBoard::getHistogramOfChannelsEfficiency(const string & histoObjName){
   
   TH1F * histogram = new TH1F (histoObjName.c_str(),"Channels efficiency",96,1,96);
@@ -408,7 +428,6 @@ void RPCLinkBoard::findResidualsInNeighbourPartitionsForChannelInPartition(vecto
       }
     }
   }
-  
 }
 
 int RPCLinkBoard::getSumOfAllTracks (){
@@ -422,3 +441,26 @@ int RPCLinkBoard::getSumOfAllTracks (){
   return tracksNumber;
   
 }
+
+TH1F * RPCLinkBoard::getHistogramOfAbsoluteChannelsEfficiency(const string & histoObjName){
+  
+  TH1F * histo = new TH1F (histoObjName.c_str(),histoObjName.c_str(),96/this->getClones(),1,96/this->getClones());
+  //cout << "-----------------" << endl;
+  
+  for(int i = 0 ; i < this->_nonPartitionEfficiencyChannelAllTracks.size(); i++){
+    double efficiency = double(double(this->_nonPartitionEfficiencyChannelEfficientTracks[i])/double(this->_nonPartitionEfficiencyChannelAllTracks[i]));
+    efficiency = efficiency*100;
+    histo->SetBinContent(i+1,efficiency);
+    //cout << "Channel: " << i+1 << " Efficiency: " << efficiency << endl;
+  }
+  
+  //cout << "------------------" << endl;
+  histo->SetLineColor(kBlue);
+  histo->SetFillColor(kBlue);
+  histo->GetXaxis()->SetTitle("Absolute channel number");
+  histo->GetYaxis()->SetTitle("Efficiency in %");
+  
+  return histo;
+  
+}
+

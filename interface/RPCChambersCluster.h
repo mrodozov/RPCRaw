@@ -55,7 +55,7 @@ public:
   /** here , place some analysis methods that loop on all the chambers and retrieve some information about the tracks */
   
   void variousStudyExperimentalFunction(TFile * fileToSave,TH1F * histo[10],const int & eventNum); // put each track on histogram along with all the rest of the hits
-  map<int,vector<double> > getReconstructedHits(vector<int> vectorOfReferenceChambers,const int & timeWindow,const int & timeReference,const int &Chi2Goodnes = 20,const ESiteFileType & fileType = kIsCERNrawFile);
+  map<int,vector<double> > getReconstructedHits(vector<int> vectorOfReferenceChambers,const int & timeWindow,const int & timeReference,bool & isVerticalTrack,const int &Chi2Goodnes = 20,const ESiteFileType & fileType = kIsCERNrawFile);
   
   /** this method goes trough all the reference chambers */
   

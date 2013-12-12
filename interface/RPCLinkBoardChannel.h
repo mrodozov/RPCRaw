@@ -17,6 +17,7 @@ class RPCLinkBoardChannel : public ExStrip {
   int allTracks;
   int efficientTracks;
   
+  
 protected:
   
 public:

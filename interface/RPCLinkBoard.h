@@ -23,6 +23,8 @@ class RPCLinkBoard : public ExRoll {
   int totalReconstructedTracksWithHit;
   vector<double> residuals;
   vector<double> residulsInNeighbourParts;
+  vector<int> _nonPartitionEfficiencyChannelEfficientTracks;
+  vector<int> _nonPartitionEfficiencyChannelAllTracks;
   
 protected:
   
@@ -101,11 +103,14 @@ public:
   double getChamberEfficiency(); // calculate chamber efficiency on the top of the global hits detected by the chamber
   bool isMatchingFiredChannelInPartition(const int & trackValue,const int & partition,const int & clusterWidth);
   void resetEfficiencyCounters();
-  void resetChannelsEfficiencyCounters() ;//{ for (int i=0; i < 96 ; i++) this->getChannel(i+1)->resetEfficiencyCounters(); }
+  void resetChannelsEfficiencyCounters() ; //{ for (int i=0; i < 96 ; i++) this->getChannel(i+1)->resetEfficiencyCounters(); } 
+  void incrementAbsoluteChannelCounters(const bool & hitIsFound,const int & absoluteChannelNumber); // absoluteChannelNumber means channel number without specified partition number
+  void clearAbsoluteChannelsCounters();
+  /** get histograms from the recocrds of the object */
   TH1F * getHistogramOfChannelsEfficiency(const string & histoObjName);
   TH1F * getDistributionOfChannelsEfficiency(const string & histoObjName);
   TH1F * getHistogramOfTracksVsChannels(const string & histoObjName);
-  
+  TH1F * getHistogramOfAbsoluteChannelsEfficiency(const string & histoObjName);
   // Statistics methods 
   
   int getSumOfAllTracks ();

@@ -3,6 +3,8 @@
 */
 
 #include "../interface/RPCChambersCluster.h"
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
 
 using namespace std;
 using namespace ROOT::Math;
@@ -486,7 +488,7 @@ void RPCChambersCluster::variousStudyExperimentalFunction(TFile * fileToSave,TH1
   
 }
 
-map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> vectorOfReferenceChambers, const int & timeWindow,const int & timeReference,const int & Chi2goodness, const ESiteFileType & fileType){
+map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> vectorOfReferenceChambers, const int & timeWindow,const int & timeReference,bool & isVerticalTrack,const int & Chi2goodness, const ESiteFileType & fileType){
   
   map<int,vector<double> > mapOfHits; //
   // the default value for Chi2goodness is 20 
@@ -549,7 +551,7 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
   }
   
   for (int combinationsVectorElement = 0 ; combinationsVectorElement < vectorOfClusterNumberCombinations.size() ; combinationsVectorElement ++){
-	
+    
     // the partition logic start  here - track could pass more than one partition
     
     int direction = 0 ; // direction should describe how the partition changes from one reference chamber to another. It 
@@ -561,10 +563,12 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
     // the Y coordinate is the partition number (1 2 or 3 - A B or C)
     
     vector<int> clusterNum = vectorOfClusterNumberCombinations.at(combinationsVectorElement);
-
+    
     for (int ii = 0; ii < clusterNum.size() ; ii++){
       RefChamberClusterPartition.push_back(this->getChamberNumber(vectorOfReferenceChambers[ii])->getXYCoordinatesOfCluster(clusterNum.at(ii)).at(1));
     }
+    
+    isVerticalTrack = true;
     
     for ( int ii = 0; ii < RefChamberClusterPartition.size() - 1 ; ii++ ){
       direction = (RefChamberClusterPartition.at(ii) - RefChamberClusterPartition.at(ii+1));
@@ -572,13 +576,13 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
 	direction = direction/abs(direction); 
 	partitionPenetrated++;
       } // get only the sign ( +1 or -1)
-      if (direction && direction == -1)  positive = true;
-      if (direction && direction == 1 )  negative = true;        
+      if (direction && direction == -1)  { positive = true; isVerticalTrack = false; }
+      if (direction && direction == 1 )  { negative = true; isVerticalTrack = false; }
     }
     
     if ( positive && negative ) continue;
     // cannot have a track that goes in both direction
-	
+    
     TH1F * histXZ = new TH1F("fitHistogram","XZ plane",110,0,11);
     histXZ->GetYaxis()->SetRangeUser(0,34);
     histXZ->SetMarkerColor(kBlue);
@@ -586,7 +590,7 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
     histXZ->GetXaxis()->SetTitle("Shelf number");
     histXZ->GetYaxis()->SetTitle("Channel number");
     TF1 * fitfunc = new TF1("FitTrack","[0]+x*[1]",0,11);
-
+    
     vector<double> coordinates;
     double xCoordinate = 0;
     int yCoordinate = 0;
@@ -611,21 +615,30 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
     
     //cout << "par1 " << params[0] << " par2 " << params[1] << " chi2 " << fitfunc->GetChisquare() << endl;
     // The resudials - difference between estimated fit value and the middle of the nearest cluster
-	
+    
     int prevReference = 0 , nextReference = 0 , prevReferencePartition = 0 , nextReferencePartition = 0; 
     bool currentChamberIsReference = false;
     int startCounter = 0, endCounter = 0;
-	
+    
     if ( fitfunc->GetChisquare() < Chi2goodness && fitfunc->GetChisquare() < best_chi2goodnes_value ) {
       best_chi2goodnes_value = fitfunc->GetChisquare(); // the next loop this value would be evaluated
       // in case of only one partition, get the partition number of the first reference point
-	  
+      
       int referenceChambersIncrementor = 0;
+      bool negativeChannelNumberIsFound = false;
       
       for ( int currentChNumber = 0 ; currentChNumber < this->getNumberOfChambers() ; currentChNumber++ ) {
 	// check where the chamber is according to the reference chambers
 	vector<double> vectorOfpartitionsAndHit;
 	double channelNum = fitfunc->Eval(currentChNumber+1);
+	
+	if(channelNum < 0 || channelNum > 96/this->getChamberNumber(1)->getClones()){
+	  // clear the map and break the loop, it would continue from the next cluster combination
+	  mapOfHits.clear();
+	  break;
+	}
+	
+	/** four cases 1. the chamber is before the first reference 2. the chamber is after the last reference 3. the chamber is between two references 4. the chamber is a reference */
 	
 	for(int refCheck = 0 ; refCheck < vectorOfReferenceChambers.size(); refCheck++){
 	  // find the surounding references
@@ -634,89 +647,93 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
 	    break;
 	  }	      
 	  if ( vectorOfReferenceChambers.at(refCheck) > currentChNumber+1 && refCheck == 0 ){
-		// its before the first reference chamber
-		nextReference = vectorOfReferenceChambers.at(refCheck);
-		nextReferencePartition = this->getChamberNumber(nextReference)->getXYCoordinatesOfCluster(clusterNum[refCheck]).at(1);
-		break;
-	      }
-	      
-	      if ( vectorOfReferenceChambers.at(refCheck) < currentChNumber+1 && refCheck == vectorOfReferenceChambers.size() - 1 ){
-		// its after the last chamber
-		prevReference = vectorOfReferenceChambers.at(refCheck);
-		prevReferencePartition = this->getChamberNumber(prevReference)->getXYCoordinatesOfCluster(clusterNum[refCheck]).at(1);
-		break;
-	      }
-	      
-	      if ( vectorOfReferenceChambers.at(refCheck) < currentChNumber+1 && vectorOfReferenceChambers.at(refCheck+1) > currentChNumber+1 ){
-		// its between two references
-		prevReference = vectorOfReferenceChambers.at(refCheck) ;
-		nextReference = vectorOfReferenceChambers.at(refCheck+1);
-		prevReferencePartition = this->getChamberNumber(prevReference)->getXYCoordinatesOfCluster(clusterNum[refCheck]).at(1);
-		nextReferencePartition = this->getChamberNumber(nextReference)->getXYCoordinatesOfCluster(clusterNum[refCheck+1]).at(1);
-		break;
-	      }      
-	    }
+	    // its before the first reference chamber
+	    nextReference = vectorOfReferenceChambers.at(refCheck);
+	    nextReferencePartition = this->getChamberNumber(nextReference)->getXYCoordinatesOfCluster(clusterNum[refCheck]).at(1);
+	    break;
 	    
-	    if(!currentChamberIsReference){
-	      if(!positive && !negative){
-		  prevReferencePartition = yCoordinate ;
-		  nextReferencePartition = yCoordinate ;
-	      }
-	      
-	      if (nextReference && prevReference == 0){
-		if (positive){
-		  prevReferencePartition = 1;
-		}
-		if(negative){
-		  prevReferencePartition = this->getChamberNumber(1)->getClones();
-		}
-	      }
-	      
-	      if (prevReferencePartition && nextReferencePartition == 0){
-		if (positive){
-		  nextReferencePartition = this->getChamberNumber(1)->getClones();
-		}
-		if(negative){
-		  nextReferencePartition = 1;
-		}
-	      }
-	      
-	      if (positive){ startCounter = prevReferencePartition; endCounter = nextReferencePartition; }
-	      else { startCounter = nextReferencePartition ; endCounter = prevReferencePartition ; }
-	      
-	      for (int currentCounter = startCounter ; currentCounter <= endCounter; currentCounter ++ ){
-		if (currentCounter == 0 || currentCounter == 4){
-		  cout << "Problem with partition calculation" << endl;
-		}
-		vectorOfpartitionsAndHit.push_back(currentCounter);
-		
-	      }      
-	    }
-	    // end of 
-	    
-	    else{
-	      vectorOfpartitionsAndHit.push_back(this->getChamberNumber(currentChNumber+1)->getXYCoordinatesOfCluster(clusterNum[referenceChambersIncrementor]).at(1));
-	      referenceChambersIncrementor += 1;
-	    }
-	    
-	    prevReference = 0 ; nextReference = 0 ; prevReferencePartition = 0 ; nextReferencePartition = 0; currentChamberIsReference = false;
-	    //cout << "Chamber " << l+1 << " " <<  coordinates.at(1) << " " << fitfunc->Eval(l+1) << " " << endl;
-	    vectorOfpartitionsAndHit.push_back(channelNum); // the last element is the number of the channel
-	    
-	    cout << "Chamber is " << currentChNumber+1 << " " ;
-	    for (int thesize = 0 ; thesize < vectorOfpartitionsAndHit.size() ; thesize++){
-	      cout << vectorOfpartitionsAndHit.at(thesize) << " " ;
-	    }
-	    cout << endl;
-	    
-	    mapOfHits[currentChNumber+1] = vectorOfpartitionsAndHit;
-	    
+	  }
+	  if ( vectorOfReferenceChambers.at(refCheck) < currentChNumber+1 && refCheck == vectorOfReferenceChambers.size() - 1 ){
+	    // its after the last chamber
+	    prevReference = vectorOfReferenceChambers.at(refCheck);
+	    prevReferencePartition = this->getChamberNumber(prevReference)->getXYCoordinatesOfCluster(clusterNum[refCheck]).at(1);
+	    break;    
+	  }
+	  if ( vectorOfReferenceChambers.at(refCheck) < currentChNumber+1 && vectorOfReferenceChambers.at(refCheck+1) > currentChNumber+1 ){
+	    // its between two references
+	    prevReference = vectorOfReferenceChambers.at(refCheck) ;
+	    nextReference = vectorOfReferenceChambers.at(refCheck+1);
+	    prevReferencePartition = this->getChamberNumber(prevReference)->getXYCoordinatesOfCluster(clusterNum[refCheck]).at(1);
+	    nextReferencePartition = this->getChamberNumber(nextReference)->getXYCoordinatesOfCluster(clusterNum[refCheck+1]).at(1);
+	    break;    
 	  }
 	}
 	
-	//histXZ->SaveAs("reconstructed_track.root"); // if one wants to see the track histogram
-	fitfunc->Delete();
-	histXZ->Delete();
+	if(!currentChamberIsReference){
+	  
+	  if (nextReference && prevReference == 0){
+	    if (positive){
+	      prevReferencePartition = 1;      
+	    }
+	    if(negative){
+	      prevReferencePartition = this->getChamberNumber(1)->getClones();      
+	    }    
+	  }
+	  
+	  if (prevReferencePartition && nextReferencePartition == 0){
+	    if (positive){
+	      nextReferencePartition = this->getChamberNumber(1)->getClones();      
+	    }
+	    if(negative){
+	      nextReferencePartition = 1;      
+	    }    
+	  }
+	  
+	  if (partitionPenetrated == 1){
+	    prevReferencePartition = yCoordinate;
+	    nextReferencePartition = yCoordinate;
+	  }
+	  
+	  if (positive){ startCounter = prevReferencePartition; endCounter = nextReferencePartition; }
+	  else { startCounter = nextReferencePartition ; endCounter = prevReferencePartition ; }
+	  
+	  for (int currentCounter = startCounter ; currentCounter <= endCounter; currentCounter ++ ){
+	    assert(currentCounter > 0 && currentCounter < 4);
+	    vectorOfpartitionsAndHit.push_back(currentCounter);    
+	  }        
+	}
+	
+	else{
+	  vectorOfpartitionsAndHit.push_back(this->getChamberNumber(currentChNumber+1)->getXYCoordinatesOfCluster(clusterNum[referenceChambersIncrementor]).at(1));
+	  referenceChambersIncrementor ++;
+	}
+	
+	prevReference = 0 ; nextReference = 0 ; prevReferencePartition = 0 ; nextReferencePartition = 0; currentChamberIsReference = false;
+	//cout << "Chamber " << l+1 << " " <<  coordinates.at(1) << " " << fitfunc->Eval(l+1) << " " << endl;
+	
+	int channelNumberToStore = channelNum;
+	if (channelNumberToStore < 96/this->getChamberNumber(1)->getClones()){
+	  channelNumberToStore += 1;
+	} // add one to represent the fired channel, or none if the channel is on the right border
+
+	vectorOfpartitionsAndHit.push_back(channelNumberToStore); // the last element is the number of the channel
+	
+	/** Debug lines
+	cout << "Chamber is " << currentChNumber+1 << " " ;
+	for (int thesize = 0 ; thesize < vectorOfpartitionsAndHit.size() ; thesize++){
+	  cout << vectorOfpartitionsAndHit.at(thesize) << " " ;
+	}
+	cout << endl;
+	*/
+	
+	mapOfHits[currentChNumber+1] = vectorOfpartitionsAndHit;
+	
+      }      
+    }
+    
+    //histXZ->SaveAs("reconstructed_track.root"); // if one wants to see the track histogram
+    fitfunc->Delete();
+    histXZ->Delete();
     
   }
   
@@ -814,7 +831,6 @@ vector<vector<int> > RPCChambersCluster::getPartitionsVectorForVectorOfReference
     }    
   }  
 }
-
 
 int RPCChambersCluster::getTimeReferenceValueForSiteType(ESiteFileType fileType){
   

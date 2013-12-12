@@ -212,16 +212,6 @@ void firstCompleteTestApplication(int arg_c,char * arg_v[]){
   
 }
 
-int testRecursion(int n, int m){
-  int returnValue;
-  if ((n == 1) || (m == 0) || (n == m))
-  returnValue = 1;
-  else
-  returnValue = testRecursion(n-1,m) + testRecursion(n-1,m-1);
-  return returnValue;
-  
-}
-
 void timeEvolutionStudy(int _argc, char* _argv[]){
   
   string filename=_argv[1],ghentMap = _argv[2];
@@ -331,9 +321,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     vectorOfReferenceChambers.push_back(1); vectorOfReferenceChambers.push_back(4); vectorOfReferenceChambers.push_back(6);
   }
   if(siteType == kIsGENTrawFile){
-    
-    vectorOfReferenceChambers.push_back(1); vectorOfReferenceChambers.push_back(5) ;
-    
+    vectorOfReferenceChambers.push_back(1); vectorOfReferenceChambers.push_back(5);
   }
   
   // map of reconstructed hits within the chambers. 
@@ -353,10 +341,12 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     cout << " Event : " << converter->getEventNumber() << endl;
     // in case of cern file, the first event is empty. so skip for i < 2 since it crashes for no record in the trigger object
     if (siteType == kIsCERNrawFile && i < 2) continue; // skip just once if its CERN file
-    timeWindow = aCluster->getTimeWindowForSiteType(siteType);
     
+    timeWindow = aCluster->getTimeWindowForSiteType(siteType);
     timeReference = aCluster->getTimeReferenceValueForSiteType(siteType);
-    mapOfCurrentEventReconstructedHits = aCluster->getReconstructedHits(vectorOfReferenceChambers,timeWindow,timeReference,2,siteType);
+    bool trackIsVertical = true;
+    
+    mapOfCurrentEventReconstructedHits = aCluster->getReconstructedHits(vectorOfReferenceChambers,timeWindow,timeReference,trackIsVertical,2,siteType);
     
     if (mapOfCurrentEventReconstructedHits.empty()){ // if the map is empty there was no reconstructed track
       //cout << " No track reconstructed for event " << converter->getEventNumber() << endl;
@@ -365,56 +355,38 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     
     else {
       
-      bool writeEfficiency = true;
-      
       for (unsigned totalChambers = 0; totalChambers < aCluster->getNumberOfChambers() ; totalChambers++ ){
 	
 	chamberObj = aCluster->getChamberNumber(totalChambers+1);
 	assert(mapOfCurrentEventReconstructedHits[totalChambers+1].size());
 	vector<double> partitionsAndChannelsVector = mapOfCurrentEventReconstructedHits[totalChambers+1];
-	double channelNum = partitionsAndChannelsVector.at(partitionsAndChannelsVector.size()-1); // the last element is the channel
-	int partitionNum = partitionsAndChannelsVector.at(0);
-	bool channelGotHit = chamberObj->isMatchingFiredChannelInPartition(channelNum,partitionNum,5);
-	chamberObj->incrementEfficiencyCounters(channelGotHit);
+	int channelNum = partitionsAndChannelsVector.at(partitionsAndChannelsVector.size()-1); // the last element is the channel
+	int partitionNum = 0;
+	bool channelGotHit = false;
 	int chNum = channelNum;
-	chNum += 1; // add one to represent the fired channel
 	
-	// make sure the channel reconstructed doesnt goes below 1 and over the channels in one partition
-	
-	// discard cases where the channel number is negative or exceeds the partition channel numbers, those cases are less then 0.02 percents
-	
-	if (channelNum < 0 || channelNum > 96/chamberObj->getClones()){
-	  writeEfficiency = false;
-	  cout << "search for channel " << chNum << " in chamber " << totalChambers+1 << endl; 
+	if (trackIsVertical){
+	  partitionNum = partitionsAndChannelsVector.at(0); // if vertical track, there is only one entry for partition
+	  channelGotHit = chamberObj->isMatchingFiredChannelInPartition(channelNum,partitionNum,5);
+	  chNum += (partitionNum - 1)*(96/chamberObj->getClones());
+	  chamberObj->findResidualValueForChannelInPartitions(channelNum,partitionsAndChannelsVector);
+	  // if the channel doesn't got any hits, search for a hits in the next partitions and write 
+	  if (!channelGotHit){
+	    chamberObj->findResidualsInNeighbourPartitionsForChannelInPartition(partitionsAndChannelsVector);
+	  }
+	  chamberObj->getChannel(chNum)->incrementEfficiencyCounters(channelGotHit);
 	}
-	
-	/*
-	chNum += (partitionNum - 1)*(96/chamberObj->getClones());
-	
-	//allTracks++;
-	if ( chNum < 1 || chNum > 96 ) { 
-	  badChannelNumberFound = true ;
-	  if ( chNum < 0 ){
-	    negativeChannelNumberFound = true;
+	else {
+	  for (unsigned partitionCounter = 0 ; partitionCounter < partitionsAndChannelsVector.size() - 1; partitionCounter++){
+	    partitionNum = partitionsAndChannelsVector.at(partitionCounter);
+	    channelGotHit = chamberObj->isMatchingFiredChannelInPartition(channelNum,partitionNum,5);
+	    if(channelGotHit) break;
 	  }
-	  if (chNum > 96 ){
-	    excessiveChNumberFound = true;	    
-	  }
-	  continue ;
 	  
+	  chamberObj->incrementAbsoluteChannelCounters(channelGotHit,channelNum);
 	}
 	
-	//cout << " search for channel : " << chNum << endl;
-	*/
-	
-	if (!writeEfficiency) continue;
-	
-	chamberObj->findResidualValueForChannelInPartitions(channelNum,partitionsAndChannelsVector);
-	// if the channel doesn't got any hits, search for a hits in the next partitions and write 
-	if (!channelGotHit){
-	  chamberObj->findResidualsInNeighbourPartitionsForChannelInPartition(partitionsAndChannelsVector);
-	}
-	chamberObj->getChannel(chNum)->incrementEfficiencyCounters(channelGotHit);
+	chamberObj->incrementEfficiencyCounters(channelGotHit);
 	
       }
       
@@ -434,7 +406,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   cout << " bad reconstructed channel number " << double(double(trackWithBadReco)/double(allTracks)) * 100 << endl;
   
   TH1F * efficiencyHisto,* efficiencyDistro, * residualsHisto, * part_residual_histo;
-  TH1F * tracksDistributionHisto;  
+  TH1F * tracksDistributionHisto,* absolute_channel_efficiency_histo;  
   string efficiency_title ;
   string track_title ;
   
@@ -446,6 +418,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     
     stringstream ss;
     ss << chamberNum+1;
+    
     efficiency_title = "efficiencyHisto_" + ss.str()+".root";
     string efficiency_title_pic = "efficiencyHisto_" + ss.str()+".png";
     track_title = "trackHisto_" + ss.str()+".root";
@@ -453,6 +426,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     string eff_distro_title = "efficiency_distro_" + ss.str()+".root";
     string res_distro_title = "residuals_distro_" + ss.str()+".root";
     string part_res_distro_title = "partition_residual_distro" + ss.str() + ".root" ;
+    string absolute_channel_efficiency = "abs_channel_eff_" + ss.str() + ".root";
     
     ss.clear();
     efficiencyHisto = aCluster->getChamberNumber(chamberNum+1)->getHistogramOfChannelsEfficiency(efficiency_title.c_str());
@@ -476,6 +450,10 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     part_residual_histo = aCluster->getChamberNumber(chamberNum+1)->getNeighbourPartitionHitsHistogram(part_res_distro_title.c_str());
     part_residual_histo->SaveAs(part_res_distro_title.c_str());
     
+    absolute_channel_efficiency_histo = aCluster->getChamberNumber(chamberNum+1)->getHistogramOfAbsoluteChannelsEfficiency(absolute_channel_efficiency.c_str());
+    absolute_channel_efficiency_histo->SaveAs(absolute_channel_efficiency.c_str());
+    
+    absolute_channel_efficiency_histo->Delete();
     part_residual_histo->Delete();
     residualsHisto->Delete();
     efficiencyDistro->Delete();
