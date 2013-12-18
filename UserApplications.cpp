@@ -318,7 +318,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   vector<int> vectorOfReferenceChambers;
   // for purpose of study, use two vectors for two different files. this to be assigned when the calibration object is introduced
   if(siteType == kIsCERNrawFile){
-    vectorOfReferenceChambers.push_back(1); vectorOfReferenceChambers.push_back(4); vectorOfReferenceChambers.push_back(6);
+    vectorOfReferenceChambers.push_back(1); vectorOfReferenceChambers.push_back(2); vectorOfReferenceChambers.push_back(8);
   }
   if(siteType == kIsGENTrawFile){
     vectorOfReferenceChambers.push_back(1); vectorOfReferenceChambers.push_back(5);

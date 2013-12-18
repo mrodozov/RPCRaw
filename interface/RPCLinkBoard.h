@@ -8,7 +8,7 @@
 #include "RollCore/ExtendedRoll.h"
 #include "RPCLinkBoardChannel.h"
 #include "RPCLinkBoardChip.h"
-
+#include "RPCChamberConditions.h"
 
 class RPCLinkBoard : public ExRoll {
   
@@ -25,6 +25,7 @@ class RPCLinkBoard : public ExRoll {
   vector<double> residulsInNeighbourParts;
   vector<int> _nonPartitionEfficiencyChannelEfficientTracks;
   vector<int> _nonPartitionEfficiencyChannelAllTracks;
+  RPCChamberConditionsBase * _chamberConditions;
   
 protected:
   
@@ -68,6 +69,10 @@ public:
   const bool & isReferenceChamber() { return this->_isReferenceChamber; }
   
   int getEthaPartitionForChannel(const int & channelNumber); // get the clone number for given channel
+  
+  RPCChamberConditionsBase * getBasicChamberConditions(); // returns base pointer that could execute any of the abstract methods regardless of their concrete implementation
+  void setCurrentRunDetails(RPCChamberConditionsBase * runDetails); // asign allocated condition object to the base pointer
+  virtual RPCChamberConditions * getExtendedChamberConditions(); // returns specific type with additional implementation if any. could be redefined what type to return.
   
   // Cluster methods 
   

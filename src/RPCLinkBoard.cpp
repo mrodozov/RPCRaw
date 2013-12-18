@@ -48,7 +48,7 @@ RPCLinkBoard::RPCLinkBoard () : ExRoll() {
 
 RPCLinkBoard::RPCLinkBoard (const string& RollOnlineName) : ExRoll(RollOnlineName) {
   // set whats required here
-  
+  this->_chamberConditions = NULL;
 }
 
 RPCLinkBoard::~RPCLinkBoard (){
@@ -462,5 +462,19 @@ TH1F * RPCLinkBoard::getHistogramOfAbsoluteChannelsEfficiency(const string & his
   
   return histo;
   
+}
+
+/** run configuration object methods */
+
+RPCChamberConditionsBase * RPCLinkBoard::getBasicChamberConditions(){
+  return this->_chamberConditions;
+}
+
+RPCChamberConditions * RPCLinkBoard::getExtendedChamberConditions(){
+  return dynamic_cast<RPCChamberConditions*>(this->_chamberConditions);
+}
+
+void  RPCLinkBoard::setCurrentRunDetails(RPCChamberConditionsBase * runDetails){
+  this->_chamberConditions = runDetails;
 }
 

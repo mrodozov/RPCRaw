@@ -7,7 +7,7 @@
 
 #include "interface/RPCChambersCluster.h"
 #include "interface/RPCRawConverter.h"
-#include "interface/RPCDBReader.h"
+#include "interface/RPCConfigObject.h"
 
 void currentTests(int _argc,char * arguments[]);// substitution of the main function. use this for tests
 

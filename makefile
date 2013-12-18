@@ -23,27 +23,27 @@ endif
 COMPILE_AS_CPP11 = "-std=c++11"
 
 LBobjects = build/DataObject.o build/Strip.o build/Roll.o build/ExtendedStrip.o build/ExtendedRoll.o build/Chip.o build/RPCLinkBoardChannel.o build/RPCLinkBoard.o build/RPCLinkBoardChip.o build/RPCChambersCluster.o
-DBobjects = build/RPCDBReader.o
+ConfigObjects = build/RPCDBReader.o build/RPCConfigObject.o build/RPCChamberConditions.o 
 RAWobjects = build/RPCRawConverter.o
 LBobjects_names = DataObject.o Strip.o Roll.o ExtendedStrip.o ExtendedRoll.o Chip.o RPCLinkBoardChannel.o RPCLinkBoard.o RPCLinkBoardChip.o RPCChambersCluster.o
-DBobjects_names = RPCDBReader.o
 RAWobjects_names = RPCRawConverter.o
+ConfigObjects_names = RPCDBReader.o RPCConfigObject.o RPCChamberConditions.o 
 
 boost_libs = -lboost_thread-mt
 
 all: mainApp
 
-mainApp: main.cpp RPCRawConverter.o RPCDBReader.o UserApplications.o $(LBobjects_names)
-	$(CC) main.cpp $(CFLAGS) -o mainApp build/RPCRawConverter.o build/RPCDBReader.o build/UserApplications.o $(ROOTINC) $(ORACLE_INCDIR) $(ROOTLIBS) $(ORACLE_LIBS) $(LBobjects) $(COMPILE_AS_CPP11)
+mainApp: main.cpp RPCRawConverter.o UserApplications.o $(LBobjects_names) $(ConfigObjects_names)
+	$(CC) main.cpp $(CFLAGS) -o mainApp build/RPCRawConverter.o build/UserApplications.o $(ROOTINC) $(ORACLE_INCDIR) $(ROOTLIBS) $(ORACLE_LIBS) $(ConfigObjects) $(LBobjects) $(COMPILE_AS_CPP11)
 
-UserApplications.o : UserApplications.cpp $(LBobjects_names) $(DBobjects_names) $(RAWobjects_names)
+UserApplications.o : UserApplications.cpp $(LBobjects_names) $(ConfigObjects_names) $(RAWobjects_names)
 	$(CC) $(CFLAGS) -c -Wall UserApplications.cpp -o build/UserApplications.o $(ROOTINC) 
 
 RPCRawConverter.o : src/RPCRawConverter.cpp
 	$(CC) $(CFLAGS) -c -Wall src/RPCRawConverter.cpp -o build/RPCRawConverter.o $(ROOTINC)
 
 RPCDBReader.o : src/RPCDBReader.cpp
-	$(CC) $(CFLAGS) -c -Wall src/RPCDBReader.cpp -o build/RPCDBReader.o $(ORACLE_INCDIR)
+	$(CC) $(CFLAGS) -c -Wall src/RPCDBReader.cpp -o build/RPCDBReader.o
 
 Chip.o : src/RollCore/Chip.cpp ExtendedRoll.o
 	$(CC) $(CFLAGS) -c -Wall src/RollCore/Chip.cpp -o build/Chip.o $(ROOTINC)
@@ -74,6 +74,12 @@ RPCLinkBoardChip.o : Chip.o
 
 RPCChambersCluster.o : RPCLinkBoard.o
 	$(CC) $(CFLAGS) -c src/RPCChambersCluster.cpp -o build/RPCChambersCluster.o $(ROOTINC)
+
+RPCConfigObject.o : src/RPCConfigObject.cpp RPCChamberConditions.o 
+	$(CC) $(CFLAGS) -c src/RPCConfigObject.cpp -o build/RPCConfigObject.o
+
+RPCChamberConditions.o : src/RPCChamberConditions.cpp
+	$(CC) $(CFLAGS) -c src/RPCChamberConditions.cpp -o build/RPCChamberConditions.o 
 
 clean:
 	rm mainApp build/*.o *~

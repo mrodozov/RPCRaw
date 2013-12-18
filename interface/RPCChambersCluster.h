@@ -19,6 +19,7 @@
 
 #include "RPCLinkBoard.h"
 #include "RPCRawTypes.h"
+#include "RPCConfigObject.h"
 
 class RPCChambersCluster {
   
@@ -64,7 +65,7 @@ public:
   
   /** helper method to get the vector of partitions between two references, with reference vectors for 1. number of reference chambers 2. cluster numbers in the reference chambers   */
   vector<vector<int> > getPartitionsVectorForVectorOfReferenceChambers(const int & chamberNumber,const vector<int> & vectorOfReferenceChambers,const vector<int> & vectorOfClusterNumbersCombination);
-  
+  void configureChambersWithConfigObject(RPCRunConfig * runConfigObject);
   
 };
 

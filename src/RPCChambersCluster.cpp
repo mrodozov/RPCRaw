@@ -939,3 +939,9 @@ int RPCChambersCluster::getTimeWindowForSiteType(ESiteFileType siteType){
   return timeWindow;
 }
 
+void RPCChambersCluster::configureChambersWithConfigObject(RPCRunConfig * runConfigObject){
+  for (int i = 0 ; i < this->getNumberOfChambers() ; i++){
+    this->getChamberNumber(i+1)->setCurrentRunDetails(runConfigObject->getConditionsObjectForChamber(i+1));
+  }
+}
+
