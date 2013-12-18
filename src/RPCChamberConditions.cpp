@@ -74,11 +74,11 @@ const vector<double> & RPCChamberConditions::getGapsVset() {
   return this->gapsVset;
 }
 
-void RPCChamberConditions::setFEBtresholds(const vector<int> & FEBtresholds) {
+void RPCChamberConditions::setFEBTresholds(const vector<int> & FEBtresholds) {
   this->_FEBtresholds = FEBtresholds;
 }
 
-const vector<int> & RPCChamberConditions::getFEBtresholds() {
+const vector<int> & RPCChamberConditions::getFEBTresholds() {
   return this->_FEBtresholds;
 }
 
@@ -104,10 +104,10 @@ const string & RPCChamberConditions::getLabelForGap(const int & gapNumber){
   return this->getGapLabels().at(gapNumber-1);
 }
 
-const int & RPCChamberConditions::getFEBtresholdForGap(const int & gapNumber){
-  
+const int & RPCChamberConditions::getFEBTresholdForBoard(const int & febNumber){
+  assert(this->_FEBtresholds.size() <= febNumber);
+  return this->_FEBtresholds.at(febNumber-1);
 }
-
 
 RPCChamberConditions::RPCChamberConditions(){
   

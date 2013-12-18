@@ -40,7 +40,14 @@ int main(int argc,char ** argv){
   cout << aBoard->getBasicChamberConditions()->getGapsVmon().at(2) << endl;
   cout << aBoard->getExtendedChamberConditions()->getHVmonForGap(3) << endl;
   
-  delete aBoard;
+  //delete aBoard;
+  
+  RPCRunConfig * config = new RPCRunConfig();
+  vector<RPCChamberConditionsBase*> conditionsVector;
+  conditionsVector.push_back(conditions);
+  config->setChamberDetails(conditionsVector);
+  cout << config->getBasicConditionsForChamber(1)->getGapsVmon().at(2) << endl;
+  
   
   return 0;
 }

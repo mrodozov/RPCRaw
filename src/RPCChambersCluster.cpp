@@ -3,8 +3,6 @@
 */
 
 #include "../interface/RPCChambersCluster.h"
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
 
 using namespace std;
 using namespace ROOT::Math;
@@ -941,7 +939,7 @@ int RPCChambersCluster::getTimeWindowForSiteType(ESiteFileType siteType){
 
 void RPCChambersCluster::configureChambersWithConfigObject(RPCRunConfig * runConfigObject){
   for (int i = 0 ; i < this->getNumberOfChambers() ; i++){
-    this->getChamberNumber(i+1)->setCurrentRunDetails(runConfigObject->getConditionsObjectForChamber(i+1));
+    this->getChamberNumber(i+1)->setCurrentRunDetails(runConfigObject->getBasicConditionsForChamber(i+1));
   }
 }
 

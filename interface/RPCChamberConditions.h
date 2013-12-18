@@ -45,7 +45,7 @@ public:
   virtual const vector<double> & getGapsVmon() = 0 ;
   virtual void setGapsVset(const vector<double> & gapsVset) = 0 ;
   virtual const vector<double> & getGapsVset() = 0 ;
-  virtual void setFEBtresholds(const vector<int> & FEBtresholds) = 0 ;
+  virtual void setFEBTresholds(const vector<int> & FEBtresholds) = 0 ;
   virtual const vector<int> & getFEBTresholds() = 0 ;
   
   RPCChamberConditionsBase();
@@ -77,8 +77,8 @@ public:
   const vector<double> & getGapsVmon() ;
   void setGapsVset(const vector<double> & gapsVset) ;
   const vector<double> & getGapsVset() ;
-  void setFEBtresholds(const vector<int> & FEBtresholds) ;
-  const vector<int> & getFEBtresholds() ;
+  void setFEBTresholds(const vector<int> & FEBtresholds) ;
+  const vector<int> & getFEBTresholds() ;
   
   /** additional methods */
   
@@ -86,7 +86,7 @@ public:
   const double & getHVsetForGap(const int & gapNumber);
   const double & getCurrentForGap(const int & gapNumber);
   const string & getLabelForGap(const int & gapNumber);
-  const int & getFEBtresholdForGap(const int & gapNumber);
+  const int & getFEBTresholdForBoard(const int & febNumber);
   
   RPCChamberConditions();
   ~RPCChamberConditions();
