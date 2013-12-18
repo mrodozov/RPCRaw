@@ -58,7 +58,7 @@ RPCLinkBoard::~RPCLinkBoard (){
   delete [] this->getStripCollection();
   this->strips = NULL;
   //cout << " RPCLinkBoard destructor called " << endl;
-   
+  
 }
 
 // chip methods. chip objects are grouping the chamber channels (strips) into pack of 8, and also provide several common methods to the group

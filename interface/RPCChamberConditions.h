@@ -4,6 +4,7 @@
 #include <string>
 #include <stdlib.h>
 #include <vector>
+#include <iostream>
 #include <assert.h>
 
 using namespace std;
@@ -68,19 +69,27 @@ public:
   const string & getChamberName() ;
   void setShelfNumber (const int & shelfNumber) ;
   const int & getShelfNumber () ;
-  void setGapLabels(const vector<string> & labels) = 0 ;
-  const vector<string> & getGapLabels() = 0;
-  void setGapsCurrent(const vector<double> & currents) = 0 ;
-  const vector<double> & getGapsCurrent() = 0;
-  void setGapsVmon(const vector<double> & gapsVmon) = 0 ;
-  const vector<double> & getGapsVmon() = 0 ;
-  void setGapsVset(const vector<double> & gapsVset) = 0 ;
-  const vector<double> & getGapsVset() = 0 ;
-  void setFEBtresholds(const vector<int> & FEBtresholds) = 0 ;
-  const vector<int> & getFEBTresholds() = 0 ;
+  void setGapLabels(const vector<string> & labels);
+  const vector<string> & getGapLabels();
+  void setGapsCurrent(const vector<double> & currents);
+  const vector<double> & getGapsCurrent();
+  void setGapsVmon(const vector<double> & gapsVmon);
+  const vector<double> & getGapsVmon() ;
+  void setGapsVset(const vector<double> & gapsVset) ;
+  const vector<double> & getGapsVset() ;
+  void setFEBtresholds(const vector<int> & FEBtresholds) ;
+  const vector<int> & getFEBtresholds() ;
   
   /** additional methods */
+  
   const double & getHVmonForGap(const int & gapNumber);
+  const double & getHVsetForGap(const int & gapNumber);
+  const double & getCurrentForGap(const int & gapNumber);
+  const string & getLabelForGap(const int & gapNumber);
+  const int & getFEBtresholdForGap(const int & gapNumber);
+  
+  RPCChamberConditions();
+  ~RPCChamberConditions();
   
 };
 

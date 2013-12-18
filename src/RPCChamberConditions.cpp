@@ -6,6 +6,10 @@ RPCChamberConditionsBase::~RPCChamberConditionsBase(){
   
 }
 
+RPCChamberConditionsBase::RPCChamberConditionsBase (){
+  
+}
+
 void RPCChamberConditions::setHVmon(const int & hvmonvalue){
   this->_hvMon = hvmonvalue;
 }
@@ -74,7 +78,7 @@ void RPCChamberConditions::setFEBtresholds(const vector<int> & FEBtresholds) {
   this->_FEBtresholds = FEBtresholds;
 }
 
-const vector<int> & RPCChamberConditions::getFEBTresholds() {
+const vector<int> & RPCChamberConditions::getFEBtresholds() {
   return this->_FEBtresholds;
 }
 
@@ -83,5 +87,39 @@ const vector<int> & RPCChamberConditions::getFEBTresholds() {
 const double & RPCChamberConditions::getHVmonForGap(const int & gapNumber){
   assert(this->getGapsVmon().size() <= gapNumber);
   return this->getGapsVmon().at(gapNumber-1);
+}
+
+const double & RPCChamberConditions::getHVsetForGap(const int & gapNumber){
+  assert(this->getGapsVset().size() <= gapNumber);
+  return this->getGapsVset().at(gapNumber-1);
+}
+
+const double & RPCChamberConditions::getCurrentForGap(const int & gapNumber){
+  assert(this->getGapsCurrent().size() <= gapNumber);
+  return this->getGapsCurrent().at(gapNumber-1);
+}
+
+const string & RPCChamberConditions::getLabelForGap(const int & gapNumber){
+  assert(this->getGapLabels().size() <= gapNumber);
+  return this->getGapLabels().at(gapNumber-1);
+}
+
+const int & RPCChamberConditions::getFEBtresholdForGap(const int & gapNumber){
+  
+}
+
+
+RPCChamberConditions::RPCChamberConditions(){
+  
+}
+
+RPCChamberConditions::~RPCChamberConditions(){
+  
+  this->gapsCurrent.clear();
+  this->gapsLabel.clear();
+  this->gapsVmon.clear();
+  this->gapsVset.clear();
+  this->_FEBtresholds.clear();
+  
 }
 
