@@ -9,10 +9,15 @@
 #include <stdio.h>
 #include <thread>
 //#include <boost/thread.hpp> // install on MacOSX, it exists on Linux
+#include <thread>
 #include "UserApplications.h" // it includes all headers anyway, even occi
+#include <boost/property_tree/ptree_fwd.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
 using namespace std;
 
+typedef basic_ptree< std::string, std::string > ptree;
 
 int main(int argc,char ** argv){
   
@@ -20,33 +25,14 @@ int main(int argc,char ** argv){
   //testDBconnection(argc,argv);
   //clusterObjectTester(argc,argv);
   //firstCompleteTestApplication(argc,argv);
-  //timeEvolutionStudy(argc,argv);
-  //localEfficiencyStudy(argc,argv);
+  //std::thread first (timeEvolutionStudy,argc,argv);
+  //thread first ( localEfficiencyStudy,argc,argv);
+  //thread second (testDBconnection,argc,argv);
   //converterTests(argc,argv);
+  //configObjectsTest(argc,argv);
   
-  RPCLinkBoard * aBoard = new RPCLinkBoard(kRPC_RE_4_2_chamber);
-  aBoard->allocAndInit();
-  vector<double> vmons;
+  //first.join();  
   
-  vmons.push_back(0.5);
-  vmons.push_back(0.6);
-  vmons.push_back(0.7);
-  
-  
-  RPCChamberConditions * conditions = new RPCChamberConditions();
-  aBoard->setCurrentRunDetails(conditions);  
-  aBoard->getBasicChamberConditions()->setGapsVmon(vmons);
-  
-  cout << aBoard->getBasicChamberConditions()->getGapsVmon().at(2) << endl;
-  cout << aBoard->getExtendedChamberConditions()->getHVmonForGap(3) << endl;
-  
-  //delete aBoard;
-  
-  RPCRunConfig * config = new RPCRunConfig();
-  vector<RPCChamberConditionsBase*> conditionsVector;
-  conditionsVector.push_back(conditions);
-  config->setChamberDetails(conditionsVector);
-  cout << config->getBasicConditionsForChamber(1)->getGapsVmon().at(2) << endl;
   
   
   return 0;

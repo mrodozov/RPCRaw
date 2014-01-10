@@ -2,15 +2,7 @@
  * created on : 05.08.13
  * 
  * This class has to be factory class for RPCLinkBoard objects. The analysis goes trough its methods
- * Nice idea is to implement counters, then to write the results for each event in the chambers 
- * in the cluster with incrementing the counters. 
  * 
- * Another nice idea is to separate the converter class to analyze each event on different thread.
- * If the converter has queue of analyzed events the Cosmics Stand could create new chambers for each 
- * event when it received an notification that new event is avalilable , make the analysis for this event.
- * As many threads as we have we could create chamber stack for them and each chamber stack would analyze
- * the events converted by each thread. Each stack with analyzed results would be put in a queue to wait
- * become first in the queue to write the results in the histograms.
  * 
 */
 

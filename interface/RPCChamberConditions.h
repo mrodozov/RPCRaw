@@ -1,3 +1,7 @@
+/** author : Mircho Rodozov, mrodozov@cern.ch 
+ * created on : 18.12.13
+*/
+
 #ifndef RPC_CHAMBER_COND_H
 #define RPC_CHAMBER_COND_H
 
@@ -21,6 +25,7 @@ protected:
   int _hvSet;
   int _hvMon;
   int _shelfNumber;
+  bool _isReference;
   vector<string> gapsLabel;
   vector<double> gapsCurrent;
   vector<double> gapsVmon;
@@ -47,6 +52,8 @@ public:
   virtual const vector<double> & getGapsVset() = 0 ;
   virtual void setFEBTresholds(const vector<int> & FEBtresholds) = 0 ;
   virtual const vector<int> & getFEBTresholds() = 0 ;
+  virtual void setIsReference(const bool & isReference)=0;
+  virtual const bool & getIsReference()=0;
   
   RPCChamberConditionsBase();
   virtual ~RPCChamberConditionsBase();
@@ -79,7 +86,8 @@ public:
   const vector<double> & getGapsVset() ;
   void setFEBTresholds(const vector<int> & FEBtresholds) ;
   const vector<int> & getFEBTresholds() ;
-  
+  void setIsReference(const bool & isReference);
+  const bool & getIsReference();
   /** additional methods */
   
   const double & getHVmonForGap(const int & gapNumber);

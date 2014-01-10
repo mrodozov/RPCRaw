@@ -23,4 +23,6 @@ void localEfficiencyStudy(int _argc,char * _argv[]);
 
 void converterTests(int _argc,char * _argv[]);
 
+void configObjectsTest(int _argc,char * _argv[]);
+
 #endif

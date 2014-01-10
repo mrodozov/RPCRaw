@@ -1,3 +1,7 @@
+/** author : Mircho Rodozov, mrodozov@cern.ch 
+ * created on : 18.12.13
+*/
+
 #include "../interface/RPCChamberConditions.h"
 
 using namespace std;
@@ -107,6 +111,14 @@ const string & RPCChamberConditions::getLabelForGap(const int & gapNumber){
 const int & RPCChamberConditions::getFEBTresholdForBoard(const int & febNumber){
   assert(this->_FEBtresholds.size() <= febNumber);
   return this->_FEBtresholds.at(febNumber-1);
+}
+
+void RPCChamberConditions::setIsReference(const bool & isReference){
+  this->_isReference = isReference;
+}
+
+const bool &  RPCChamberConditions::getIsReference(){
+  return this->_isReference;
 }
 
 RPCChamberConditions::RPCChamberConditions(){

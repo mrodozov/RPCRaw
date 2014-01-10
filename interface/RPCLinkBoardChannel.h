@@ -38,6 +38,8 @@ public:
   void resetEfficiencyCounters();
   const int & getAllTracks () const;// { return this->allTracks;}
   const int & getEfficientTracks () const;// { return this->efficientTracks;}
+  const int & getLinkBoardChannelNumberInChamber() { return this->getOnlineNumber() ; } // returns the number of the channel within the chamber (so called online number), which is different from the strip number. Between 1 and 96
+  const int & getStripNumberInRoll() { return this->getOfflineNumber(); } // returns the number of the channel within the Roll (CMSSW convention). Strip objects within one chamber may have the same strip number as another Strip object from the same chamber, but each number is specified for given partition, where the combination of partition number (or label) and the strip number is always unique
   
 };
 

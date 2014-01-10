@@ -4,7 +4,7 @@
 
 #include "UserApplications.h"
 #include <occi.h>
-#include <json/json.h>
+//#include <json/json.h>
 
 using namespace std;
 using namespace oracle::occi;
@@ -139,8 +139,8 @@ void firstCompleteTestApplication(int arg_c,char * arg_v[]){
   
   string filename=arg_v[1],ghentMap = arg_v[2];
   int numberOfEventsToUse = atoi(arg_v[3]);
-  TFile * cernfile = new TFile(filename.c_str());
-  RPCRawConverter * converter = new RPCRawConverter(cernfile);
+  TFile * rawdatafile = new TFile(filename.c_str());
+  RPCRawConverter * converter = new RPCRawConverter(rawdatafile);
   converter->setGhentTDCtoRPCmap(ghentMap);
   int numberOfChambersNeeded = converter->getNumberOfChamberObjects();
   int numberOfTriggerObjsNeeded = converter->getNumberOfTriggerObjects();
@@ -204,8 +204,8 @@ void firstCompleteTestApplication(int arg_c,char * arg_v[]){
   histPointer[8]->SaveAs("PartitionTypes.root");
   histPointer[9]->SaveAs("SingleDoubleHits.root");
   
-  cernfile->Close("R");
-  cernfile->Delete();
+  rawdatafile->Close("R");
+  rawdatafile->Delete();
   
   delete aCluster;
   delete converter;
@@ -214,12 +214,12 @@ void firstCompleteTestApplication(int arg_c,char * arg_v[]){
 
 void timeEvolutionStudy(int _argc, char* _argv[]){
   
-  string filename=_argv[1],ghentMap = _argv[2];
+  string filename=_argv[6],ghentMap = _argv[2];
   int numberOfEventsToUse = atoi(_argv[3]);
   string histoToSave = _argv[4];
-  unsigned chamberToTest = atoi(_argv[5]);
-  TFile * cernfile = new TFile(filename.c_str());
-  RPCRawConverter * converter = new RPCRawConverter(cernfile);
+  unsigned chamberToTest = atoi(_argv[5]); // to be given from 1 not from 0
+  TFile * rawdatafile = new TFile(filename.c_str());
+  RPCRawConverter * converter = new RPCRawConverter(rawdatafile);
   converter->setGhentTDCtoRPCmap(ghentMap);
   int numberOfChambersNeeded = converter->getNumberOfChamberObjects();
   int numberOfTriggerObjsNeeded = converter->getNumberOfTriggerObjects();
@@ -238,10 +238,22 @@ void timeEvolutionStudy(int _argc, char* _argv[]){
   RPCChamber * aChamber;
   vector<unsigned> vectorWithHits;
   int timeDifference = 0;
+  unsigned startBin = 0 , stopBin = 0, numofbins = 0;
+  ESiteFileType site = converter->getCurrentFileType();
+  if (site == kIsCERNrawFile){
+    startBin = 10000 ; stopBin = 25000; numofbins = 1500;
+  }
+  else if (site == kIsGENTrawFile) {
+    startBin = 100 ; stopBin = 1000; numofbins = 1500;
+  }
+  else {
+    // its barc file , specify it
+  }
   
-  TH2F * histoOfFirstChamber = new TH2F("","",1500,100,1000,98,0,98);
-  TH2F * histoOfMultiHits = new TH2F("  ","",1500,100,1000,98,0,98);
-  TH2F * histoOfFirstHits = new TH2F("   ","",1500,100,1000,98,0,98);
+  
+  TH2F * histoOfFirstChamber = new TH2F("","",numofbins,startBin,stopBin,98,0,98);
+  TH2F * histoOfMultiHits = new TH2F("  ","",numofbins,startBin,stopBin,98,0,98);
+  TH2F * histoOfFirstHits = new TH2F("   ","",numofbins,startBin,stopBin,98,0,98);
   
   for (int i = 0 ; i < numberOfEventsToUse ; i++ , converter->nextEvent()){
     
@@ -258,12 +270,14 @@ void timeEvolutionStudy(int _argc, char* _argv[]){
 	  aChannel = aChamber->getChannel(totalChannels+1);
 	  vectorWithHits = aChannel->getHits();
 	  for (unsigned j=0 ; j < vectorWithHits.size() ; j++){    
-	    if(totalNumberOfChambers == chamberToTest){
-	      histoOfFirstChamber->Fill(vectorWithHits.at(j),aChannel->getOnlineNumber());
+	    assert(chamberToTest >= 0); // chamber number to be given with human number starting from 1, not from 0
+	    if(totalNumberOfChambers == chamberToTest-1 ){
+	      
+	      histoOfFirstChamber->Fill(vectorWithHits.at(j),aChannel->getLinkBoardChannelNumberInChamber());
 	      cout << aChannel->getOnlineNumber() << " " << vectorWithHits.at(j) << " " << endl;      
 	      if(aChannel->hasMultipleHits() && j < vectorWithHits.size()-1){
 		// only the hits after the first
-		histoOfMultiHits->Fill(vectorWithHits.at(j+1),aChannel->getOnlineNumber());
+		histoOfMultiHits->Fill(vectorWithHits.at(j+1),aChannel->getLinkBoardChannelNumberInChamber());
 		timeDifference = vectorWithHits.at(j+1) - vectorWithHits.at(j);
 		timeEvolutionHisto->Fill(timeDifference/10);
 		cout << vectorWithHits.at(j+1) << " " << vectorWithHits.at(j) << " difference: " << timeDifference << endl;
@@ -280,12 +294,27 @@ void timeEvolutionStudy(int _argc, char* _argv[]){
     }
   }
   
+  histoOfFirstChamber->GetXaxis()->SetTitle("Time of hit");
+  histoOfFirstChamber->GetYaxis()->SetTitle("Channel number");
+  histoOfMultiHits->GetXaxis()->SetTitle("Time of hit");
+  histoOfMultiHits->GetYaxis()->SetTitle("Channel number");
+  histoOfFirstHits->GetXaxis()->SetTitle("Time of hit");
+  histoOfFirstHits->GetYaxis()->SetTitle("Channel number");
   histoOfFirstHits->SaveAs("firstHitsOnly.root");
+  histoOfFirstHits->SetOption("lego");
+  histoOfFirstHits->SaveAs("firstHitsOnly3D.root");
   histoOfMultiHits->SaveAs("secondaryHitsOnly.root");
+  histoOfMultiHits->SetOption("lego");
+  histoOfMultiHits->SaveAs("secondaryHitsOnly3D.root");
   histoOfFirstChamber->SaveAs("firstChamberMap.root");
+  histoOfFirstChamber->SetOption("lego");
+  histoOfFirstChamber->SaveAs("firstChamberMap3D.root");
+  
   histoToSave = histoToSave+".root";
   timeEvolutionHisto->SaveAs(histoToSave.c_str());  
   
+  rawdatafile->Close("R");
+  rawdatafile->Delete();
 }
 
 /** Single function to study the efficiency. implement the calibration object to read the text based run details. 
@@ -297,11 +326,17 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   
   string filename=arg_v[1],ghentMap = arg_v[2];
   int numberOfEventsToUse = atoi(arg_v[3]);
-  TFile * cernfile = new TFile(filename.c_str());
-  RPCRawConverter * converter = new RPCRawConverter(cernfile);
+  TFile * rawdatafile = new TFile(filename.c_str());
+  RPCRawConverter * converter = new RPCRawConverter(rawdatafile);
   converter->setGhentTDCtoRPCmap(ghentMap);
   int numberOfChambersNeeded = converter->getNumberOfChamberObjects();
   int numberOfTriggerObjsNeeded = converter->getNumberOfTriggerObjects();
+  
+  /** create a run configuration object */
+  
+  RPCRunConfig * runConfig = new RPCRunConfig();
+  //runConfig->readConfigurationFromJSONDocument();
+  //runConfig->setChamberDetails();
   
   /** */
   
@@ -318,7 +353,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   vector<int> vectorOfReferenceChambers;
   // for purpose of study, use two vectors for two different files. this to be assigned when the calibration object is introduced
   if(siteType == kIsCERNrawFile){
-    vectorOfReferenceChambers.push_back(1); vectorOfReferenceChambers.push_back(2); vectorOfReferenceChambers.push_back(8);
+    vectorOfReferenceChambers.push_back(1); vectorOfReferenceChambers.push_back(5); vectorOfReferenceChambers.push_back(8);
   }
   if(siteType == kIsGENTrawFile){
     vectorOfReferenceChambers.push_back(1); vectorOfReferenceChambers.push_back(5);
@@ -328,12 +363,6 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   map<int,vector<double> > mapOfCurrentEventReconstructedHits;
   
   int allTracks = 0;
-  int trackWithBadReco = 0;
-  int trackWithNegativeChannelNumber = 0;
-  int trackWithExcessiveChannelNumber = 0;
-  bool excessiveChNumberFound = false;
-  bool badChannelNumberFound = false;
-  bool negativeChannelNumberFound = false;  
   
   RPCChamber * chamberObj;
   //RPCLinkBoardChannel * channelObj;
@@ -392,18 +421,10 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
       
       allTracks++;
       
-      if (badChannelNumberFound) { trackWithBadReco++ ; badChannelNumberFound = false; }
-      if (negativeChannelNumberFound){ trackWithNegativeChannelNumber ++ ; negativeChannelNumberFound = false;}
-      if (excessiveChNumberFound){ trackWithExcessiveChannelNumber++; excessiveChNumberFound = false; }
     }
   }
   
   cout << " all reconstructed tracks " << allTracks << endl;
-  cout << "bad with excessive channels " << trackWithExcessiveChannelNumber << endl;
-  cout << "bad with negative channels " << trackWithNegativeChannelNumber << endl;
-  cout << " bad reconstructed with excessive channel number " << double(double(trackWithExcessiveChannelNumber)/double(allTracks)) * 100 << endl;
-  cout << " bad reconstructed with negative channel number " << double(double(trackWithNegativeChannelNumber)/double(allTracks)) * 100 << endl;
-  cout << " bad reconstructed channel number " << double(double(trackWithBadReco)/double(allTracks)) * 100 << endl;
   
   TH1F * efficiencyHisto,* efficiencyDistro, * residualsHisto, * part_residual_histo;
   TH1F * tracksDistributionHisto,* absolute_channel_efficiency_histo;  
@@ -462,6 +483,9 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     
   }
   
+  rawdatafile->Close("R");
+  rawdatafile->Delete();
+  
 }
 
 /** Function for converter class tests - for Mariana and Francesco practice */
@@ -502,6 +526,33 @@ void converterTests(int _argc,char ** arg_v){
     
   }
   
+}
+
+void configObjectsTest(int _argc, char* _argv[]){
+  
+  RPCLinkBoard * aBoard = new RPCLinkBoard(kRPC_RE_4_2_chamber);
+  aBoard->allocAndInit();
+  vector<double> vmons;
+  
+  vmons.push_back(0.5);
+  vmons.push_back(0.6);
+  vmons.push_back(0.7);
+  
+  RPCChamberConditions * conditions = new RPCChamberConditions();
+  aBoard->setCurrentRunDetails(conditions);  
+  aBoard->getBasicChamberConditions()->setGapsVmon(vmons);
+  
+  cout << aBoard->getBasicChamberConditions()->getGapsVmon().at(2) << endl;
+  cout << aBoard->getExtendedChamberConditions()->getHVmonForGap(3) << endl;
+  
+  //delete aBoard;
+  
+  RPCRunConfig * config = new RPCRunConfig();
+  vector<RPCChamberConditionsBase*> conditionsVector;
+  conditionsVector.push_back(conditions);
+  config->setChamberDetails(conditionsVector);
+  cout << config->getBasicConditionsForChamber(1)->getGapsVmon().at(2) << endl;
+
 }
 
 

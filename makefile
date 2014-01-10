@@ -7,20 +7,23 @@ CFLAGS=-g -O0
 KERNEL = $(shell uname)
 ROOTINC = $(shell root-config --cflags) 
 ROOTLIBS = $(shell root-config --glibs)
-# LIBJSON = -ljson_linux_jsoncpp # add the library later with the headers
+LIBJSON = -ljson_linux_jsoncpp # add the library later with the headers
 
 ifeq (Darwin,$(KERNEL))
 # How to install GCC 4.7 on OSX apart from the LLVM-g++ 4.2 version
 # http://stackoverflow.com/questions/14153725/installing-gcc-4-7-1-on-os-x
+# How to install jsoncpp
 	CC=g++-mp-4.7
 	ORACLE_LIBS = -locci -lclntsh 
 	ORACLE_INCDIR = -I /Users/mrodozov/Desktop/OracleSDK/instantclient_11_2/sdk/include/
 else
 	ORACLE_LIBS = -locci -lclntsh -lociei
 	ORACLE_INCDIR = -I /usr/include/oracle/12.1/client/
+#	on lxplus libs and headers are under /afs/cern.ch/sw/lcg/external/oracle/
 endif
 
 COMPILE_AS_CPP11 = "-std=c++11"
+# -std=c++0x when the compiler is 4.3.x to 4.6.x and -std=c++11 when its 4.7 and above
 
 LBobjects = build/DataObject.o build/Strip.o build/Roll.o build/ExtendedStrip.o build/ExtendedRoll.o build/Chip.o build/RPCLinkBoardChannel.o build/RPCLinkBoard.o build/RPCLinkBoardChip.o build/RPCChambersCluster.o
 ConfigObjects = build/RPCDBReader.o build/RPCConfigObject.o build/RPCChamberConditions.o 
@@ -34,7 +37,7 @@ boost_libs = -lboost_thread-mt
 all: mainApp
 
 mainApp: main.cpp RPCRawConverter.o UserApplications.o $(LBobjects_names) $(ConfigObjects_names)
-	$(CC) main.cpp $(CFLAGS) -o mainApp build/RPCRawConverter.o build/UserApplications.o $(ROOTINC) $(ORACLE_INCDIR) $(ROOTLIBS) $(ORACLE_LIBS) $(ConfigObjects) $(LBobjects) $(COMPILE_AS_CPP11)
+	$(CC) main.cpp $(CFLAGS) -o mainApp build/RPCRawConverter.o build/UserApplications.o $(ROOTINC) $(ORACLE_INCDIR) $(ROOTLIBS) $(ORACLE_LIBS) $(ConfigObjects) $(LBobjects) $(LIBJSON) $(COMPILE_AS_CPP11)
 
 UserApplications.o : UserApplications.cpp $(LBobjects_names) $(ConfigObjects_names) $(RAWobjects_names)
 	$(CC) $(CFLAGS) -c -Wall UserApplications.cpp -o build/UserApplications.o $(ROOTINC) 

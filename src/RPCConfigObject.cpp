@@ -1,3 +1,7 @@
+/** author : Mircho Rodozov, mrodozov@cern.ch 
+ * created on : 18.12.13
+*/
+
 #include "../interface/RPCConfigObject.h"
 
 using namespace std;
@@ -15,6 +19,13 @@ void RPCRunConfig::readConfigurationFromFile(const string & fileName) {
 }
 
 void RPCRunConfig::readConfigurationFromDBforRunAndSite(const int & run,const string & site){
+  
+}
+
+void RPCRunConfig::readConfigurationFromJSONDocument(const string & jsonDocument){
+  //Json::Reader jsonReader;
+  //Json::Value resultValue;
+  //jsonReader.parse(jsonDocument,resultValue);
   
 }
 
@@ -84,5 +95,15 @@ void RPCRunConfig::setChamberDetails(const vector<RPCChamberConditionsBase*> & c
 
 RPCDBReader * RPCRunConfig::getDBreader(){
   return this->_dbReader;
+}
+
+vector<int> RPCRunConfig::getVectorOfReferenceChambers(){
+  vector<int> referenceChambers;
+  for(int i=0;i < this->getChambersDetails().size() ; i++){
+    if(this->getBasicConditionsForChamber(i+1)->getIsReference()){
+      referenceChambers.push_back(i+1);
+    }
+  }
+  return referenceChambers;
 }
 
