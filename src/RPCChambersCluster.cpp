@@ -501,7 +501,7 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
   
   if (fileType == kIsCERNrawFile ){
   
-    assert(vectorOfReferenceChambers.size() == 3);
+    assert(vectorOfReferenceChambers.size() == 3 || vectorOfClusterNumberCombinations.size() == 4);
     
     for ( int i = 0 ; i < this->getChamberNumber(vectorOfReferenceChambers[0])->getNumberOfClusters() ; i++ ){
       for( int j = 0 ; j < this->getChamberNumber(vectorOfReferenceChambers[1])->getNumberOfClusters() ; j++ ){
@@ -523,6 +523,8 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
 	}      
       }
     }
+    
+    
   }
   
   if (fileType == kIsBARCrawFile || fileType == kIsGENTrawFile ){

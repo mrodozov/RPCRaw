@@ -4,7 +4,6 @@
 
 #include "UserApplications.h"
 #include <occi.h>
-//#include <json/json.h>
 
 using namespace std;
 using namespace oracle::occi;
@@ -120,18 +119,18 @@ void clusterObjectTester (int _argc,char * _argv[]){
   // memory leak test, its ok not leaking. also checked with valgrind
   */
   
-  RPCChambersCluster * aCluster = new RPCChambersCluster;
-  aCluster->createNewClusterOfChambersWithRE4type(5,kRPC_RE_4_2_chamber);
-  aCluster->deleteAllChambers();
+  RPCChambersCluster * cosmicTestChambersStack = new RPCChambersCluster;
+  cosmicTestChambersStack->createNewClusterOfChambersWithRE4type(5,kRPC_RE_4_2_chamber);
+  cosmicTestChambersStack->deleteAllChambers();
   
-  aCluster->createNewClusterOfChambersWithRE4type(10,kRPC_RE_4_3_chamber);
+  cosmicTestChambersStack->createNewClusterOfChambersWithRE4type(10,kRPC_RE_4_3_chamber);
   // now try to create before erase the previous
-  aCluster->createNewClusterOfChambersWithRE4type(3,kRPC_RE_4_3_chamber);
+  cosmicTestChambersStack->createNewClusterOfChambersWithRE4type(3,kRPC_RE_4_3_chamber);
   // now print the ammount
-  cout << aCluster->getNumberOfChambers() << endl;
+  cout << cosmicTestChambersStack->getNumberOfChambers() << endl;
   // delete
-  aCluster->deleteAllObjects();
-  cout << aCluster->getNumberOfChambers() << endl;
+  cosmicTestChambersStack->deleteAllObjects();
+  cout << cosmicTestChambersStack->getNumberOfChambers() << endl;
   
 }
 
@@ -142,19 +141,19 @@ void firstCompleteTestApplication(int arg_c,char * arg_v[]){
   TFile * rawdatafile = new TFile(filename.c_str());
   RPCRawConverter * converter = new RPCRawConverter(rawdatafile);
   converter->setGhentTDCtoRPCmap(ghentMap);
-  int numberOfChambersNeeded = converter->getNumberOfChamberObjects();
+  int numberOfChamberObjectsNeeded = converter->getNumberOfChamberObjects();
   int numberOfTriggerObjsNeeded = converter->getNumberOfTriggerObjects();
   
   /** */
   
-  RPCChambersCluster * aCluster = new RPCChambersCluster(numberOfChambersNeeded,numberOfTriggerObjsNeeded,kRPC_RE_4_2_chamber);
-  aCluster->setDataSourceForNchambers(numberOfChambersNeeded,converter->getChambersData());
-  aCluster->setDataSourceForNtriggerObjects(numberOfTriggerObjsNeeded,converter->getTriggersData());
+  RPCChambersCluster * cosmicTestChambersStack = new RPCChambersCluster(numberOfChamberObjectsNeeded,numberOfTriggerObjsNeeded,kRPC_RE_4_2_chamber);
+  cosmicTestChambersStack->setDataSourceForNchambers(numberOfChamberObjectsNeeded,converter->getChambersData());
+  cosmicTestChambersStack->setDataSourceForNtriggerObjects(numberOfTriggerObjsNeeded,converter->getTriggersData());
   
   //RPCChamber * singleLBforTest;
   //RPCLinkBoardChannel * singleChannel;
   //RPCChamber * triggerObject;
-  //triggerObject = aCluster->getTriggerObjectNumber(1);
+  //triggerObject = cosmicTestChambersStack->getTriggerObjectNumber(1);
   
   //TGraphErrors * trackGraph;
   //TGraph2DErrors * fitGraph;
@@ -187,11 +186,11 @@ void firstCompleteTestApplication(int arg_c,char * arg_v[]){
     converter->nextEvent();
     cout << " ----------------------------- " << endl;
     cout << " event: " << converter->getEventNumber() << ", chambers data: ";
-    aCluster->variousStudyExperimentalFunction(aFile,histPointer,converter->getEventNumber());
+    cosmicTestChambersStack->variousStudyExperimentalFunction(aFile,histPointer,converter->getEventNumber());
     
   }
   
-  aCluster->deleteAllObjects();
+  cosmicTestChambersStack->deleteAllObjects();
   
   histPointer[0]->SaveAs("ScintTimes1.root");
   histPointer[1]->SaveAs("CoincMinusTop.root");
@@ -207,7 +206,7 @@ void firstCompleteTestApplication(int arg_c,char * arg_v[]){
   rawdatafile->Close("R");
   rawdatafile->Delete();
   
-  delete aCluster;
+  delete cosmicTestChambersStack;
   delete converter;
   
 }
@@ -221,11 +220,11 @@ void timeEvolutionStudy(int _argc, char* _argv[]){
   TFile * rawdatafile = new TFile(filename.c_str());
   RPCRawConverter * converter = new RPCRawConverter(rawdatafile);
   converter->setGhentTDCtoRPCmap(ghentMap);
-  int numberOfChambersNeeded = converter->getNumberOfChamberObjects();
+  int numberOfChamberObjectsNeeded = converter->getNumberOfChamberObjects();
   int numberOfTriggerObjsNeeded = converter->getNumberOfTriggerObjects();
-  RPCChambersCluster * aCluster = new RPCChambersCluster(numberOfChambersNeeded,numberOfTriggerObjsNeeded,kRPC_RE_4_2_chamber);
-  aCluster->setDataSourceForNchambers(numberOfChambersNeeded,converter->getChambersData());
-  aCluster->setDataSourceForNtriggerObjects(numberOfTriggerObjsNeeded,converter->getTriggersData());
+  RPCChambersCluster * cosmicTestChambersStack = new RPCChambersCluster(numberOfChamberObjectsNeeded,numberOfTriggerObjsNeeded,kRPC_RE_4_2_chamber);
+  cosmicTestChambersStack->setDataSourceForNchambers(numberOfChamberObjectsNeeded,converter->getChambersData());
+  cosmicTestChambersStack->setDataSourceForNtriggerObjects(numberOfTriggerObjsNeeded,converter->getTriggersData());
   
   // Setup done, now create histogram to fill. With other words, thats the analisys code
   
@@ -259,9 +258,9 @@ void timeEvolutionStudy(int _argc, char* _argv[]){
     
     cout << "Event : " << converter->getEventNumber() << endl;
     
-    for (unsigned totalNumberOfChambers = 0 ; totalNumberOfChambers < aCluster->getNumberOfChambers() ; totalNumberOfChambers++){
+    for (unsigned totalNumberOfChambers = 0 ; totalNumberOfChambers < cosmicTestChambersStack->getNumberOfChambers() ; totalNumberOfChambers++){
       
-      aChamber = aCluster->getChamberNumber(totalNumberOfChambers+1);
+      aChamber = cosmicTestChambersStack->getChamberNumber(totalNumberOfChambers+1);
       
       for (int totalChannels = 0 ; totalChannels < 96 ; totalChannels++){
 	
@@ -324,12 +323,12 @@ void timeEvolutionStudy(int _argc, char* _argv[]){
 
 void localEfficiencyStudy(int _argc,char ** arg_v){
   
-  string filename=arg_v[1],ghentMap = arg_v[2];
+  string rawdataFilename=arg_v[1],ghentMap = arg_v[2];
   int numberOfEventsToUse = atoi(arg_v[3]);
-  TFile * rawdatafile = new TFile(filename.c_str());
+  TFile * rawdatafile = new TFile(rawdataFilename.c_str());
   RPCRawConverter * converter = new RPCRawConverter(rawdatafile);
   converter->setGhentTDCtoRPCmap(ghentMap);
-  int numberOfChambersNeeded = converter->getNumberOfChamberObjects();
+  int numberOfChamberObjectsNeeded = converter->getNumberOfChamberObjects();
   int numberOfTriggerObjsNeeded = converter->getNumberOfTriggerObjects();
   
   /** create a run configuration object */
@@ -340,9 +339,9 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   
   /** */
   
-  RPCChambersCluster * aCluster = new RPCChambersCluster(numberOfChambersNeeded,numberOfTriggerObjsNeeded,kRPC_RE_4_2_chamber);
-  aCluster->setDataSourceForNchambers(numberOfChambersNeeded,converter->getChambersData());
-  aCluster->setDataSourceForNtriggerObjects(numberOfTriggerObjsNeeded,converter->getTriggersData());
+  RPCChambersCluster * cosmicTestChambersStack = new RPCChambersCluster(numberOfChamberObjectsNeeded,numberOfTriggerObjsNeeded,kRPC_RE_4_2_chamber);
+  cosmicTestChambersStack->setDataSourceForNchambers(numberOfChamberObjectsNeeded,converter->getChambersData());
+  cosmicTestChambersStack->setDataSourceForNtriggerObjects(numberOfTriggerObjsNeeded,converter->getTriggersData());
   
   // vector of reference chambers needed    
   // site type 
@@ -353,7 +352,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   vector<int> vectorOfReferenceChambers;
   // for purpose of study, use two vectors for two different files. this to be assigned when the calibration object is introduced
   if(siteType == kIsCERNrawFile){
-    vectorOfReferenceChambers.push_back(1); vectorOfReferenceChambers.push_back(5); vectorOfReferenceChambers.push_back(8);
+    vectorOfReferenceChambers.push_back(1); vectorOfReferenceChambers.push_back(5); vectorOfReferenceChambers.push_back(7);
   }
   if(siteType == kIsGENTrawFile){
     vectorOfReferenceChambers.push_back(1); vectorOfReferenceChambers.push_back(5);
@@ -363,30 +362,33 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   map<int,vector<double> > mapOfCurrentEventReconstructedHits;
   
   int allTracks = 0;
+  int noTrackCounter = 0;
   
-  RPCChamber * chamberObj;
-  //RPCLinkBoardChannel * channelObj;
+  RPCChamber * chamberObj; // pointer to point to each chamber in the loop
+  RPCLinkBoardChannel * channelObj; // pointer to point to each channel of each chamber 
+  
   for (int i = 0 ; i < numberOfEventsToUse ; i++ , converter->nextEvent()){
     cout << " Event : " << converter->getEventNumber() << endl;
     // in case of cern file, the first event is empty. so skip for i < 2 since it crashes for no record in the trigger object
     if (siteType == kIsCERNrawFile && i < 2) continue; // skip just once if its CERN file
     
-    timeWindow = aCluster->getTimeWindowForSiteType(siteType);
-    timeReference = aCluster->getTimeReferenceValueForSiteType(siteType);
+    timeWindow = cosmicTestChambersStack->getTimeWindowForSiteType(siteType);
+    timeReference = cosmicTestChambersStack->getTimeReferenceValueForSiteType(siteType);
     bool trackIsVertical = true;
     
-    mapOfCurrentEventReconstructedHits = aCluster->getReconstructedHits(vectorOfReferenceChambers,timeWindow,timeReference,trackIsVertical,2,siteType);
+    mapOfCurrentEventReconstructedHits = cosmicTestChambersStack->getReconstructedHits(vectorOfReferenceChambers,timeWindow,timeReference,trackIsVertical,2,siteType);
     
     if (mapOfCurrentEventReconstructedHits.empty()){ // if the map is empty there was no reconstructed track
       //cout << " No track reconstructed for event " << converter->getEventNumber() << endl;
+      noTrackCounter ++;
       continue; // skip execution, there is no track reconstucted
     }
     
     else {
       
-      for (unsigned totalChambers = 0; totalChambers < aCluster->getNumberOfChambers() ; totalChambers++ ){
+      for (unsigned totalChambers = 0; totalChambers < cosmicTestChambersStack->getNumberOfChambers() ; totalChambers++ ){
 	
-	chamberObj = aCluster->getChamberNumber(totalChambers+1);
+	chamberObj = cosmicTestChambersStack->getChamberNumber(totalChambers+1);
 	assert(mapOfCurrentEventReconstructedHits[totalChambers+1].size());
 	vector<double> partitionsAndChannelsVector = mapOfCurrentEventReconstructedHits[totalChambers+1];
 	int channelNum = partitionsAndChannelsVector.at(partitionsAndChannelsVector.size()-1); // the last element is the channel
@@ -425,17 +427,19 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   }
   
   cout << " all reconstructed tracks " << allTracks << endl;
+  cout << " no tracks for " << noTrackCounter << " events" << endl;
   
   TH1F * efficiencyHisto,* efficiencyDistro, * residualsHisto, * part_residual_histo;
   TH1F * tracksDistributionHisto,* absolute_channel_efficiency_histo;  
   string efficiency_title ;
   string track_title ;
   
-  /** writing the results of the application */
+  /** writing the results of the application */ 
+  /** TODO - make this part more short (an elegant) with defining a subroutine  */
   
-  for (unsigned chamberNum = 0 ; chamberNum < aCluster->getNumberOfChambers() ; chamberNum++){
+  for (unsigned chamberNum = 0 ; chamberNum < cosmicTestChambersStack->getNumberOfChambers() ; chamberNum++){
     
-    cout << " Number of all tracks chamber " << chamberNum+1 << " : " << aCluster->getChamberNumber(chamberNum+1)->getSumOfAllTracks() << endl;
+    cout << " Number of all tracks chamber " << chamberNum+1 << " : " << cosmicTestChambersStack->getChamberNumber(chamberNum+1)->getSumOfAllTracks() << endl;
     
     stringstream ss;
     ss << chamberNum+1;
@@ -450,28 +454,28 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     string absolute_channel_efficiency = "abs_channel_eff_" + ss.str() + ".root";
     
     ss.clear();
-    efficiencyHisto = aCluster->getChamberNumber(chamberNum+1)->getHistogramOfChannelsEfficiency(efficiency_title.c_str());
+    efficiencyHisto = cosmicTestChambersStack->getChamberNumber(chamberNum+1)->getHistogramOfChannelsEfficiency(efficiency_title.c_str());
     efficiencyHisto->SetStats(false);
     efficiencyHisto->SaveAs(efficiency_title.c_str());
-    //efficiencyHisto->SaveAs(efficiency_title_pic.c_str());
-    tracksDistributionHisto = aCluster->getChamberNumber(chamberNum+1)->getHistogramOfTracksVsChannels(track_title.c_str());    
+    
+    tracksDistributionHisto = cosmicTestChambersStack->getChamberNumber(chamberNum+1)->getHistogramOfTracksVsChannels(track_title.c_str());    
     tracksDistributionHisto->SetStats(false);
     tracksDistributionHisto->SaveAs(track_title.c_str());
-    //tracksDistributionHisto->SaveAs(track_title_pic.c_str());
-    efficiencyDistro = aCluster->getChamberNumber(chamberNum+1)->getDistributionOfChannelsEfficiency(eff_distro_title.c_str());
+    
+    efficiencyDistro = cosmicTestChambersStack->getChamberNumber(chamberNum+1)->getDistributionOfChannelsEfficiency(eff_distro_title.c_str());
     efficiencyDistro->SetMarkerColor(kBlue);
     efficiencyDistro->SetFillColor(kBlue);
-    //efficiencyDistro->SetStats(kFALSE); // need the mean here
+    
     efficiencyDistro->SaveAs(eff_distro_title.c_str());
-    residualsHisto = aCluster->getChamberNumber(chamberNum+1)->getResidualsHistogram(res_distro_title.c_str());
+    residualsHisto = cosmicTestChambersStack->getChamberNumber(chamberNum+1)->getResidualsHistogram(res_distro_title.c_str());
     residualsHisto->SetMarkerColor(kBlue);
     residualsHisto->SetFillColor(kBlue);
-    //efficiencyDistro->SetStats(kFALSE); // need the mean here
+    
     residualsHisto->SaveAs(res_distro_title.c_str());
-    part_residual_histo = aCluster->getChamberNumber(chamberNum+1)->getNeighbourPartitionHitsHistogram(part_res_distro_title.c_str());
+    part_residual_histo = cosmicTestChambersStack->getChamberNumber(chamberNum+1)->getNeighbourPartitionHitsHistogram(part_res_distro_title.c_str());
     part_residual_histo->SaveAs(part_res_distro_title.c_str());
     
-    absolute_channel_efficiency_histo = aCluster->getChamberNumber(chamberNum+1)->getHistogramOfAbsoluteChannelsEfficiency(absolute_channel_efficiency.c_str());
+    absolute_channel_efficiency_histo = cosmicTestChambersStack->getChamberNumber(chamberNum+1)->getHistogramOfAbsoluteChannelsEfficiency(absolute_channel_efficiency.c_str());
     absolute_channel_efficiency_histo->SaveAs(absolute_channel_efficiency.c_str());
     
     absolute_channel_efficiency_histo->Delete();

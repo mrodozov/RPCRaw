@@ -23,9 +23,6 @@ void RPCRunConfig::readConfigurationFromDBforRunAndSite(const int & run,const st
 }
 
 void RPCRunConfig::readConfigurationFromJSONDocument(const string & jsonDocument){
-  //Json::Reader jsonReader;
-  //Json::Value resultValue;
-  //jsonReader.parse(jsonDocument,resultValue);
   
 }
 

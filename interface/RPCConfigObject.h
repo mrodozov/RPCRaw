@@ -7,7 +7,7 @@
 
 #include "RPCDBReader.h"
 #include "RPCChamberConditions.h"
-#include <json/json.h>
+
 
 class RPCAbstractRunConfig {
   
@@ -72,7 +72,7 @@ public:
   virtual RPCChamberConditions * getConcreteConditionsForChamber(const int & chamberNum); // overload the return type if new class is derived from RPCChamberConditions 
   virtual void readConfigurationFromFile(const string & fileName); // overload if change of implementation is needed
   virtual void readConfigurationFromDBforRunAndSite(const int & run,const string & site); // overload if change of implementation is needed
-  virtual void readConfigurationFromJSONDocument(const string & jsonDocument); // overload if change of implementation is needed
+  virtual void readConfigurationFromJSONDocument(const string & jsonDocument); // overload if change of implementation is needed. currently using boost property list
   
   vector<int> getVectorOfReferenceChambers();
   

@@ -7,7 +7,6 @@ CFLAGS=-g -O0
 KERNEL = $(shell uname)
 ROOTINC = $(shell root-config --cflags) 
 ROOTLIBS = $(shell root-config --glibs)
-LIBJSON = -ljson_linux_jsoncpp # add the library later with the headers
 
 ifeq (Darwin,$(KERNEL))
 # How to install GCC 4.7 on OSX apart from the LLVM-g++ 4.2 version
@@ -37,7 +36,7 @@ boost_libs = -lboost_thread-mt
 all: mainApp
 
 mainApp: main.cpp RPCRawConverter.o UserApplications.o $(LBobjects_names) $(ConfigObjects_names)
-	$(CC) main.cpp $(CFLAGS) -o mainApp build/RPCRawConverter.o build/UserApplications.o $(ROOTINC) $(ORACLE_INCDIR) $(ROOTLIBS) $(ORACLE_LIBS) $(ConfigObjects) $(LBobjects) $(LIBJSON) $(COMPILE_AS_CPP11)
+	$(CC) main.cpp $(CFLAGS) -o mainApp build/RPCRawConverter.o build/UserApplications.o $(ROOTINC) $(ORACLE_INCDIR) $(ROOTLIBS) $(ORACLE_LIBS) $(ConfigObjects) $(LBobjects) $(COMPILE_AS_CPP11)
 
 UserApplications.o : UserApplications.cpp $(LBobjects_names) $(ConfigObjects_names) $(RAWobjects_names)
 	$(CC) $(CFLAGS) -c -Wall UserApplications.cpp -o build/UserApplications.o $(ROOTINC) 
