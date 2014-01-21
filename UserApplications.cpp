@@ -4,6 +4,7 @@
 
 #include "UserApplications.h"
 #include <occi.h>
+#include <boost/concept_check.hpp>
 
 using namespace std;
 using namespace oracle::occi;
@@ -326,6 +327,8 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   string rawdataFilename=arg_v[1],ghentMap = arg_v[2];
   int numberOfEventsToUse = atoi(arg_v[3]);
   TFile * rawdatafile = new TFile(rawdataFilename.c_str());
+  string jsonFileWithConfig = arg_v[4] , runToUse = arg_v[5];
+  
   RPCRawConverter * converter = new RPCRawConverter(rawdatafile);
   converter->setGhentTDCtoRPCmap(ghentMap);
   int numberOfChamberObjectsNeeded = converter->getNumberOfChamberObjects();
@@ -334,14 +337,18 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   /** create a run configuration object */
   
   RPCRunConfig * runConfig = new RPCRunConfig();
-  //runConfig->readConfigurationFromJSONDocument();
-  //runConfig->setChamberDetails();
-  
+  runConfig->readConfigurationFromJSONDocument(jsonFileWithConfig,runToUse);
+  numberOfEventsToUse = runConfig->getNumberOfEvents();
   /** */
   
   RPCChambersCluster * cosmicTestChambersStack = new RPCChambersCluster(numberOfChamberObjectsNeeded,numberOfTriggerObjsNeeded,kRPC_RE_4_2_chamber);
   cosmicTestChambersStack->setDataSourceForNchambers(numberOfChamberObjectsNeeded,converter->getChambersData());
   cosmicTestChambersStack->setDataSourceForNtriggerObjects(numberOfTriggerObjsNeeded,converter->getTriggersData());
+  
+  for (unsigned chambersInConfig = 0; chambersInConfig < runConfig->getChambersDetails().size() ; chambersInConfig++){
+    RPCChamberConditions * conditions = runConfig->getConcreteConditionsForChamber(chambersInConfig+1);
+    cosmicTestChambersStack->getChamberNumber(conditions->getShelfNumber())->setCurrentRunDetails(conditions);
+  }
   
   // vector of reference chambers needed    
   // site type 
@@ -352,7 +359,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   vector<int> vectorOfReferenceChambers;
   // for purpose of study, use two vectors for two different files. this to be assigned when the calibration object is introduced
   if(siteType == kIsCERNrawFile){
-    vectorOfReferenceChambers.push_back(1); vectorOfReferenceChambers.push_back(5); vectorOfReferenceChambers.push_back(7);
+    vectorOfReferenceChambers = runConfig->getReferenceChambers();
   }
   if(siteType == kIsGENTrawFile){
     vectorOfReferenceChambers.push_back(1); vectorOfReferenceChambers.push_back(5);
@@ -365,7 +372,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   int noTrackCounter = 0;
   
   RPCChamber * chamberObj; // pointer to point to each chamber in the loop
-  RPCLinkBoardChannel * channelObj; // pointer to point to each channel of each chamber 
+//   RPCLinkBoardChannel * channelObj; // pointer to point to each channel of each chamber 
   
   for (int i = 0 ; i < numberOfEventsToUse ; i++ , converter->nextEvent()){
     cout << " Event : " << converter->getEventNumber() << endl;
@@ -381,6 +388,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     if (mapOfCurrentEventReconstructedHits.empty()){ // if the map is empty there was no reconstructed track
       //cout << " No track reconstructed for event " << converter->getEventNumber() << endl;
       noTrackCounter ++;
+      // add some function to research the main reason of no track
       continue; // skip execution, there is no track reconstucted
     }
     
@@ -534,28 +542,41 @@ void converterTests(int _argc,char ** arg_v){
 
 void configObjectsTest(int _argc, char* _argv[]){
   
-  RPCLinkBoard * aBoard = new RPCLinkBoard(kRPC_RE_4_2_chamber);
-  aBoard->allocAndInit();
-  vector<double> vmons;
-  
-  vmons.push_back(0.5);
-  vmons.push_back(0.6);
-  vmons.push_back(0.7);
-  
-  RPCChamberConditions * conditions = new RPCChamberConditions();
-  aBoard->setCurrentRunDetails(conditions);  
-  aBoard->getBasicChamberConditions()->setGapsVmon(vmons);
-  
-  cout << aBoard->getBasicChamberConditions()->getGapsVmon().at(2) << endl;
-  cout << aBoard->getExtendedChamberConditions()->getHVmonForGap(3) << endl;
-  
-  //delete aBoard;
   
   RPCRunConfig * config = new RPCRunConfig();
-  vector<RPCChamberConditionsBase*> conditionsVector;
-  conditionsVector.push_back(conditions);
-  config->setChamberDetails(conditionsVector);
-  cout << config->getBasicConditionsForChamber(1)->getGapsVmon().at(2) << endl;
+  string file = _argv[1];
+  config->readConfigurationFromJSONDocument(file,_argv[2]);
+  
+  //cout << config->getHumidity() << " " << config->getPressure() << " " << config->getTriggerLayer() << " " << config->getRunNumber() << endl;
+  for (unsigned refCh = 0 ; refCh < config->getReferenceChambers().size() ; refCh ++){
+    cout << config->getReferenceChambers().at(refCh) << endl;
+  }
+  
+  for (unsigned chamberNum = 0 ; chamberNum < config->getChambersDetails().size();chamberNum++){
+    
+    RPCChamberConditions * condition = config->getConcreteConditionsForChamber(chamberNum+1);
+    cout << "name " << condition->getChamberName() << endl;
+    cout << "shelf " << condition->getShelfNumber() << endl;
+    cout << "HV cable " << condition->getHVcable() << endl;
+    cout << "LV cable " << condition->getLVcable() << endl;
+    cout << "TDC cable " << condition->getTDCcable() << endl;
+    cout << "Is reference " << condition->getIsReference() << endl;
+    cout << "HV set on chamber " << condition->getHVset() << endl;
+    
+    for (unsigned gap=0;gap < condition->getGapLabels().size() ; gap++){
+      cout << "gap label " << condition->getLabelForGap(gap+1) << " current " << condition->getCurrentForGap(gap+1)
+      << " hvset " << condition->getHVsetForGap(gap+1) << " hvmon " << condition->getHVmonForGap(gap+1) << endl;
+    }
+    condition->getLabelForGap(RPCChamberConditionsBase::Etopnarrow);
+    for(unsigned febs = 0 ; febs < condition->getFEBTresholds().size() ; febs++){
+      cout << condition->getFEBTresholdForBoard(febs+1)<< " " ;
+    }
+    
+    cout << endl;
+  }
+  
+  
+  
 
 }
 

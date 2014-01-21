@@ -20,9 +20,7 @@ int main(int argc,char ** argv){
   //thread second (testDBconnection,argc,argv);
   //converterTests(argc,argv);
   //configObjectsTest(argc,argv);
-  
-  //first.join();  
-  
+    
   
   //return 0;
 }

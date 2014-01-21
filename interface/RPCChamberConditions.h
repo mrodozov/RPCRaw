@@ -2,6 +2,8 @@
  * created on : 18.12.13
 */
 
+/* Adaptable class to derive object that are describing the current conditions of a chambers */
+
 #ifndef RPC_CHAMBER_COND_H
 #define RPC_CHAMBER_COND_H
 
@@ -26,13 +28,22 @@ protected:
   int _hvMon;
   int _shelfNumber;
   bool _isReference;
+  int _hvCable;
+  int _lvCable;
+  int _tdcCable;
   vector<string> gapsLabel;
   vector<double> gapsCurrent;
-  vector<double> gapsVmon;
-  vector<double> gapsVset;
+  vector<int> gapsVmon;
+  vector<int> gapsVset;
   vector<int> _FEBtresholds;
   
 public:
+  
+  enum EgapLabel {
+    Etopnarrow = 1,
+    Etopwide,
+    Ebottom
+  };
   
   virtual void setHVmon(const int & hvmonvalue) = 0;
   virtual const int & getHVmon() = 0;
@@ -46,10 +57,10 @@ public:
   virtual const vector<string> & getGapLabels() = 0;
   virtual void setGapsCurrent(const vector<double> & currents) = 0 ;
   virtual const vector<double> & getGapsCurrent() = 0;
-  virtual void setGapsVmon(const vector<double> & gapsVmon) = 0 ;
-  virtual const vector<double> & getGapsVmon() = 0 ;
-  virtual void setGapsVset(const vector<double> & gapsVset) = 0 ;
-  virtual const vector<double> & getGapsVset() = 0 ;
+  virtual void setGapsVmon(const vector<int> & gapsVmon) = 0 ;
+  virtual const vector<int> & getGapsVmon() = 0 ;
+  virtual void setGapsVset(const vector<int> & gapsVset) = 0 ;
+  virtual const vector<int> & getGapsVset() = 0 ;
   virtual void setFEBTresholds(const vector<int> & FEBtresholds) = 0 ;
   virtual const vector<int> & getFEBTresholds() = 0 ;
   virtual void setIsReference(const bool & isReference)=0;
@@ -80,14 +91,20 @@ public:
   const vector<string> & getGapLabels();
   void setGapsCurrent(const vector<double> & currents);
   const vector<double> & getGapsCurrent();
-  void setGapsVmon(const vector<double> & gapsVmon);
-  const vector<double> & getGapsVmon() ;
-  void setGapsVset(const vector<double> & gapsVset) ;
-  const vector<double> & getGapsVset() ;
+  void setGapsVmon(const vector<int> & gapsVmon);
+  const vector<int> & getGapsVmon() ;
+  void setGapsVset(const vector<int> & gapsVset) ;
+  const vector<int> & getGapsVset() ;
   void setFEBTresholds(const vector<int> & FEBtresholds) ;
   const vector<int> & getFEBTresholds() ;
   void setIsReference(const bool & isReference);
   const bool & getIsReference();
+  const int & getHVcable(){return this->_hvCable;}
+  void setHVcable(const int & cableNum){this->_hvCable=cableNum;}
+  const int & getLVcable(){return this->_lvCable;}
+  void setLVcable(const int & cableNum){this->_lvCable=cableNum;}
+  const int & getTDCcable(){return this->_tdcCable;}
+  void setTDCcable(const int & cableNum){this->_tdcCable = cableNum;}
   /** additional methods */
   
   const double & getHVmonForGap(const int & gapNumber);

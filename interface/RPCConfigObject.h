@@ -2,6 +2,11 @@
  * created on : 18.12.13
 */
 
+/** Adaptable class to derive (mostly) single objects from. The class is helper for reading databases, performing concrete queries, implement formats reading (JSON, txt, csv)
+ * creating, configuring and hooking chamber condition objects with the chamber objects, and storing global run variables (temperature, humidity etc).
+ * Run details concerning the environment and the chambers are handled mostly from here. 
+ */
+
 #ifndef RPC_CONFIG_OBJ_H
 #define RPC_CONFIG_OBJ_H
 
@@ -19,6 +24,7 @@ protected:
   double _pressure;
   double _temperature;
   int _numberOfEvents;
+  int _hvOnTestChambers;
   vector<RPCChamberConditionsBase*> _chambersDetails;
   
 public:
@@ -48,9 +54,12 @@ public:
 class RPCRunConfig : public RPCAbstractRunConfig {
   
   RPCDBReader * _dbReader;
+  vector<int> referenceChambers;
   
 public:
   
+  void setReferenceChambers(const vector<int> & referenceChambersVector){ this->referenceChambers = referenceChambersVector;}
+  const vector<int> & getReferenceChambers(){ return this->referenceChambers;}
   void setRunNumber(const int & runNumber);
   const int & getRunNumber();
   void setTriggerLayer(const string & layer);
@@ -66,15 +75,15 @@ public:
   void setNumberOfEvents(const int & nevents){ this->_numberOfEvents = nevents;}
   const int & getNumberOfEvents(){ return this->_numberOfEvents;}
   
+  
   RPCDBReader * getDBreader();
   
   RPCChamberConditionsBase * getBasicConditionsForChamber(const int & chamberNum);
   virtual RPCChamberConditions * getConcreteConditionsForChamber(const int & chamberNum); // overload the return type if new class is derived from RPCChamberConditions 
   virtual void readConfigurationFromFile(const string & fileName); // overload if change of implementation is needed
   virtual void readConfigurationFromDBforRunAndSite(const int & run,const string & site); // overload if change of implementation is needed
-  virtual void readConfigurationFromJSONDocument(const string & jsonDocument); // overload if change of implementation is needed. currently using boost property list
+  virtual void readConfigurationFromJSONDocument(const string & jsonDocument,const string & runToUse ); // overload if change of implementation is needed. currently using boost property list
   
-  vector<int> getVectorOfReferenceChambers();
   
   RPCRunConfig();
   ~RPCRunConfig();
