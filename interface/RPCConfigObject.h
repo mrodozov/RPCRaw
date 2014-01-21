@@ -83,7 +83,7 @@ public:
   virtual void readConfigurationFromFile(const string & fileName); // overload if change of implementation is needed
   virtual void readConfigurationFromDBforRunAndSite(const int & run,const string & site); // overload if change of implementation is needed
   virtual void readConfigurationFromJSONDocument(const string & jsonDocument,const string & runToUse ); // overload if change of implementation is needed. currently using boost property list
-  
+  vector<string> getRunListFromJSONfile(const string & jsonFile); // CERN cases only
   
   RPCRunConfig();
   ~RPCRunConfig();

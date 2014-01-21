@@ -16,11 +16,12 @@ int main(int argc,char ** argv){
   //clusterObjectTester(argc,argv);
   //firstCompleteTestApplication(argc,argv);
   //std::thread first (timeEvolutionStudy,argc,argv);
-  localEfficiencyStudy(argc,argv);
+  //localEfficiencyStudy(argc,argv);
   //thread second (testDBconnection,argc,argv);
   //converterTests(argc,argv);
   //configObjectsTest(argc,argv);
-    
+  
+  getGlobalPlotsForRunStack(argc,argv);
   
   //return 0;
 }

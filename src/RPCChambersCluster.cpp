@@ -500,12 +500,14 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
   vector<vector<int> > vectorOfClusterNumberCombinations;  
   
   if (fileType == kIsCERNrawFile ){
-  
-    assert(vectorOfReferenceChambers.size() == 3 || vectorOfClusterNumberCombinations.size() == 4);
+    
+  //TODO Add implementation for 4 reference chambers 
+    
+    assert(vectorOfReferenceChambers.size() == 3 || vectorOfReferenceChambers.size() == 4);
     
     for ( int i = 0 ; i < this->getChamberNumber(vectorOfReferenceChambers[0])->getNumberOfClusters() ; i++ ){
       for( int j = 0 ; j < this->getChamberNumber(vectorOfReferenceChambers[1])->getNumberOfClusters() ; j++ ){
-	for( int k = 0 ; k < this->getChamberNumber(vectorOfReferenceChambers[2])->getNumberOfClusters() ; k++ ){
+	for( int k = 0 ; k < this->getChamberNumber(vectorOfReferenceChambers[vectorOfReferenceChambers.size()-1])->getNumberOfClusters() ; k++ ){
 	  
 	  vector<int> singleCombination;
 	

@@ -4,7 +4,7 @@
 
 #include "UserApplications.h"
 #include <occi.h>
-#include <boost/concept_check.hpp>
+#include <boost/lexical_cast.hpp>
 
 using namespace std;
 using namespace oracle::occi;
@@ -338,7 +338,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   
   RPCRunConfig * runConfig = new RPCRunConfig();
   runConfig->readConfigurationFromJSONDocument(jsonFileWithConfig,runToUse);
-  numberOfEventsToUse = runConfig->getNumberOfEvents();
+  numberOfEventsToUse = converter->getTotalEvents();
   /** */
   
   RPCChambersCluster * cosmicTestChambersStack = new RPCChambersCluster(numberOfChamberObjectsNeeded,numberOfTriggerObjsNeeded,kRPC_RE_4_2_chamber);
@@ -494,7 +494,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     tracksDistributionHisto->Delete();
     
   }
-  
+    
   rawdatafile->Close("R");
   rawdatafile->Delete();
   
@@ -574,11 +574,66 @@ void configObjectsTest(int _argc, char* _argv[]){
     
     cout << endl;
   }
-  
-  
-  
 
 }
 
-
+void getGlobalPlotsForRunStack(int _argc,char * _argv[]){
+  
+  string runFolder = _argv[1];
+  string jsonFile = _argv[2];
+  // get the number of chambers under test from the JSON and create objects only for them
+  vector<string> runlist;
+  RPCRunConfig * config = new RPCRunConfig();
+  runlist = config->getRunListFromJSONfile(jsonFile);
+  config->readConfigurationFromJSONDocument(jsonFile,runlist.at(0)); // get the number of chambers 
+  int chambersNeeded = config->getChambersDetails().size();
+  RPCChambersCluster * cluster = new RPCChambersCluster(9,0,kRPC_RE_4_3_chamber);
+  
+  
+  for (unsigned run = 0 ; run < runlist.size() ; run++){
+    config->readConfigurationFromJSONDocument(jsonFile,runlist.at(run));
+    for (unsigned chamberConfig = 0 ; chamberConfig < config->getChambersDetails().size();chamberConfig++){
+      RPCChamberConditions * conditions = config->getConcreteConditionsForChamber(chamberConfig+1);
+      cluster->getChamberNumber(conditions->getShelfNumber())->setCurrentRunDetails(conditions);
+    }
+    cout << runlist.at(run) << endl;
+    for (unsigned chamber = 0 ; chamber < cluster->getNumberOfChambers() ; chamber++){
+      RPCLinkBoard * aChamber = cluster->getChamberNumber(chamber+1);
+      if(aChamber->getExtendedChamberConditions() != NULL && !aChamber->getExtendedChamberConditions()->getIsReference()){
+	
+	cout << aChamber->getExtendedChamberConditions()->getChamberName() << " shelf " << aChamber->getExtendedChamberConditions()->getShelfNumber() << " chamber in cluster " << chamber+1 << endl; 
+	string shelfNumberAsString = boost::lexical_cast<string>(chamber+1);
+	string efficiencyFilePath = runFolder+runlist.at(run)+"/";
+	string efficiencyFileName = "efficiency_distro_"+shelfNumberAsString+".root";
+	TKey *key;
+	TObject *obj;
+	TFile * efficiencyFile = new TFile((efficiencyFilePath+efficiencyFileName).c_str(),"READ","in");
+	TH1F * pointerToHisto;
+	if (efficiencyFile->IsOpen()){
+	  
+	  pointerToHisto = dynamic_cast<TH1F*>(efficiencyFile->Get(efficiencyFileName.c_str()));
+	  cout << config->getTriggerLayer() << " " << aChamber->getExtendedChamberConditions()->getHVset() 
+	  << " " << pointerToHisto->GetMean() << endl;
+	  double hmean = pointerToHisto->GetMean();
+	  aChamber->setEfficiencyVsHVentryForMode(aChamber->getExtendedChamberConditions()->getHVset(),hmean,0,
+						  config->getTriggerLayer());
+	}
+	
+	efficiencyFile->Close("R");
+	efficiencyFile->Delete();
+	
+      }
+      
+    }
+    
+  }
+  
+  for (unsigned chamber = 0 ; chamber < cluster->getNumberOfChambers() ; chamber++){
+    RPCLinkBoard * ch = cluster->getChamberNumber(chamber+1);
+    if (ch->getExtendedChamberConditions() != NULL && !ch->getExtendedChamberConditions()->getIsReference()){
+      ch->drawNestedSigmoidPlotForAllModes(ch->getExtendedChamberConditions()->getChamberName());
+    }
+  }
+  
+}
 

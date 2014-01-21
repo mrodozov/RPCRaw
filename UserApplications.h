@@ -25,4 +25,6 @@ void converterTests(int _argc,char * _argv[]);
 
 void configObjectsTest(int _argc,char * _argv[]);
 
+void getGlobalPlotsForRunStack(int _argc,char * _argv[]); // mostly for CERN files
+
 #endif

@@ -26,6 +26,7 @@ class RPCLinkBoard : public ExRoll {
   vector<int> _nonPartitionEfficiencyChannelEfficientTracks;
   vector<int> _nonPartitionEfficiencyChannelAllTracks;
   RPCChamberConditionsBase * _chamberConditions;
+  map<string, map<int,double> > _chamberEfficiencyVsGapHV;
   
 protected:
   
@@ -33,7 +34,7 @@ public:
   
   // channel methods
   virtual void allocStrips(); // allocate concrete type, its a factory method
-  virtual void initStrips(); // init whats needed. execute the parent method with this signature inside this one first, and then add you specifics
+  virtual void initStrips(); // init whats needed. execute the parent method with this signature inside this one first, and then add you specifications
   virtual void allocAndInit() {this->allocStrips(); this->initStrips();} // this better be redefined in every inherited class, because alloc and init are redefined. 
   
   virtual RPCLinkBoardChannel * getStrip (int stripNumber); // get channel by number. Start from 1 , not from 0
@@ -119,6 +120,11 @@ public:
   // Statistics methods 
   
   int getSumOfAllTracks ();
+  
+  // Global histograms
+  TH2F * getEfficiencyHistogramForGapOperationMode(const string & mode);
+  void setEfficiencyVsHVentryForMode(const int & HV,const double & efficiency,const double & effUncertainty,const string & mode);
+  void drawNestedSigmoidPlotForAllModes(const string & title);
   
 };
 

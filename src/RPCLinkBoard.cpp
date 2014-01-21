@@ -4,6 +4,7 @@
 
 #include "../interface/RPCLinkBoard.h"
 #include <assert.h>
+#include <boost/concept_check.hpp>
 
 using namespace std;
 
@@ -477,4 +478,63 @@ RPCChamberConditions * RPCLinkBoard::getExtendedChamberConditions(){
 void  RPCLinkBoard::setCurrentRunDetails(RPCChamberConditionsBase * runDetails){
   this->_chamberConditions = runDetails;
 }
+
+TH2F * RPCLinkBoard::getEfficiencyHistogramForGapOperationMode(const string & mode){
+  TH2F * retval = new TH2F((this->getExtendedChamberConditions()->getChamberName()+mode).c_str(),this->getExtendedChamberConditions()->getChamberName().c_str(),2100,8000,10100,550,0,110);
+  map<int,double> values = this->_chamberEfficiencyVsGapHV.find(mode)->second;
+  for (map<int,double>::iterator iter = values.begin();iter != values.end();iter++){
+    retval->Fill(iter->first,iter->second);
+  }
+  return retval;
+}
+
+void RPCLinkBoard::setEfficiencyVsHVentryForMode(const int & HV,const double & efficiency,const double & effUncertainty,const string & mode){
+  map<int,double> modevals;
+  if(this->_chamberEfficiencyVsGapHV.find(mode) == this->_chamberEfficiencyVsGapHV.end()){
+    this->_chamberEfficiencyVsGapHV[mode] = modevals;
+  }
+  else{
+    modevals = this->_chamberEfficiencyVsGapHV.find(mode)->second;
+  }
+  modevals[HV] = efficiency;
+  this->_chamberEfficiencyVsGapHV[mode] = modevals;
+  
+}
+
+void RPCLinkBoard::drawNestedSigmoidPlotForAllModes(const string & title){
+  
+  TCanvas * canvas = new TCanvas(title.c_str(),title.c_str(),1200,700);
+  canvas->cd();
+  vector<int> colors;
+  colors.push_back(kGreen);
+  colors.push_back(kBlue);
+  colors.push_back(kRed);
+  int color = 0;
+  TLegend * leg;
+  leg = new TLegend(0.150313,0.713733,0.318372,0.865571);
+  for (map<string,map<int,double > >::iterator iter = this->_chamberEfficiencyVsGapHV.begin();iter != this->_chamberEfficiencyVsGapHV.end();iter++){
+    TH2F * hist = getEfficiencyHistogramForGapOperationMode(iter->first);
+    hist->SetMarkerColor(colors.at(color));
+    hist->SetMarkerStyle(kFullCircle);
+    hist->SetStats(kFALSE);
+    hist->GetXaxis()->SetTitle("Applied HV");
+    hist->GetYaxis()->SetTitle("Efficiency %");
+    leg->AddEntry(hist,iter->first.c_str(),"p");
+    if(color == 0){
+      hist->Draw();
+    }
+    else{
+      hist->Draw("same");
+    }
+    color++;
+  }
+  string filename = title+".root";
+  leg->SetFillColor(0);
+  leg->SetTextSize(0.04);
+  leg->SetBorderSize(0);
+  leg->Draw();
+  canvas->SaveAs(filename.c_str());
+  
+}
+
 

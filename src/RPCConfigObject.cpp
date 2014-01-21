@@ -30,6 +30,14 @@ void RPCRunConfig::readConfigurationFromDBforRunAndSite(const int & run,const st
 
 void RPCRunConfig::readConfigurationFromJSONDocument(const string & jsonDocument,const string & runToUse){
   
+  // clear previous chamber config objects if any
+  if (this->getChambersDetails().size()){
+    for (int details = 0 ; details < this->getChambersDetails().size();details++){
+      delete this->_chambersDetails.at(details);
+    }
+    this->_chambersDetails.clear();
+  }
+  
   stringstream ss;
   ifstream filestream;
   filestream.open(jsonDocument.c_str());
@@ -150,6 +158,29 @@ void RPCRunConfig::readConfigurationFromJSONDocument(const string & jsonDocument
         std::cerr << e.what() << std::endl;
   }
   
+}
+
+vector<string> RPCRunConfig::getRunListFromJSONfile(const string & jsonFile){
+  stringstream ss;
+  ifstream filestream;
+  boost::property_tree::ptree pt;
+  filestream.open(jsonFile.c_str());
+  string content,line;
+  vector<string> runlist;
+  if (filestream.is_open()){
+    while (getline(filestream,line)){
+      
+      ss << line;
+      boost::property_tree::read_json(ss,pt);
+      ss.clear();
+      runlist.push_back(pt.begin()->first);
+      filestream.clear();
+      
+    }
+  }
+  filestream.close();
+  
+  return runlist;
 }
 
 RPCChamberConditionsBase * RPCRunConfig::getBasicConditionsForChamber(const int & chamberNum) { 
