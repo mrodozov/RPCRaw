@@ -165,12 +165,16 @@ vector<vector<int> > RPCLinkBoard::getStripsHitsTimes(){
 
 vector<int> RPCLinkBoard::getClusterNumber(int clusterNumber){
   vector<int> retval;
+  cout << this->getNumberOfClusters() << " " << clusterNumber << endl;
+  if (clusterNumber <= this->getNumberOfClusters()){
   int clusterStartChannel= this->_clusterChannelNumbers.at(clusterNumber-1);
   
   while( clusterStartChannel <= this->getLastStripNumberOfClone(this->getEthaPartitionForChannel(clusterStartChannel)) && this->getStrip(clusterStartChannel)->hasHit() ){
     retval.push_back(clusterStartChannel);
     clusterStartChannel++;
   }
+  }
+  else cout << "Cluster number exceeds the number of existing clusters, return empty vector" << endl;
   return retval;
 }
 
@@ -353,9 +357,9 @@ void RPCLinkBoard::resetResiduals (){ this->residuals.clear();}
 const vector<double> & RPCLinkBoard::getResiduals () const { return this->residuals;}
 
 TH1F * RPCLinkBoard::getResidualsHistogram (const string & histoObjName){
-  int bins = 96/this->getClones() * 10;
+  int bins = 96/this->getClones() * 2;
   int axisLenght = 96/this->getClones();
-  TH1F * residuals = new TH1F (histoObjName.c_str(),"Residual values",bins,0,axisLenght);
+  TH1F * residuals = new TH1F (histoObjName.c_str(),"Residual values",bins+1,-(axisLenght/2),axisLenght/2);
   
   for(int i = 0 ; i < this->getResiduals().size() ; i++){
     residuals->Fill(this->getResiduals().at(i));
@@ -389,7 +393,8 @@ void RPCLinkBoard::findResidualValueForChannelInPartitions(const double & recons
   assert(!partitions.empty());
   int partitionNumber = partitions.at(0);
   bool atLeastOneClusterFound = false;
-  double lowestResidualValue = 96/this->getClones() + 10; // initial value higher than the possible
+  double lowestAbsResidualValue = 96/this->getClones() + 10; // initial value higher than the possible
+  double lowestResidualValue = 0;
   int clusterPartition = 0;
   double clusterPosition = 0;
   for (int i = 0 ; i < this->getNumberOfClusters() ; i++){
@@ -397,7 +402,7 @@ void RPCLinkBoard::findResidualValueForChannelInPartitions(const double & recons
     clusterPosition = this->getXYCoordinatesOfCluster(i+1).at(0);
     if (partitionNumber == clusterPartition){
       atLeastOneClusterFound = true;
-      if (abs(clusterPosition - reconstructedChannel) < lowestResidualValue){ lowestResidualValue = abs(clusterPosition - reconstructedChannel); } 
+      if (abs(clusterPosition - reconstructedChannel) < lowestAbsResidualValue){ lowestAbsResidualValue = abs(clusterPosition - reconstructedChannel); lowestResidualValue = clusterPosition - reconstructedChannel; } 
     }
   }
   

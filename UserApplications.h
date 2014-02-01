@@ -27,4 +27,7 @@ void configObjectsTest(int _argc,char * _argv[]);
 
 void getGlobalPlotsForRunStack(int _argc,char * _argv[]); // mostly for CERN files
 
+void getDistributionOfEventsByClustersInRefChambers(int _argc,char * _argv[]);
+
+
 #endif

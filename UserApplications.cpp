@@ -144,7 +144,7 @@ void firstCompleteTestApplication(int arg_c,char * arg_v[]){
   converter->setGhentTDCtoRPCmap(ghentMap);
   int numberOfChamberObjectsNeeded = converter->getNumberOfChamberObjects();
   int numberOfTriggerObjsNeeded = converter->getNumberOfTriggerObjects();
-  
+  numberOfEventsToUse = converter->getTotalEvents();
   /** */
   
   RPCChambersCluster * cosmicTestChambersStack = new RPCChambersCluster(numberOfChamberObjectsNeeded,numberOfTriggerObjsNeeded,kRPC_RE_4_2_chamber);
@@ -357,12 +357,11 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   int timeWindow = 0 ;
   int timeReference = 0 ;
   vector<int> vectorOfReferenceChambers;
-  // for purpose of study, use two vectors for two different files. this to be assigned when the calibration object is introduced
   if(siteType == kIsCERNrawFile){
     vectorOfReferenceChambers = runConfig->getReferenceChambers();
   }
   if(siteType == kIsGENTrawFile){
-    vectorOfReferenceChambers.push_back(1); vectorOfReferenceChambers.push_back(5);
+    vectorOfReferenceChambers.push_back(1); vectorOfReferenceChambers.push_back(5); // ghent references are fixed
   }
   
   // map of reconstructed hits within the chambers. 
@@ -586,7 +585,7 @@ void getGlobalPlotsForRunStack(int _argc,char * _argv[]){
   RPCRunConfig * config = new RPCRunConfig();
   runlist = config->getRunListFromJSONfile(jsonFile);
   config->readConfigurationFromJSONDocument(jsonFile,runlist.at(0)); // get the number of chambers 
-  int chambersNeeded = config->getChambersDetails().size();
+  //int chambersNeeded = config->getChambersDetails().size();
   RPCChambersCluster * cluster = new RPCChambersCluster(9,0,kRPC_RE_4_3_chamber);
   
   
@@ -605,8 +604,6 @@ void getGlobalPlotsForRunStack(int _argc,char * _argv[]){
 	string shelfNumberAsString = boost::lexical_cast<string>(chamber+1);
 	string efficiencyFilePath = runFolder+runlist.at(run)+"/";
 	string efficiencyFileName = "efficiency_distro_"+shelfNumberAsString+".root";
-	TKey *key;
-	TObject *obj;
 	TFile * efficiencyFile = new TFile((efficiencyFilePath+efficiencyFileName).c_str(),"READ","in");
 	TH1F * pointerToHisto;
 	if (efficiencyFile->IsOpen()){
@@ -636,4 +633,122 @@ void getGlobalPlotsForRunStack(int _argc,char * _argv[]){
   }
   
 }
+
+void getDistributionOfEventsByClustersInRefChambers(int _argc,char * arg_v[]){
+  string rawdataFilename=arg_v[1],ghentMap = arg_v[2];
+  ///int numberOfEventsToUse = atoi(arg_v[3]);
+  TFile * rawdatafile = new TFile(rawdataFilename.c_str());
+  string jsonFileWithConfig = arg_v[4] , runToUse = arg_v[5];
+  
+  RPCRawConverter * converter = new RPCRawConverter(rawdatafile);
+  converter->setGhentTDCtoRPCmap(ghentMap);
+  int numberOfChamberObjectsNeeded = converter->getNumberOfChamberObjects();
+  int numberOfTriggerObjsNeeded = converter->getNumberOfTriggerObjects();
+  
+  /** create a run configuration object */
+  
+  RPCRunConfig * runConfig = new RPCRunConfig();
+  runConfig->readConfigurationFromJSONDocument(jsonFileWithConfig,runToUse);
+  //numberOfEventsToUse = converter->getTotalEvents();
+  
+  RPCChambersCluster * cosmicTestChambersStack = new RPCChambersCluster(numberOfChamberObjectsNeeded,numberOfTriggerObjsNeeded,kRPC_RE_4_2_chamber);
+  cosmicTestChambersStack->setDataSourceForNchambers(numberOfChamberObjectsNeeded,converter->getChambersData());
+  cosmicTestChambersStack->setDataSourceForNtriggerObjects(numberOfTriggerObjsNeeded,converter->getTriggersData());
+  
+  for (unsigned chambersInConfig = 0; chambersInConfig < runConfig->getChambersDetails().size() ; chambersInConfig++){
+    RPCChamberConditions * conditions = runConfig->getConcreteConditionsForChamber(chambersInConfig+1);
+    cosmicTestChambersStack->getChamberNumber(conditions->getShelfNumber())->setCurrentRunDetails(conditions);
+  }
+  
+  ESiteFileType siteType = converter->getCurrentFileType();
+  int timeWindow = 0 ;
+  int timeReference = 0 ;
+  vector<int> vectorOfReferenceChambers;
+  if(siteType == kIsCERNrawFile){
+    vectorOfReferenceChambers = runConfig->getReferenceChambers();
+  }
+  if(siteType == kIsGENTrawFile){
+    vectorOfReferenceChambers.push_back(1); vectorOfReferenceChambers.push_back(5); // ghent references are fixed
+  }
+  
+  TH1F * histoOfEventsWithClusterInRefChambers = new TH1F("eventscls","Distribution of events by track reconstruction capability",20,-2,2);
+  histoOfEventsWithClusterInRefChambers->GetYaxis()->SetTitle("Number of events");
+  histoOfEventsWithClusterInRefChambers->GetXaxis()->SetTitle("Track not possible (-1) vs track possible (1) events");
+  histoOfEventsWithClusterInRefChambers->SetFillColor(kBlue);
+  TH1F * numberOfClustersInRefChambers = new TH1F("clsnumdistr","Distribution of events by number of ref chambers with at least 1 cluster",24,0,5);
+  numberOfClustersInRefChambers->GetXaxis()->SetTitle("Reference chambers with at least 1 cluster");
+  numberOfClustersInRefChambers->GetYaxis()->SetTitle("Number of events");
+  numberOfClustersInRefChambers->SetFillColor(kBlue);
+  TH1F * samePartitionClusters = new TH1F ("samepart","Clusters in same partition vs clusters in different partition - all clusters",20,-2,2);
+  samePartitionClusters->GetXaxis()->SetTitle("Same partition (1) vs diff partition (-1) clusters");
+  samePartitionClusters->GetYaxis()->SetTitle("Number of events");
+  samePartitionClusters->SetFillColor(kBlue);
+  TH1F * samePartitionClusters2 = new TH1F ("samepart2","Clusters in same partition vs clusters in different partition - 2 clusters",20,-2,2);
+  samePartitionClusters2->GetXaxis()->SetTitle("Same partition (1) vs diff partition (-1) clusters");
+  samePartitionClusters2->GetYaxis()->SetTitle("Number of events");
+  samePartitionClusters2->SetFillColor(kBlue);
+  TH1F * samePartitionClusters3 = new TH1F ("samepart3","Clusters in same partition vs clusters in different partition - 3 clusters",20,-2,2);
+  samePartitionClusters3->GetXaxis()->SetTitle("Same partition (1) vs diff partition (-1) clusters");
+  samePartitionClusters3->GetYaxis()->SetTitle("Number of events");
+  samePartitionClusters3->SetFillColor(kBlue);
+  
+  
+  while(converter->nextEvent()){
+    
+    cout << "Event: " << converter->getEventNumber() << endl;
+    if (siteType == kIsCERNrawFile && converter->getEventNumber() < 2) continue; // skip just once if its CERN file
+    
+    timeWindow = cosmicTestChambersStack->getTimeWindowForSiteType(siteType);
+    timeReference = cosmicTestChambersStack->getTimeReferenceValueForSiteType(siteType);
+    
+    for(unsigned chamber = 0 ; chamber < cosmicTestChambersStack->getNumberOfChambers() ; chamber++){
+      cosmicTestChambersStack->getChamberNumber(chamber+1)->findAllClustersForTriggerTimeReferenceAndTimeWindow(timeReference,timeWindow);
+    }
+    
+    bool clustersFoundInAllReferences = true;
+    int numberOfRefChambersWithCluster = 0 ;
+    int eventIsGood = 1;
+    int clustersInSamePartition = 1;
+    vector<int> clusterPartitionsCheck;
+    
+    for(unsigned refchamber = 0 ; refchamber < vectorOfReferenceChambers.size();refchamber++){
+      
+      if (cosmicTestChambersStack->getChamberNumber(vectorOfReferenceChambers.at(refchamber))->getNumberOfClusters() == 0){
+	clustersFoundInAllReferences = false;
+      }
+      else{
+	numberOfRefChambersWithCluster++;
+	cout << cosmicTestChambersStack->getChamberNumber(vectorOfReferenceChambers.at(refchamber))->getExtendedChamberConditions()->getChamberName() << " ";
+	clusterPartitionsCheck.push_back(cosmicTestChambersStack->getChamberNumber(vectorOfReferenceChambers.at(refchamber))->getXYCoordinatesOfCluster(1).at(1));
+      }
+    }
+    
+    if(clusterPartitionsCheck.size() > 1){
+      for(unsigned vsizee = 0 ; vsizee < clusterPartitionsCheck.size() - 1;vsizee++){
+	if (clusterPartitionsCheck.at(vsizee+1) != clusterPartitionsCheck.at(vsizee) ) clustersInSamePartition = -1;
+      }
+      samePartitionClusters->Fill(clustersInSamePartition);
+      if (clusterPartitionsCheck.size() == 2){
+	samePartitionClusters2->Fill(clustersInSamePartition);
+      }
+      else {
+	samePartitionClusters3->Fill(clustersInSamePartition);
+      }
+      
+    }
+    
+    if(!clustersFoundInAllReferences) eventIsGood = -1;
+    histoOfEventsWithClusterInRefChambers->Fill(eventIsGood);
+    numberOfClustersInRefChambers->Fill(numberOfRefChambersWithCluster);
+    
+  }
+  
+  histoOfEventsWithClusterInRefChambers->SaveAs(("EventsTrackStatistics_"+runToUse+".root").c_str());
+  numberOfClustersInRefChambers->SaveAs(("RefChambersWithClusterStat_"+runToUse+".root").c_str());
+  samePartitionClusters->SaveAs(("SamePartitionClusters_"+runToUse+".root").c_str());
+  samePartitionClusters2->SaveAs(("SamePartitionClusters2_"+runToUse+".root").c_str());
+  samePartitionClusters3->SaveAs(("SamePartitionClusters3_"+runToUse+".root").c_str());
+  
+}
+
 

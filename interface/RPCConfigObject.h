@@ -75,15 +75,14 @@ public:
   void setNumberOfEvents(const int & nevents){ this->_numberOfEvents = nevents;}
   const int & getNumberOfEvents(){ return this->_numberOfEvents;}
   
-  
   RPCDBReader * getDBreader();
   
   RPCChamberConditionsBase * getBasicConditionsForChamber(const int & chamberNum);
   virtual RPCChamberConditions * getConcreteConditionsForChamber(const int & chamberNum); // overload the return type if new class is derived from RPCChamberConditions 
   virtual void readConfigurationFromFile(const string & fileName); // overload if change of implementation is needed
   virtual void readConfigurationFromDBforRunAndSite(const int & run,const string & site); // overload if change of implementation is needed
-  virtual void readConfigurationFromJSONDocument(const string & jsonDocument,const string & runToUse ); // overload if change of implementation is needed. currently using boost property list
-  vector<string> getRunListFromJSONfile(const string & jsonFile); // CERN cases only
+  virtual void readConfigurationFromJSONDocument(const string & jsonDocument,const string & runToUse ); // Get configuration for a run from a JSON file, overload if change of implementation is needed. currently using boost property list
+  vector<string> getRunListFromJSONfile(const string & jsonFile); // Get runlist as vector of runs from the JSON file. CERN cases only
   
   RPCRunConfig();
   ~RPCRunConfig();

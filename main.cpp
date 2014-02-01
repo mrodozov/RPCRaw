@@ -15,13 +15,16 @@ int main(int argc,char ** argv){
   //testDBconnection(argc,argv);
   //clusterObjectTester(argc,argv);
   //firstCompleteTestApplication(argc,argv);
-  //std::thread first (timeEvolutionStudy,argc,argv);
+  //timeEvolutionStudy(argc,argv);
   //localEfficiencyStudy(argc,argv);
   //thread second (testDBconnection,argc,argv);
   //converterTests(argc,argv);
   //configObjectsTest(argc,argv);
   
-  getGlobalPlotsForRunStack(argc,argv);
+  //getGlobalPlotsForRunStack(argc,argv);
   
-  //return 0;
+  getDistributionOfEventsByClustersInRefChambers(argc,argv);
+  
+  
+  return 0;
 }

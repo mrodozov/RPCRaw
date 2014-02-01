@@ -78,7 +78,7 @@ public:
   // Cluster methods 
   
   const vector<int> & getClusters ();// { return this->_clusterChannelNumbers ;} // get vector of clusters (vectors) . each vector holds the numbers of the strips in a cluster 
-  void findAllClustersForTriggerTimeReferenceAndTimeWindow(int triggerTimeReference,int timeWindow,int maxClusterSize=5); // this method writes all found clusters in a vectors, and store them as elements of vector
+  void findAllClustersForTriggerTimeReferenceAndTimeWindow(int triggerTimeReference,int timeWindow,int maxClusterSize=5); // this method finds all clusters starting channel numbers , and store them as elements of vector
   
   int getNumberOfClusters() ;//{ return this->_clusterChannelNumbers.size(); } // get the number of clusters in the chamber if any 
   vector<int> getClusterNumber(int clusterNumber) ;

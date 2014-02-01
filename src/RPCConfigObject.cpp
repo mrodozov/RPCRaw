@@ -60,7 +60,7 @@ void RPCRunConfig::readConfigurationFromJSONDocument(const string & jsonDocument
   string runDescription;
   // use single run passed as argument, if exists
   // find the line for the run number and push it as single element
-
+  
   for (int counter = 0;counter < lines.size();counter++){
     ss << lines.at(counter);
     boost::property_tree::read_json(ss,atree);

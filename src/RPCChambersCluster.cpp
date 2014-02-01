@@ -347,8 +347,8 @@ void RPCChambersCluster::variousStudyExperimentalFunction(TFile * fileToSave,TH1
 	
 	if(this->getChamberNumber(vectorOfReferenceChambers[0])->getSizeOfCluster(i+1) > 5 ||
 	  this->getChamberNumber(vectorOfReferenceChambers[1])->getSizeOfCluster(j+1) > 5 ||
-	  this->getChamberNumber(vectorOfReferenceChambers[2])->getSizeOfCluster(k+1) > 5 ||
-	  this->getChamberNumber(1)->getClusterNumber(i+1).at(0) == 33) continue;
+	  this->getChamberNumber(vectorOfReferenceChambers[2])->getSizeOfCluster(k+1) > 5
+	  ) continue;
 	
 	// the partition logic start  here - track could pass more than one partition
 	int direction = 0 ; // direction should describe how the partition changes from one reference chamber to another. It 
