@@ -107,6 +107,8 @@ public:
   void incrementEfficiencyCounters(const bool & hitIsFound);  
   double getIntegratedChannelEfficiency(); // get the average of the all channels efficiency
   double getChamberEfficiency(); // calculate chamber efficiency on the top of the global hits detected by the chamber
+  int getNumberOfAllTracks () { return this->totalReconstructedTracks ;}
+  int getNumberOfEfficientTracks () { return this->totalReconstructedTracksWithHit ; }
   bool isMatchingFiredChannelInPartition(const int & trackValue,const int & partition,const int & clusterWidth);
   void resetEfficiencyCounters();
   void resetChannelsEfficiencyCounters() ; //{ for (int i=0; i < 96 ; i++) this->getChannel(i+1)->resetEfficiencyCounters(); } 

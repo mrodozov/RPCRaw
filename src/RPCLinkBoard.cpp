@@ -126,7 +126,9 @@ void RPCLinkBoard::findAllClustersForTriggerTimeReferenceAndTimeWindow(int trigg
 	//cout << "Channels in cluster  : ";      
 	int k = j;      
 	// increment a counter starting from the first for all consecutive hits
-	while (k <= this->getLastStripNumberOfClone(i+1) && this->getChannel(k)->hasHit()) {
+	while (k <= this->getLastStripNumberOfClone(i+1) && this->getChannel(k)->hasHit()
+	  
+	) {
 	  //cout << k << " ";
 	  //vectorOfStripNumber.push_back(k);
 	  k++;
@@ -165,7 +167,7 @@ vector<vector<int> > RPCLinkBoard::getStripsHitsTimes(){
 
 vector<int> RPCLinkBoard::getClusterNumber(int clusterNumber){
   vector<int> retval;
-  cout << this->getNumberOfClusters() << " " << clusterNumber << endl;
+  //cout << this->getNumberOfClusters() << " " << clusterNumber << endl;
   if (clusterNumber <= this->getNumberOfClusters()){
   int clusterStartChannel= this->_clusterChannelNumbers.at(clusterNumber-1);
   
@@ -268,7 +270,9 @@ void RPCLinkBoard::incrementEfficiencyCounters(const bool & hitIsFound){
 }
 
 double RPCLinkBoard::getChamberEfficiency(){
-  return (this->totalReconstructedTracksWithHit/this->totalReconstructedTracks)*100;
+  return (double)((double)this->totalReconstructedTracksWithHit/(double)this->totalReconstructedTracks)*100;
+  //cout << endl;
+  //cout << " Eff ratio " << this->totalReconstructedTracksWithHit << " " << this->totalReconstructedTracksWithHit << endl;
 }
 
 double RPCLinkBoard::getIntegratedChannelEfficiency(){
@@ -359,7 +363,7 @@ const vector<double> & RPCLinkBoard::getResiduals () const { return this->residu
 TH1F * RPCLinkBoard::getResidualsHistogram (const string & histoObjName){
   int bins = 96/this->getClones() * 2;
   int axisLenght = 96/this->getClones();
-  TH1F * residuals = new TH1F (histoObjName.c_str(),"Residual values",bins+1,-(axisLenght/2),axisLenght/2);
+  TH1F * residuals = new TH1F (histoObjName.c_str(),"Residual values",bins,-(axisLenght/2),axisLenght/2);
   
   for(int i = 0 ; i < this->getResiduals().size() ; i++){
     residuals->Fill(this->getResiduals().at(i));

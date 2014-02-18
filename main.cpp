@@ -16,14 +16,14 @@ int main(int argc,char ** argv){
   //clusterObjectTester(argc,argv);
   //firstCompleteTestApplication(argc,argv);
   //timeEvolutionStudy(argc,argv);
-  //localEfficiencyStudy(argc,argv);
+  localEfficiencyStudy(argc,argv);
   //thread second (testDBconnection,argc,argv);
   //converterTests(argc,argv);
   //configObjectsTest(argc,argv);
   
   //getGlobalPlotsForRunStack(argc,argv);
   
-  getDistributionOfEventsByClustersInRefChambers(argc,argv);
+  //getDistributionOfEventsByClustersInRefChambers(argc,argv);
   
   
   return 0;

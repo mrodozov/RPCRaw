@@ -14,7 +14,7 @@
 #include <string>
 #include "IniFile.h"
 
-#include "../interface/ROOT.h"
+#include "../../interface/ROOT.h"
 
 using std::cout;
 using std::endl;

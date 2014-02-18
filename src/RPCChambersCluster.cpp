@@ -739,6 +739,12 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
     
   }
   
+  for (int aCount = 0 ; aCount < mapOfHits.size() ; aCount++){
+    if (mapOfHits[aCount+1].size() > 2){
+      isVerticalTrack = false;
+    }
+  }
+  
   return mapOfHits;
 }
 
@@ -826,7 +832,7 @@ vector<vector<int> > RPCChambersCluster::getPartitionsVectorForVectorOfReference
 	
       }      
     }
-	    // end of 	    
+    // end of 	    
     else{
       vectorOfpartitionsAndHit.push_back(this->getChamberNumber(currentChNumber+1)->getXYCoordinatesOfCluster(clusterNum[referenceChambersIncrementor]).at(1));
       referenceChambersIncrementor += 1;

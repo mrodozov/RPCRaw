@@ -7,6 +7,7 @@
 #include <sstream>
 #include <string>
 #include <cstdio>
+#include <iomanip>
 
 #include "rpc_offline.h"
 #include "../../interface/ROOT.h"
@@ -15,6 +16,7 @@ using namespace std;
 using std::cout;
 using std::endl;
 using std::vector;
+//using std::std::setprecision;
 using std::stringstream;
 
 
@@ -243,7 +245,6 @@ void rpc_offline::StripProfile() {
     int text_xmin_res = 0, text_xmax_res = 16;                                                                   // Label FIT q
     float text_xminm = 0, text_xmaxm = 0.15;                                                                     // Label FIT m
     int text_yminqu, text_ymaxqu, text_yminchi2, text_ymaxchi2, text_yminm, text_ymaxm, text_ymin_res, text_ymax_res;
-
     
     // Defining verboses
     bool verbose_trg = 1, verbose_map = 0, verbose_filling = 0, verbose_filling2 = 0, verbose_filling_detailed = 0, verbose_filling_eff_counts = 0, verbose_dump = 0, verbose_filling_eff_noise = 0, verbose_clustering1 = 0, verbose_showers = 0, detailed_printout = 0, verbose_fit = 0;
@@ -1113,7 +1114,7 @@ TFile * hfile2 = new TFile(filename,"RECREATE");
                         // if (Cut(ientry) < 0) continue;
                     }
                     
-                    //if (i_station==1) cout << " LEGGIMI " << setprecision(4) << jentry << " A = " << tracked_sector_isA << " B = " << tracked_sector_isB << " C = " << tracked_sector_isC << " effiA = " << chamber_efficiencyA[1] << " effiB = " << chamber_efficiencyB[1] << " effiC = " << chamber_efficiencyC[1] << endl;
+                    //if (i_station==1) cout << " LEGGIMI " << std::setprecision(4) << jentry << " A = " << tracked_sector_isA << " B = " << tracked_sector_isB << " C = " << tracked_sector_isC << " effiA = " << chamber_efficiencyA[1] << " effiB = " << chamber_efficiencyB[1] << " effiC = " << chamber_efficiencyC[1] << endl;
                     
                     // Initialization of master trigger and small counter
                     
@@ -2063,7 +2064,7 @@ TFile * hfile2 = new TFile(filename,"RECREATE");
                                                             float mean_cluster = reco_start;
                                                             if (finish>0) mean_cluster = ( finish + reco_start ) / 2;
                                                             
-                                                            if (verbose_print_cluster) cout << "1) Entry="<<jentry << " , found starting cluster at strip = " << reco_start << " and finishing at " << finish << " with average " << setprecision(2) << mean_cluster << endl;
+                                                            if (verbose_print_cluster) cout << "1) Entry="<<jentry << " , found starting cluster at strip = " << reco_start << " and finishing at " << finish << " with average " << std::setprecision(2) << mean_cluster << endl;
                                                             scan = nn - 1;
                                                             nn = 96;
                                                             
@@ -2118,7 +2119,7 @@ TFile * hfile2 = new TFile(filename,"RECREATE");
                                                             float mean_cluster = reco_start;
                                                             if (finish>0) mean_cluster = ( finish + reco_start ) / 2;
                                                             
-                                                            if (verbose_print_cluster) cout << "2) Entry="<<jentry << " , found starting cluster at strip = " << reco_start << " and finishing at " << finish << " with average " << setprecision(2) << mean_cluster << endl;
+                                                            if (verbose_print_cluster) cout << "2) Entry="<<jentry << " , found starting cluster at strip = " << reco_start << " and finishing at " << finish << " with average " << std::setprecision(2) << mean_cluster << endl;
                                                             scan = nn - 1;
                                                             nn = 96;
                                                             
@@ -2172,7 +2173,7 @@ TFile * hfile2 = new TFile(filename,"RECREATE");
                                                             float mean_cluster = reco_start;
                                                             if (finish>0) mean_cluster = ( finish + reco_start ) / 2;
                                                             
-                                                            if (verbose_print_cluster) cout << "3) Entry="<<jentry << " , found starting cluster at strip = " << reco_start << " and finishing at " << finish << " with average " << setprecision(2) << mean_cluster << endl;
+                                                            if (verbose_print_cluster) cout << "3) Entry="<<jentry << " , found starting cluster at strip = " << reco_start << " and finishing at " << finish << " with average " << std::setprecision(2) << mean_cluster << endl;
                                                             scan = nn - 1;
                                                             nn = 96;
                                                             
@@ -2256,8 +2257,7 @@ TFile * hfile2 = new TFile(filename,"RECREATE");
                                                                 else {
                                                                     fitgraph.Fit("pol1", "Q");
                                                                 }
-                                                                 TGraphErrors fitgraph(3, z, x, zer, xer);
-								 fitgraph.Fit("pol1");
+                                                                
                                                                 TF1 *fitfunc = fitgraph.GetFunction("pol1");
                                                                 
                                                                 double param[2];
@@ -4814,7 +4814,7 @@ TFile * hfile2 = new TFile(filename,"RECREATE");
             
             // Printing summary informations of the chamber
             {
-                cout << setprecision(5);
+                cout << std::setprecision(5);
                 if ( trackingreconstruction == 1 ) counterA = tracked_sector_isA;
                 if ( trackingreconstruction == 1 ) counterB = tracked_sector_isB;
                 if ( trackingreconstruction == 1 ) counterC = tracked_sector_isC;

@@ -328,6 +328,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   int numberOfEventsToUse = atoi(arg_v[3]);
   TFile * rawdatafile = new TFile(rawdataFilename.c_str());
   string jsonFileWithConfig = arg_v[4] , runToUse = arg_v[5];
+  bool DEBUG = atoi(arg_v[6]);
   
   RPCRawConverter * converter = new RPCRawConverter(rawdatafile);
   converter->setGhentTDCtoRPCmap(ghentMap);
@@ -338,7 +339,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   
   RPCRunConfig * runConfig = new RPCRunConfig();
   runConfig->readConfigurationFromJSONDocument(jsonFileWithConfig,runToUse);
-  numberOfEventsToUse = converter->getTotalEvents();
+  //numberOfEventsToUse = converter->getTotalEvents();
   /** */
   
   RPCChambersCluster * cosmicTestChambersStack = new RPCChambersCluster(numberOfChamberObjectsNeeded,numberOfTriggerObjsNeeded,kRPC_RE_4_2_chamber);
@@ -348,6 +349,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   for (unsigned chambersInConfig = 0; chambersInConfig < runConfig->getChambersDetails().size() ; chambersInConfig++){
     RPCChamberConditions * conditions = runConfig->getConcreteConditionsForChamber(chambersInConfig+1);
     cosmicTestChambersStack->getChamberNumber(conditions->getShelfNumber())->setCurrentRunDetails(conditions);
+    cosmicTestChambersStack->getChamberNumber(conditions->getShelfNumber())->resetEfficiencyCounters();
   }
   
   // vector of reference chambers needed    
@@ -365,23 +367,22 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   }
   
   // map of reconstructed hits within the chambers. 
-  map<int,vector<double> > mapOfCurrentEventReconstructedHits;
   
-  int allTracks = 0;
+  map<int,vector<double> > mapOfCurrentEventReconstructedHits;
+  int allTracks = 0, verticalTracks=0;
   int noTrackCounter = 0;
   
   RPCChamber * chamberObj; // pointer to point to each chamber in the loop
-//   RPCLinkBoardChannel * channelObj; // pointer to point to each channel of each chamber 
+  RPCLinkBoardChannel * channelObj; // pointer to point to each channel of each chamber 
   
   for (int i = 0 ; i < numberOfEventsToUse ; i++ , converter->nextEvent()){
-    cout << " Event : " << converter->getEventNumber() << endl;
+    //cout << " Event : " << converter->getEventNumber() << endl;
     // in case of cern file, the first event is empty. so skip for i < 2 since it crashes for no record in the trigger object
     if (siteType == kIsCERNrawFile && i < 2) continue; // skip just once if its CERN file
     
     timeWindow = cosmicTestChambersStack->getTimeWindowForSiteType(siteType);
     timeReference = cosmicTestChambersStack->getTimeReferenceValueForSiteType(siteType);
-    bool trackIsVertical = true;
-    
+    bool trackIsVertical = true;    
     mapOfCurrentEventReconstructedHits = cosmicTestChambersStack->getReconstructedHits(vectorOfReferenceChambers,timeWindow,timeReference,trackIsVertical,2,siteType);
     
     if (mapOfCurrentEventReconstructedHits.empty()){ // if the map is empty there was no reconstructed track
@@ -411,29 +412,53 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
 	  // if the channel doesn't got any hits, search for a hits in the next partitions and write 
 	  if (!channelGotHit){
 	    chamberObj->findResidualsInNeighbourPartitionsForChannelInPartition(partitionsAndChannelsVector);
+	    
+	    if (DEBUG) {
+	    if (chamberObj->getExtendedChamberConditions() != NULL ){
+	      
+	      cout << " Cannot found near enough hits for track found in event : " << converter->getEventNumber() << " in chamber " << totalChambers+1 << endl;
+	      
+	      for (int iiii = 0 ; iiii < mapOfCurrentEventReconstructedHits.size() ; iiii++){
+		vector<double> tempVector = mapOfCurrentEventReconstructedHits[iiii+1];
+		 cout << "chamber number : " <<  iiii+1 << " partition number " << tempVector.at(0) << " channel " << tempVector.at(tempVector.size() - 1) << " " << " absolute channel " << (partitionNum-1)*32 + tempVector.at(tempVector.size() - 1) << endl;
+		 cout << "partitions number : ";
+		 for (int aCounter = 0 ; aCounter < tempVector.size() - 1 ; aCounter++) { cout << tempVector.at(aCounter) << " "; }
+		 cout << endl;
+	      }
+	      
+	      cout << " Hits in the chamber " << totalChambers+1 << " channels : " << endl;
+	      for (int allStrips__ = 1 ; allStrips__ <= 32 ; allStrips__++){
+		channelObj = chamberObj->getChannel((partitionNum-1)*32 + allStrips__);
+		if (channelObj->hasHit()) {
+		  cout << (partitionNum-1)*32 + allStrips__ << " ";
+		}
+	      }
+	      cout << endl;
+	      
+	    }
+	    
+	    }
 	  }
 	  chamberObj->getChannel(chNum)->incrementEfficiencyCounters(channelGotHit);
+	  chamberObj->incrementEfficiencyCounters(channelGotHit);  
 	}
 	else {
 	  for (unsigned partitionCounter = 0 ; partitionCounter < partitionsAndChannelsVector.size() - 1; partitionCounter++){
 	    partitionNum = partitionsAndChannelsVector.at(partitionCounter);
 	    channelGotHit = chamberObj->isMatchingFiredChannelInPartition(channelNum,partitionNum,5);
 	    if(channelGotHit) break;
-	  }
-	  
+	  }  
 	  chamberObj->incrementAbsoluteChannelCounters(channelGotHit,channelNum);
 	}
-	
-	chamberObj->incrementEfficiencyCounters(channelGotHit);
-	
       }
-      
+      if (trackIsVertical) verticalTracks++;
       allTracks++;
       
     }
   }
   
   cout << " all reconstructed tracks " << allTracks << endl;
+  cout << " vertical tracks " << verticalTracks << endl;
   cout << " no tracks for " << noTrackCounter << " events" << endl;
   
   TH1F * efficiencyHisto,* efficiencyDistro, * residualsHisto, * part_residual_histo;
@@ -442,11 +467,16 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   string track_title ;
   
   /** writing the results of the application */ 
-  /** TODO - make this part more short (an elegant) with defining a subroutine  */
+  /** TODO - make this part more short (an elegant) with defining a subroutine (the histogram write part) */
   
   for (unsigned chamberNum = 0 ; chamberNum < cosmicTestChambersStack->getNumberOfChambers() ; chamberNum++){
     
+    if (cosmicTestChambersStack->getChamberNumber(chamberNum+1)->getExtendedChamberConditions() == NULL) continue ;
+        
     cout << " Number of all tracks chamber " << chamberNum+1 << " : " << cosmicTestChambersStack->getChamberNumber(chamberNum+1)->getSumOfAllTracks() << endl;
+    cout << " Total and efficient tracks " << cosmicTestChambersStack->getChamberNumber(chamberNum+1)->getNumberOfEfficientTracks() << " "
+    << cosmicTestChambersStack->getChamberNumber(chamberNum+1)->getNumberOfAllTracks() << endl;
+    cout << " Total efficiency " << cosmicTestChambersStack->getChamberNumber(chamberNum+1)->getChamberEfficiency() << endl;
     
     stringstream ss;
     ss << chamberNum+1;
@@ -493,7 +523,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     tracksDistributionHisto->Delete();
     
   }
-    
+  
   rawdatafile->Close("R");
   rawdatafile->Delete();
   
@@ -671,6 +701,7 @@ void getDistributionOfEventsByClustersInRefChambers(int _argc,char * arg_v[]){
     vectorOfReferenceChambers.push_back(1); vectorOfReferenceChambers.push_back(5); // ghent references are fixed
   }
   
+  
   TH1F * histoOfEventsWithClusterInRefChambers = new TH1F("eventscls","Distribution of events by track reconstruction capability",20,-2,2);
   histoOfEventsWithClusterInRefChambers->GetYaxis()->SetTitle("Number of events");
   histoOfEventsWithClusterInRefChambers->GetXaxis()->SetTitle("Track not possible (-1) vs track possible (1) events");
@@ -704,6 +735,8 @@ void getDistributionOfEventsByClustersInRefChambers(int _argc,char * arg_v[]){
     for(unsigned chamber = 0 ; chamber < cosmicTestChambersStack->getNumberOfChambers() ; chamber++){
       cosmicTestChambersStack->getChamberNumber(chamber+1)->findAllClustersForTriggerTimeReferenceAndTimeWindow(timeReference,timeWindow);
     }
+    
+    //cosmicTestChambersStack->getChamberNumber(1)->getStrip()->getAllTracks()
     
     bool clustersFoundInAllReferences = true;
     int numberOfRefChambersWithCluster = 0 ;
