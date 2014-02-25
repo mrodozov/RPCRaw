@@ -48,6 +48,7 @@ public:
   
   RPCRawConverter();
   RPCRawConverter(TFile * inputFile); // contructor with file already open
+  RPCRawConverter(TWebFile * webFile); // for remote files
   ~RPCRawConverter();
   
   void convertToCommonFormat(); // executes internally 2 methods - the one that gets the events tree, and one that gets the next event

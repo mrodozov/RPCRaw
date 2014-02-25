@@ -49,8 +49,10 @@ ResultSet * RPCDBReader::getCurrentResultSet () {
 void RPCDBReader::getChambersDataForRunAndSite(const unsigned & run,const string & site){
   
   string queryString ; // make some magic here ;) 
-  queryString = "select r.CHAMBER_NAME, r.CHAMBER_TYPE, c.ETA_PARTITION, c.FLAG, c.LAYER, c.HV, c.CURRENT_B, c.CURRENT_TN, c.CURRENT_TW  from CMS_RPC_CONSTR.RE4_COSMIC_TABLE c, CMS_RPC_CONSTR.RE4_CHAMBER r where c.CHAMBER_ID=r.CHAMBER_ID and ";
+  //queryString = "select r.CHAMBER_NAME, r.CHAMBER_TYPE, c.ETA_PARTITION, c.FLAG, c.LAYER, c.HV, c.CURRENT_B, c.CURRENT_TN, c.CURRENT_TW  from CMS_RPC_CONSTR.RE4_COSMIC_TABLE c, CMS_RPC_CONSTR.RE4_CHAMBER r where c.CHAMBER_ID=r.CHAMBER_ID and ";
+  queryString = "select distinct r.CHAMBER_NAME, r.CHAMBER_TYPE, c.LAYER, c.HV, c.HVMON_TN, c.HVMON_TW, c.HVMON_B, c.CURRENT_TN, c.CURRENT_TW, c.CURRENT_B ,c.VTH1_A, c.VTH2_A,c.VTH3_A, c.VTH4_A,c.VTH1_B, c.VTH2_B,c.VTH3_B, c.VTH4_B,c.VTH1_C, c.VTH2_C,c.VTH3_C, c.VTH4_C , c.STATION from CMS_RPC_CONSTR.RE4_COSMIC_TABLE c, CMS_RPC_CONSTR.RE4_CHAMBER r where c.CHAMBER_ID=r.CHAMBER_ID and ";
   queryString = RPCDBReader::concatenateQueryStringWithRunAndSite(queryString,run,site);
+  queryString += " order by c.STATION";
   cout << queryString << endl;
   this->executeQueryWithSQLstatement(queryString.c_str());
   
@@ -90,8 +92,10 @@ void RPCDBReader::getChambersDataForRunRangeAndSite(const unsigned & runstart,co
   ss << runend;
   _runend = ss.str();
   ss.clear();
-  string queryString = "select r.CHAMBER_NAME, r.CHAMBER_TYPE, c.ETA_PARTITION, c.FLAG, c.LAYER, c.HV, c.CURRENT_B, c.CURRENT_TN, c.CURRENT_TW  from CMS_RPC_CONSTR.RE4_COSMIC_TABLE c, CMS_RPC_CONSTR.RE4_CHAMBER r where c.CHAMBER_ID=r.CHAMBER_ID and ";
-  queryString = queryString + " c.RUN >= '" + _runstart + "' or c.RUN <= '" + _runend + "' and SITE = '" + site + "'";
+  string queryString = 
+  "select distinct r.CHAMBER_NAME, r.CHAMBER_TYPE, c.LAYER, c.HV, c.HVMON_TN, c.HVMON_TW, c.HVMON_B, c.CURRENT_TN, c.CURRENT_TW,c.CURRENT_B ,c.STATION from CMS_RPC_CONSTR.RE4_COSMIC_TABLE c, CMS_RPC_CONSTR.RE4_CHAMBER r where c.CHAMBER_ID=r.CHAMBER_ID and ";
+  queryString = queryString + " c.RUN >= '" + _runstart + "' or c.RUN <= '" + _runend + "' and c.SITE = '" + site + "'";
+  queryString += " order by c.STATION";
   this->executeQueryWithSQLstatement(queryString.c_str());
   
 }

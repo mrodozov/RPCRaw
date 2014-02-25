@@ -26,6 +26,110 @@ void RPCRunConfig::readConfigurationFromFile(const string & fileName) {
 
 void RPCRunConfig::readConfigurationFromDBforRunAndSite(const int & run,const string & site){
   
+  this->_dbReader->openNewConnection();
+  this->_dbReader->getEnvironmentDataForRunAndSite(run,site);
+  this->_dbReader->getCurrentResultSet()->next();
+  this->setHumidity(this->_dbReader->getCurrentResultSet()->getDouble(3));
+  this->setTemperature(this->_dbReader->getCurrentResultSet()->getDouble(1));
+  this->setPressure(this->_dbReader->getCurrentResultSet()->getDouble(2));
+  this->setRunNumber(run);
+  
+  vector<string> gapTypes;
+  gapTypes.push_back("topnarrow");
+  gapTypes.push_back("topwide");
+  gapTypes.push_back("bottom");  
+  this->_dbReader->getChambersDataForRunAndSite(run,site);
+  
+  RPCChamberConditions * pointerToGhentRefChambers[2];
+  
+  if (site == "Ghent"){
+    // create two conditions for chambers that are reference 
+    
+    RPCChamberConditions * reference1 = new RPCChamberConditions;
+    RPCChamberConditions * reference2 = new RPCChamberConditions;
+    pointerToGhentRefChambers[0] = reference1;
+    pointerToGhentRefChambers[1] = reference2;
+    reference1->setShelfNumber(1);    
+    reference2->setShelfNumber(5);
+    vector<int> refChambers ;
+    refChambers.push_back(1);
+    refChambers.push_back(5);
+    this->setReferenceChambers(refChambers);
+    reference1->setChamberName("GhentReferenceChamberOne");
+    reference2->setChamberName("GhentReferenceChamberTwo");
+    vector<double> gapCurrents;
+    vector<int> gapVsets;
+    vector<int> gapVmons;
+    vector<int> febsValues;    
+    
+    for (int i = 0 ; i < 3 ; i++){
+      gapCurrents.push_back(0.1);
+      gapVmons.push_back(9950);
+      gapVsets.push_back(9950);      
+    }
+    
+    for (int i = 0 ; i < 12 ; i++){
+      febsValues.push_back(215);
+    }
+    
+    for (int i = 0 ; i < 2 ; i++){
+      pointerToGhentRefChambers[i]->setGapLabels(gapTypes);
+      pointerToGhentRefChambers[i]->setIsReference(true);
+      pointerToGhentRefChambers[i]->setTDCcable(0);
+      pointerToGhentRefChambers[i]->setLVcable(0);
+      pointerToGhentRefChambers[i]->setHVcable(0);
+      pointerToGhentRefChambers[i]->setFEBTresholds(febsValues);
+      pointerToGhentRefChambers[i]->setGapsCurrent(gapCurrents);
+      pointerToGhentRefChambers[i]->setGapsVmon(gapVmons);
+      pointerToGhentRefChambers[i]->setGapsVset(gapVsets);
+      pointerToGhentRefChambers[i]->setHVmon(9950);
+      pointerToGhentRefChambers[i]->setHVset(9950);
+    }
+    this->_chambersDetails.push_back(reference1);
+  }
+  
+  while(this->_dbReader->getCurrentResultSet()->next()){
+    RPCChamberConditions * conditions = new RPCChamberConditions;
+    conditions->setIsReference(false);
+    conditions->setChamberName(this->_dbReader->getCurrentResultSet()->getString(1));
+    this->setTriggerLayer(this->_dbReader->getCurrentResultSet()->getString(3));
+    // no records for the cables order in the DB, sorry
+    conditions->setLVcable(0);
+    conditions->setHVcable(0);
+    conditions->setTDCcable(0);
+    //
+    conditions->setShelfNumber(this->_dbReader->getCurrentResultSet()->getInt(23));
+    conditions->setHVset(this->_dbReader->getCurrentResultSet()->getInt(4));
+    conditions->setHVmon(this->_dbReader->getCurrentResultSet()->getInt(5));
+    int vset_const = this->_dbReader->getCurrentResultSet()->getInt(4); // its always the same value, even for CERN chambers its the Vset
+    
+    vector<double> gapCurrents;
+    vector<int> gapVsets;
+    vector<int> gapVmons;
+    for (int i = 0 ; i < 3 ; i++){
+      gapVsets.push_back(vset_const);
+      gapVmons.push_back(this->_dbReader->getCurrentResultSet()->getInt(5+i));
+      gapCurrents.push_back(this->_dbReader->getCurrentResultSet()->getDouble(8+i));      
+      
+    }
+    vector<int> febsValues;
+    for(int i = 0 ; i < 12 ; i++){
+      febsValues.push_back(this->_dbReader->getCurrentResultSet()->getInt(11+i));
+    }
+    
+    conditions->setFEBTresholds(febsValues);
+    conditions->setGapsVset(gapVsets);
+    conditions->setGapLabels(gapTypes);
+    conditions->setGapsVmon(gapVmons);
+    conditions->setGapsCurrent(gapCurrents);
+    this->_chambersDetails.push_back(conditions);
+  }
+  if(site == "Ghent"){
+    this->_chambersDetails.push_back(pointerToGhentRefChambers[1]);
+  }
+  
+  this->_dbReader->closeCurrentConnection();
+    
 }
 
 void RPCRunConfig::readConfigurationFromJSONDocument(const string & jsonDocument,const string & runToUse){

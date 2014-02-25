@@ -74,20 +74,32 @@ void testDBconnection(int _argc, char* arguments[]){
   
   /** data base object tests */
   
-  RPCDBReader * reader = new RPCDBReader;
+  //RPCDBReader * reader = new RPCDBReader;
+  RPCRunConfig *runconfig = new RPCRunConfig;
   
-  reader->openNewConnection();
-  reader->closeCurrentConnection(); // just test does it work
-  reader->openNewConnection();
+  runconfig->readConfigurationFromDBforRunAndSite(1163,"Ghent");
+  for (unsigned i = 0 ; i < runconfig->getChambersDetails().size() ; i++){
+    RPCChamberConditions * cond = runconfig->getConcreteConditionsForChamber(i+1);
+    cout << cond->getChamberName() << " " << cond->getIsReference() << " " << cond->getHVsetForGap(1) << endl;
+    cout << cond->getChamberName() << " " << cond->getLabelForGap(3) << " " << cond->getGapsCurrent().at(0) <<  " " << cond->getGapsCurrent().at(1) << " " << cond->getGapsCurrent().at(2) << " " << cond->getShelfNumber() <<  endl;
+  }
   
-  reader->getChambersDataForRunAndSite(2202,"CERN");
+  cout << runconfig->getTemperature() << " " << runconfig->getHumidity() << " " << runconfig->getPressure() << endl;
   
-  reader->printResultWithNcolumns(8);
+  //reader->openNewConnection();
   
-  reader->getChambersDataForRunAndSite(1163,"Ghent");
+  //reader->getChambersDataForRunAndSite(2202,"CERN");  
+  //reader->printResultWithNcolumns(8);
   
-  reader->printResultWithNcolumns(8);
+  //reader->getChambersDataForRunAndSite(1163,"Ghent");
+  //reader->printResultWithNcolumns(23);
   
+  /*
+  reader->getEnvironmentDataForRunAndSite(1163,"Ghent");
+  
+  reader->printResultWithNcolumns(3);
+  */
+  /*
   reader->getChambersDataForRunAndSite(2499,"CERN");
   
   reader->printResultWithNcolumns(8);
@@ -99,11 +111,9 @@ void testDBconnection(int _argc, char* arguments[]){
   reader->getEnvironmentDataForRunAndSite(2499,"CERN");
   
   reader->printResultWithNcolumns(3);
+  */
+  //reader->closeCurrentConnection();  
   
-  reader->closeCurrentConnection();
-  
-    
-    
 }
 
 void clusterObjectTester (int _argc,char * _argv[]){
@@ -329,56 +339,76 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   TFile * rawdatafile = new TFile(rawdataFilename.c_str());
   string jsonFileWithConfig = arg_v[4] , runToUse = arg_v[5];
   bool DEBUG = atoi(arg_v[6]);
+  int timeWindow = 0 ,  timeReference = 0 ; // time windowses to use
+  vector<int> vectorOfReferenceChambers; // vector of consecutive reference chambers, filled by the run config object
+  int allTracks = 0, verticalTracks=0; int noTrackCounter = 0; // track counters just to keep eye on the stats
+  // some pointer for further use 
+  RPCChamber * chamberObj; // pointer to point to each chamber , use it in a loop
+  RPCLinkBoardChannel * channelObj; // pointer to point to each channel of each chamber , use it in a loop
   
+  /** this following structure (the vector) is used to get the result from the reconstruction. If track is reconstructed,
+   * it contains the partitions and channel numbers obtained from the reconstructed line (from the fit). 
+   * The structure is - the int (the key) gives the chamber number, while each vector of doubles corresponding 
+   * to the key is structured like this : the last vector value is the channel number reconstructed (since the result given by the fit is not integer)
+   * and from the first to the last-1 the values are the partitions (1,2 to or 3) where we may search for hit using the 
+   * channel number, in case the track was in more than one partition. If the track was in one partition only (vertical track),
+   * then the 
+   */
+  
+  map<int,vector<double> > mapOfCurrentEventReconstructedHits; 
+  
+  /** file converter, that addapts different inputs as common output, and loop on the events */
+
   RPCRawConverter * converter = new RPCRawConverter(rawdatafile);
+  cout << "all events " <<  converter->getTotalEvents() << endl;  
   converter->setGhentTDCtoRPCmap(ghentMap);
   int numberOfChamberObjectsNeeded = converter->getNumberOfChamberObjects();
   int numberOfTriggerObjsNeeded = converter->getNumberOfTriggerObjects();
+  numberOfEventsToUse = converter->getTotalEvents();
   
-  /** create a run configuration object */
-  
+  /** create a run configuration object, use it to configure the execution. JSON file for CERN, DB records for GHENT */
+    
   RPCRunConfig * runConfig = new RPCRunConfig();
-  runConfig->readConfigurationFromJSONDocument(jsonFileWithConfig,runToUse);
-  //numberOfEventsToUse = converter->getTotalEvents();
-  /** */
+  /** get the file type */
+  
+  // put the different cases of run configuration reading within the two cases
+  
+  ESiteFileType siteType = converter->getCurrentFileType();
+ 
+  if(siteType == kIsCERNrawFile){
+    runConfig->readConfigurationFromJSONDocument(jsonFileWithConfig,runToUse);
+  }
+  
+  if(siteType == kIsGENTrawFile){
+    runConfig->readConfigurationFromDBforRunAndSite(boost::lexical_cast<int>(runToUse),"Ghent");
+  }
+  
+  vectorOfReferenceChambers = runConfig->getReferenceChambers();
+  
+  // run details configured
+  
+  /* Create cluster of chambers, and set the run details to each chamber in the cluster */
   
   RPCChambersCluster * cosmicTestChambersStack = new RPCChambersCluster(numberOfChamberObjectsNeeded,numberOfTriggerObjsNeeded,kRPC_RE_4_2_chamber);
   cosmicTestChambersStack->setDataSourceForNchambers(numberOfChamberObjectsNeeded,converter->getChambersData());
   cosmicTestChambersStack->setDataSourceForNtriggerObjects(numberOfTriggerObjsNeeded,converter->getTriggersData());
-  
+  for(unsigned i = 0 ; i < cosmicTestChambersStack->getNumberOfChambers() ; i++){
+    cosmicTestChambersStack->getChamberNumber(i+1)->resetEfficiencyCounters();
+  }  
+
   for (unsigned chambersInConfig = 0; chambersInConfig < runConfig->getChambersDetails().size() ; chambersInConfig++){
     RPCChamberConditions * conditions = runConfig->getConcreteConditionsForChamber(chambersInConfig+1);
     cosmicTestChambersStack->getChamberNumber(conditions->getShelfNumber())->setCurrentRunDetails(conditions);
     cosmicTestChambersStack->getChamberNumber(conditions->getShelfNumber())->resetEfficiencyCounters();
-  }
+  }  
   
-  // vector of reference chambers needed    
-  // site type 
-  
-  ESiteFileType siteType = converter->getCurrentFileType();
-  int timeWindow = 0 ;
-  int timeReference = 0 ;
-  vector<int> vectorOfReferenceChambers;
-  if(siteType == kIsCERNrawFile){
-    vectorOfReferenceChambers = runConfig->getReferenceChambers();
-  }
-  if(siteType == kIsGENTrawFile){
-    vectorOfReferenceChambers.push_back(1); vectorOfReferenceChambers.push_back(5); // ghent references are fixed
-  }
-  
-  // map of reconstructed hits within the chambers. 
-  
-  map<int,vector<double> > mapOfCurrentEventReconstructedHits;
-  int allTracks = 0, verticalTracks=0;
-  int noTrackCounter = 0;
-  
-  RPCChamber * chamberObj; // pointer to point to each chamber in the loop
-  RPCLinkBoardChannel * channelObj; // pointer to point to each channel of each chamber 
+  // actual analysis program apart from definitions and config
   
   for (int i = 0 ; i < numberOfEventsToUse ; i++ , converter->nextEvent()){
-    //cout << " Event : " << converter->getEventNumber() << endl;
-    // in case of cern file, the first event is empty. so skip for i < 2 since it crashes for no record in the trigger object
-    if (siteType == kIsCERNrawFile && i < 2) continue; // skip just once if its CERN file
+    
+    //cout << " Event : " << converter->getEventNumber() << endl; // print the event if you like
+    
+    if (siteType == kIsCERNrawFile && i < 2) continue; // skip just once if its CERN file. The first event is always empty
     
     timeWindow = cosmicTestChambersStack->getTimeWindowForSiteType(siteType);
     timeReference = cosmicTestChambersStack->getTimeReferenceValueForSiteType(siteType);
@@ -388,15 +418,29 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     if (mapOfCurrentEventReconstructedHits.empty()){ // if the map is empty there was no reconstructed track
       //cout << " No track reconstructed for event " << converter->getEventNumber() << endl;
       noTrackCounter ++;
-      // add some function to research the main reason of no track
       continue; // skip execution, there is no track reconstucted
     }
     
-    else {
+    else { // else, track was found. search was it vertical (passing single partition) or passed more then one.
       
       for (unsigned totalChambers = 0; totalChambers < cosmicTestChambersStack->getNumberOfChambers() ; totalChambers++ ){
 	
 	chamberObj = cosmicTestChambersStack->getChamberNumber(totalChambers+1);
+	
+	/* // check on the multiple hits, remove in next version
+	for (int ch=0 ; ch < 96 ; ch++){
+	  if(chamberObj->getChannel(ch+1)->hasMultipleHits()){
+	    cout << "Event " << converter->getEventNumber() << " Chamber " << totalChambers+1 << " Channel " << ch+1 << " hits";
+
+	    for(unsigned hitnumber=0;hitnumber < chamberObj->getChannel(ch+1)->getHits().size() ; hitnumber++){
+	      cout << " " << chamberObj->getChannel(ch+1)->getHits().at(hitnumber);
+	    }
+	    
+	    cout << endl;
+	  }
+	}
+	*/
+	
 	assert(mapOfCurrentEventReconstructedHits[totalChambers+1].size());
 	vector<double> partitionsAndChannelsVector = mapOfCurrentEventReconstructedHits[totalChambers+1];
 	int channelNum = partitionsAndChannelsVector.at(partitionsAndChannelsVector.size()-1); // the last element is the channel
@@ -413,19 +457,20 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
 	  if (!channelGotHit){
 	    chamberObj->findResidualsInNeighbourPartitionsForChannelInPartition(partitionsAndChannelsVector);
 	    
+	    /*
 	    if (DEBUG) {
 	    if (chamberObj->getExtendedChamberConditions() != NULL ){
 	      
 	      cout << " Cannot found near enough hits for track found in event : " << converter->getEventNumber() << " in chamber " << totalChambers+1 << endl;
 	      
-	      for (int iiii = 0 ; iiii < mapOfCurrentEventReconstructedHits.size() ; iiii++){
+	      for (unsigned iiii = 0 ; iiii < mapOfCurrentEventReconstructedHits.size() ; iiii++){
 		vector<double> tempVector = mapOfCurrentEventReconstructedHits[iiii+1];
 		 cout << "chamber number : " <<  iiii+1 << " partition number " << tempVector.at(0) << " channel " << tempVector.at(tempVector.size() - 1) << " " << " absolute channel " << (partitionNum-1)*32 + tempVector.at(tempVector.size() - 1) << endl;
 		 cout << "partitions number : ";
-		 for (int aCounter = 0 ; aCounter < tempVector.size() - 1 ; aCounter++) { cout << tempVector.at(aCounter) << " "; }
+		 for (unsigned aCounter = 0 ; aCounter < tempVector.size() - 1 ; aCounter++) { cout << tempVector.at(aCounter) << " "; }
 		 cout << endl;
 	      }
-	      
+	       
 	      cout << " Hits in the chamber " << totalChambers+1 << " channels : " << endl;
 	      for (int allStrips__ = 1 ; allStrips__ <= 32 ; allStrips__++){
 		channelObj = chamberObj->getChannel((partitionNum-1)*32 + allStrips__);
@@ -438,7 +483,10 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
 	    }
 	    
 	    }
-	  }
+	    */  
+	    
+	  }  
+	  
 	  chamberObj->getChannel(chNum)->incrementEfficiencyCounters(channelGotHit);
 	  chamberObj->incrementEfficiencyCounters(channelGotHit);  
 	}
@@ -457,6 +505,8 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     }
   }
   
+  // and thats it, the entire program, here comes the output
+  
   cout << " all reconstructed tracks " << allTracks << endl;
   cout << " vertical tracks " << verticalTracks << endl;
   cout << " no tracks for " << noTrackCounter << " events" << endl;
@@ -472,7 +522,8 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   for (unsigned chamberNum = 0 ; chamberNum < cosmicTestChambersStack->getNumberOfChambers() ; chamberNum++){
     
     if (cosmicTestChambersStack->getChamberNumber(chamberNum+1)->getExtendedChamberConditions() == NULL) continue ;
-        
+    
+    
     cout << " Number of all tracks chamber " << chamberNum+1 << " : " << cosmicTestChambersStack->getChamberNumber(chamberNum+1)->getSumOfAllTracks() << endl;
     cout << " Total and efficient tracks " << cosmicTestChambersStack->getChamberNumber(chamberNum+1)->getNumberOfEfficientTracks() << " "
     << cosmicTestChambersStack->getChamberNumber(chamberNum+1)->getNumberOfAllTracks() << endl;
@@ -481,14 +532,16 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     stringstream ss;
     ss << chamberNum+1;
     
-    efficiency_title = "efficiencyHisto_" + ss.str()+".root";
-    string efficiency_title_pic = "efficiencyHisto_" + ss.str()+".png";
-    track_title = "trackHisto_" + ss.str()+".root";
-    string track_title_pic = "trackHisto_" + ss.str()+".png";
-    string eff_distro_title = "efficiency_distro_" + ss.str()+".root";
-    string res_distro_title = "residuals_distro_" + ss.str()+".root";
-    string part_res_distro_title = "partition_residual_distro" + ss.str() + ".root" ;
-    string absolute_channel_efficiency = "abs_channel_eff_" + ss.str() + ".root";
+    string chamber_Name =  "_" + ss.str() + "_" + cosmicTestChambersStack->getChamberNumber(chamberNum+1)->getExtendedChamberConditions()->getChamberName();
+    
+    efficiency_title = "efficiencyHisto_"+runToUse + chamber_Name+".root";
+    string efficiency_title_pic = "efficiencyHisto_"+runToUse + chamber_Name+".png";
+    track_title = "trackHisto_"+runToUse + chamber_Name+".root";
+    string track_title_pic = "trackHisto_"+runToUse + chamber_Name+".png";
+    string eff_distro_title = "efficiency_distro_"+runToUse + chamber_Name+".root";
+    string res_distro_title = "residuals_distro_"+runToUse + chamber_Name+".root";
+    string part_res_distro_title = "partition_residual_distro"+runToUse + chamber_Name + ".root" ;
+    string absolute_channel_efficiency = "abs_channel_eff_"+runToUse + chamber_Name + ".root";
     
     ss.clear();
     efficiencyHisto = cosmicTestChambersStack->getChamberNumber(chamberNum+1)->getHistogramOfChannelsEfficiency(efficiency_title.c_str());
@@ -534,11 +587,9 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
 void converterTests(int _argc,char ** arg_v){
   
   TFile * myFile = new TFile(arg_v[1]);
-  RPCRawConverter * converter = new RPCRawConverter(myFile);
-  
+  RPCRawConverter * converter = new RPCRawConverter(myFile);  
   //converter->getChannelHitsVectorFromChamber(1);
   converter->setGhentTDCtoRPCmap(arg_v[2]);
-  
   
   RPCChamber * chamber = new RPCChamber(kRPC_RE_4_2_chamber);
   chamber->allocAndInit();
@@ -562,9 +613,7 @@ void converterTests(int _argc,char ** arg_v){
       }
       
     }
-    */
-  
-    
+    */    
   }
   
 }
@@ -596,8 +645,11 @@ void configObjectsTest(int _argc, char* _argv[]){
       cout << "gap label " << condition->getLabelForGap(gap+1) << " current " << condition->getCurrentForGap(gap+1)
       << " hvset " << condition->getHVsetForGap(gap+1) << " hvmon " << condition->getHVmonForGap(gap+1) << endl;
     }
+    
     condition->getLabelForGap(RPCChamberConditionsBase::Etopnarrow);
+    
     for(unsigned febs = 0 ; febs < condition->getFEBTresholds().size() ; febs++){
+      
       cout << condition->getFEBTresholdForBoard(febs+1)<< " " ;
     }
     

@@ -320,12 +320,12 @@ TH1F * RPCLinkBoard::getHistogramOfChannelsEfficiency(const string & histoObjNam
 
 TH1F * RPCLinkBoard::getDistributionOfChannelsEfficiency(const string & histoObjName){
   
-  TH1F * histo = new TH1F (histoObjName.c_str(),"Channels efficiency distribution",1100,0,110);
+  TH1F * histo = new TH1F (histoObjName.c_str(),"Channels efficiency distribution",1010,0,101);
   histo->GetXaxis()->SetTitle("Efficiency %");
   histo->GetYaxis()->SetTitle("Entries");
   
   for (int i = 0 ; i < 96 ; i++){
-    if (this->getChannel(i+1)->getEfficiency() != -1 ){
+    if (this->getChannel(i+1)->getEfficiency() > -1 ){
       histo->Fill(this->getChannel(i+1)->getEfficiency());
     }
   }
@@ -342,7 +342,6 @@ TH1F * RPCLinkBoard::getHistogramOfTracksVsChannels(const string & histoObjName)
   }
   return histo;
 }
-
 
 int RPCLinkBoard::getSizeOfCluster(int clusterNumber){ return this->getClusterNumber(clusterNumber).size();}
 

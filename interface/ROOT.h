@@ -67,6 +67,7 @@
 #include "TError.h"
 #include "TGraph2DErrors.h"
 #include <TGraph2D.h>
+#include <TWebFile.h>
 
 #endif
 

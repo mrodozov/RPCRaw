@@ -32,6 +32,15 @@ RPCRawConverter::RPCRawConverter(TFile * inputFile){
   
 }
 
+RPCRawConverter::RPCRawConverter(TWebFile * webFile){
+  
+  TFile * inputFile = dynamic_cast<TFile*>(webFile);
+  this->setCurrentFileType(this->getFileTypeForFile(inputFile));
+  this->setCurrentFile(inputFile);
+  this->initialyzeStructure();
+  
+}
+
 /** */
 
 ESiteFileType RPCRawConverter::getCurrentFileType(){
@@ -327,7 +336,7 @@ void RPCRawConverter::getDataFromGHENTinputFile(){
       }
       
       else {
-
+	
 	int TdcChannelToSearch = data.TDCCh[i];
 	this->getGhentTDCtoRPCmap().find(TdcChannelToSearch); // TODO - find why there is no value for this key when it should be. here is the bug
 	channel = this->getGhentTDCtoRPCmap().find(TdcChannelToSearch)->second;
@@ -336,19 +345,26 @@ void RPCRawConverter::getDataFromGHENTinputFile(){
       }
     }
     
-  /*  
-  // debug lines
-    cout << "Event: " << this-> getEventNumber() << " iEvent: " << data.iEvent << endl 
-    << " TDChits: " << data.TDCNHits << " records: " ;
+    // debug 
     
-    for (int i = 0 ; i < data.TDCNHits ; i++){
-      cout << data.TDCCh[i] << " " << data.TDCTime[i] << " ";
+//     cout << "Event: " << this-> getEventNumber() << " iEvent: " << data.iEvent << endl 
+//     << " TDChits: " << data.TDCNHits << " records: " << endl;
+    
+//     for (int i = 0 ; i < data.TDCNHits ; i++){
       
-    } */
-  
+//        cout << data.TDCCh[i] << " " << data.TDCTime[i] << endl;
+
+      //if( i+1 < data.TDCNHits && data.TDCCh[i] == data.TDCCh[i+1] ){
+       // TDCCh are not ordered by ch number - i.e. data.TDCCh[i] may not te followed by data.TDCCh[i+1] if they have multihits
+	//cout << " iEvent: " << data.iEvent << endl ;
+	//cout << data.TDCCh[i+1] << " " << data.TDCTime[i+1] << " " << data.TDCCh[i] << " " << data.TDCTime[i] << endl;
+      //}
+    //}
+    //cout << endl;
+    
   }
-  //cout << endl;
   
+  //cout << endl;
   
 }
 
