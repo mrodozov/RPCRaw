@@ -25,8 +25,10 @@ class RPCLinkBoard : public ExRoll {
   vector<double> residulsInNeighbourParts;
   vector<int> _nonPartitionEfficiencyChannelEfficientTracks;
   vector<int> _nonPartitionEfficiencyChannelAllTracks;
+  map<int,vector<int> > _clusterSizeEntries;
   RPCChamberConditionsBase * _chamberConditions;
   map<string, map<int,double> > _chamberEfficiencyVsGapHV;
+  // get each partition cluster size
   
 protected:
   
@@ -114,11 +116,24 @@ public:
   void resetChannelsEfficiencyCounters() ; //{ for (int i=0; i < 96 ; i++) this->getChannel(i+1)->resetEfficiencyCounters(); } 
   void incrementAbsoluteChannelCounters(const bool & hitIsFound,const int & absoluteChannelNumber); // absoluteChannelNumber means channel number without specified partition number
   void clearAbsoluteChannelsCounters();
-  /** get histograms from the recocrds of the object */
+  
+  // cluster size methods
+  void writeClusterSizeValues(); // use to fill cluster size values after each event
+  const vector<int> & getClusterSizeEntriesForPartition(const int & partitionNum); // use partition number starting from 1 
+  void resetClusterSizeEntries(); // erase the records for cluster size for the run
+  
+  // time evolution methods
+  void writeTimeEvolutionValues();
+  const vector<vector<double> > & getTimeEvolutionVectorsForAllStrips();  
+  
+  /** get histograms from the records of the object */
+  
   TH1F * getHistogramOfChannelsEfficiency(const string & histoObjName);
   TH1F * getDistributionOfChannelsEfficiency(const string & histoObjName);
   TH1F * getHistogramOfTracksVsChannels(const string & histoObjName);
   TH1F * getHistogramOfAbsoluteChannelsEfficiency(const string & histoObjName);
+  TH1F * getHistogramOfClusterSizeForPartition(const int & partitionNum);
+  TH2F * getTimeEvolutionProfileHistogram (const string & histoObjName);
   // Statistics methods 
   
   int getSumOfAllTracks ();

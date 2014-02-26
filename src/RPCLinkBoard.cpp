@@ -4,7 +4,7 @@
 
 #include "../interface/RPCLinkBoard.h"
 #include <assert.h>
-#include <boost/concept_check.hpp>
+#include <boost/lexical_cast.hpp>
 
 using namespace std;
 
@@ -265,14 +265,94 @@ void RPCLinkBoard::incrementEfficiencyCounters(const bool & hitIsFound){
   if(hitIsFound){
     this->totalReconstructedTracksWithHit++;
   }
-  this->totalReconstructedTracks++;
-  
+  this->totalReconstructedTracks++;  
 }
 
 double RPCLinkBoard::getChamberEfficiency(){
   return (double)((double)this->totalReconstructedTracksWithHit/(double)this->totalReconstructedTracks)*100;
   //cout << endl;
   //cout << " Eff ratio " << this->totalReconstructedTracksWithHit << " " << this->totalReconstructedTracksWithHit << endl;
+}
+
+void RPCLinkBoard::writeClusterSizeValues(){
+  vector<int> clusterSizeVector;
+  for (int i = 0 ; i < this->getNumberOfClusters() ; i++){
+    int partitionNum = this->getXYCoordinatesOfCluster(i+1).at(1);
+        
+    if(this->_clusterSizeEntries.find(partitionNum) != this->_clusterSizeEntries.end()){
+      clusterSizeVector = this->_clusterSizeEntries[partitionNum];
+    }
+    
+    //cout << this->getClusterNumber(i+1).size() << endl;
+    clusterSizeVector.push_back(this->getClusterNumber(i+1).size());
+    this->_clusterSizeEntries[partitionNum] = clusterSizeVector;
+    
+  }
+}
+
+const vector<int> & RPCLinkBoard::getClusterSizeEntriesForPartition(const int & partitionNum){
+  vector<int> retval;
+  if (this->_clusterSizeEntries.find(partitionNum) != this->_clusterSizeEntries.end()){
+    return this->_clusterSizeEntries[partitionNum];   
+    
+  }
+  else{
+    return retval;
+  }
+}
+
+void RPCLinkBoard::resetClusterSizeEntries(){
+  for (map<int,vector<int> >::iterator itr = this->_clusterSizeEntries.begin() ; itr != this->_clusterSizeEntries.end() ; itr++){
+    itr->second.clear();
+  }
+  this->_clusterSizeEntries.clear();
+}
+
+TH2F * RPCLinkBoard::getTimeEvolutionProfileHistogram(const string & histoObjName){
+  TH2F * timeEvoStripProfileHisto = new TH2F(histoObjName.c_str(),histoObjName.c_str(),1000,0,1000,98,0,98);
+  
+  for (int i = 0 ; i < 96 ; i++){
+    vector<double> singleStripTimeResolutionVector = this->getChannel(i+1)->getTimeEvolutionVector();
+    
+    for (int j = 0 ; j < singleStripTimeResolutionVector.size() ; j++){
+      timeEvoStripProfileHisto->Fill(singleStripTimeResolutionVector.at(j),i+1);
+    }
+  }
+  
+  return timeEvoStripProfileHisto;
+  
+}
+
+
+TH1F * RPCLinkBoard::getHistogramOfClusterSizeForPartition(const int & partitionNum){
+  string histoName  = boost::lexical_cast<string>(partitionNum);
+  if (this->getExtendedChamberConditions() != NULL){
+    histoName = this->getBasicChamberConditions()->getChamberName() + "_" + histoName;
+  }
+  histoName = "ClusterSize_" + histoName;
+  
+  TH1F * clsSize = new TH1F(histoName.c_str(),histoName.c_str(),10,0.5,3.5);
+  for(int i = 0 ; i < this->getClusterSizeEntriesForPartition(partitionNum).size() ; i++){
+    //cout << this->getClusterSizeEntriesForPartition(partitionNum).at(i) << endl;
+    clsSize->Fill(this->getClusterSizeEntriesForPartition(partitionNum).at(i));
+  }  
+  return clsSize;
+}
+
+void RPCLinkBoard::writeTimeEvolutionValues(){
+  for (int i = 0 ; i < 96 ; i++){
+    this->getChannel(i+1)->writeMultiHitDifferences();
+  }
+}
+
+
+
+const vector<vector<double> > & RPCLinkBoard::getTimeEvolutionVectorsForAllStrips(){
+  vector< vector<double> > retval;
+  for (int i = 0 ; i < 96 ; i++){
+    retval.push_back(this->getChannel(i+1)->getTimeEvolutionVector());
+  }
+  return retval;
 }
 
 double RPCLinkBoard::getIntegratedChannelEfficiency(){
@@ -304,7 +384,6 @@ void RPCLinkBoard::clearAbsoluteChannelsCounters(){
     this->_nonPartitionEfficiencyChannelEfficientTracks[0] = 0;
   }
 }
-
 
 TH1F * RPCLinkBoard::getHistogramOfChannelsEfficiency(const string & histoObjName){
   
@@ -371,6 +450,7 @@ TH1F * RPCLinkBoard::getResidualsHistogram (const string & histoObjName){
   return residuals;
   
 }
+
 
 
 TH1F * RPCLinkBoard::getNeighbourPartitionHitsHistogram(const string & histoTitle){

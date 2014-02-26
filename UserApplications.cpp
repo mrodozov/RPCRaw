@@ -367,7 +367,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   numberOfEventsToUse = converter->getTotalEvents();
   
   /** create a run configuration object, use it to configure the execution. JSON file for CERN, DB records for GHENT */
-    
+  
   RPCRunConfig * runConfig = new RPCRunConfig();
   /** get the file type */
   
@@ -392,15 +392,16 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   RPCChambersCluster * cosmicTestChambersStack = new RPCChambersCluster(numberOfChamberObjectsNeeded,numberOfTriggerObjsNeeded,kRPC_RE_4_2_chamber);
   cosmicTestChambersStack->setDataSourceForNchambers(numberOfChamberObjectsNeeded,converter->getChambersData());
   cosmicTestChambersStack->setDataSourceForNtriggerObjects(numberOfTriggerObjsNeeded,converter->getTriggersData());
+  
   for(unsigned i = 0 ; i < cosmicTestChambersStack->getNumberOfChambers() ; i++){
     cosmicTestChambersStack->getChamberNumber(i+1)->resetEfficiencyCounters();
   }  
-
+  
   for (unsigned chambersInConfig = 0; chambersInConfig < runConfig->getChambersDetails().size() ; chambersInConfig++){
     RPCChamberConditions * conditions = runConfig->getConcreteConditionsForChamber(chambersInConfig+1);
     cosmicTestChambersStack->getChamberNumber(conditions->getShelfNumber())->setCurrentRunDetails(conditions);
     cosmicTestChambersStack->getChamberNumber(conditions->getShelfNumber())->resetEfficiencyCounters();
-  }  
+  }
   
   // actual analysis program apart from definitions and config
   
@@ -412,7 +413,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     
     timeWindow = cosmicTestChambersStack->getTimeWindowForSiteType(siteType);
     timeReference = cosmicTestChambersStack->getTimeReferenceValueForSiteType(siteType);
-    bool trackIsVertical = true;    
+    bool trackIsVertical = true;
     mapOfCurrentEventReconstructedHits = cosmicTestChambersStack->getReconstructedHits(vectorOfReferenceChambers,timeWindow,timeReference,trackIsVertical,2,siteType);
     
     if (mapOfCurrentEventReconstructedHits.empty()){ // if the map is empty there was no reconstructed track
@@ -426,7 +427,8 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
       for (unsigned totalChambers = 0; totalChambers < cosmicTestChambersStack->getNumberOfChambers() ; totalChambers++ ){
 	
 	chamberObj = cosmicTestChambersStack->getChamberNumber(totalChambers+1);
-	
+	chamberObj->writeClusterSizeValues(); //
+	chamberObj->writeTimeEvolutionValues(); //
 	/* // check on the multiple hits, remove in next version
 	for (int ch=0 ; ch < 96 ; ch++){
 	  if(chamberObj->getChannel(ch+1)->hasMultipleHits()){
@@ -512,7 +514,8 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   cout << " no tracks for " << noTrackCounter << " events" << endl;
   
   TH1F * efficiencyHisto,* efficiencyDistro, * residualsHisto, * part_residual_histo;
-  TH1F * tracksDistributionHisto,* absolute_channel_efficiency_histo;  
+  TH1F * tracksDistributionHisto,* absolute_channel_efficiency_histo,* clsSizeHistograms;  
+  TH2F * timeEvoHistoPointer;
   string efficiency_title ;
   string track_title ;
   
@@ -542,6 +545,28 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     string res_distro_title = "residuals_distro_"+runToUse + chamber_Name+".root";
     string part_res_distro_title = "partition_residual_distro"+runToUse + chamber_Name + ".root" ;
     string absolute_channel_efficiency = "abs_channel_eff_"+runToUse + chamber_Name + ".root";
+    
+    double stripEfficiencySum = 0;
+    double stripsWithAtLeastOneTrack = 0;
+    int sum_OfAllTracks = 0 ;
+    int sum_EffTracks = 0;
+    //setprecision(9);
+    
+    chamberObj = cosmicTestChambersStack->getChamberNumber(chamberNum+1);
+    
+    for (int i = 0 ; i < 96 ; i++){
+      channelObj = chamberObj->getChannel(i+1);
+      if (channelObj->getAllTracks() > 0 ){
+	stripEfficiencySum += channelObj->getEfficiency();
+	stripsWithAtLeastOneTrack ++;
+	sum_OfAllTracks += channelObj->getAllTracks();
+	sum_EffTracks += channelObj->getEfficientTracks();
+      }
+    }
+    
+    // now check the efficiency as average of the strip efficiency
+    cout << "Channel efficiency average for " << stripsWithAtLeastOneTrack << " strips with hits : " << stripEfficiencySum/stripsWithAtLeastOneTrack << ". Efficiency sum " << stripEfficiencySum << endl;
+    cout << "Track stats : sum of all tracks in strips : " << sum_OfAllTracks << ", sum of efficient tracks : " << sum_EffTracks << endl;
     
     ss.clear();
     efficiencyHisto = cosmicTestChambersStack->getChamberNumber(chamberNum+1)->getHistogramOfChannelsEfficiency(efficiency_title.c_str());
@@ -575,6 +600,15 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     efficiencyHisto->Delete();
     tracksDistributionHisto->Delete();
     
+    for(int i = 0 ; i < chamberObj->getClones() ; i++){
+      clsSizeHistograms = chamberObj->getHistogramOfClusterSizeForPartition(i+1);
+      string histoFileToSave = clsSizeHistograms->GetName();
+      histoFileToSave += ".root";
+      clsSizeHistograms->SaveAs(histoFileToSave.c_str());
+    }
+    
+    timeEvoHistoPointer = chamberObj->getTimeEvolutionProfileHistogram(("TimeResolutionPerStrip_"+chamberObj->getExtendedChamberConditions()->getChamberName()).c_str());
+    timeEvoHistoPointer->SaveAs(("TimeResolutionPerStrip_"+chamber_Name+".root").c_str());
   }
   
   rawdatafile->Close("R");

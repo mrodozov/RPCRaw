@@ -31,6 +31,14 @@ bool RPCLinkBoardChannel::hasMultipleHits (){
   return (this->hasHit() && this->_vectorOfhits->size() > 1);
 }
 
+void RPCLinkBoardChannel::writeMultiHitDifferences(){
+  if (this->hasMultipleHits()){
+    for (int i = 0 ; i < this->getHits().size() - 1 ; i++) {
+      this->timeEvolutionDifferences.push_back( this->getHits().at(i+1) - this->getHits().at(i) );
+    }
+  }
+}
+
 RPCLinkBoardChannel::RPCLinkBoardChannel(){
   this->setEfficiency(0); // well, should have default value
   this->resetEfficiencyCounters();
@@ -45,6 +53,15 @@ void RPCLinkBoardChannel::incrementEfficiencyCounters(const bool & hitIsFound){
     this->efficientTracks++;
   }
   this->allTracks++;
+}
+
+void RPCLinkBoardChannel::resetTimeEvoEntriesVector(){
+  this->timeEvolutionDifferences.clear();
+}
+
+void RPCLinkBoardChannel::resetAllCounters(){
+  this->resetTimeEvoEntriesVector();
+  this->resetEfficiencyCounters();
 }
 
 void RPCLinkBoardChannel::resetEfficiencyCounters(){

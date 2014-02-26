@@ -4,7 +4,7 @@
 
 #ifndef USER_APPLICATIONS_H
 #define USER_APPLICATIONS_H
-
+#include <iomanip>
 #include "interface/RPCChambersCluster.h"
 #include "interface/RPCRawConverter.h"
 #include "interface/RPCConfigObject.h"
