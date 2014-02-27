@@ -337,8 +337,8 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   string rawdataFilename=arg_v[1],ghentMap = arg_v[2];
   int numberOfEventsToUse = atoi(arg_v[3]);
   TFile * rawdatafile = new TFile(rawdataFilename.c_str());
-  string jsonFileWithConfig = arg_v[4] , runToUse = arg_v[5];
-  bool DEBUG = atoi(arg_v[6]);
+  string jsonFileWithConfig = arg_v[4] , runToUse = arg_v[5] , sigmoidHistosFolder = arg_v[6];
+  //bool DEBUG = atoi(arg_v[7]);
   int timeWindow = 0 ,  timeReference = 0 ; // time windowses to use
   vector<int> vectorOfReferenceChambers; // vector of consecutive reference chambers, filled by the run config object
   int allTracks = 0, verticalTracks=0; int noTrackCounter = 0; // track counters just to keep eye on the stats
@@ -360,11 +360,12 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   /** file converter, that addapts different inputs as common output, and loop on the events */
 
   RPCRawConverter * converter = new RPCRawConverter(rawdatafile);
-  cout << "all events " <<  converter->getTotalEvents() << endl;  
+  if(numberOfEventsToUse > converter->getTotalEvents()) numberOfEventsToUse = converter->getTotalEvents();
+  cout << "all events " <<  converter->getTotalEvents() << endl;
   converter->setGhentTDCtoRPCmap(ghentMap);
   int numberOfChamberObjectsNeeded = converter->getNumberOfChamberObjects();
   int numberOfTriggerObjsNeeded = converter->getNumberOfTriggerObjects();
-  numberOfEventsToUse = converter->getTotalEvents();
+  //numberOfEventsToUse = converter->getTotalEvents();
   
   /** create a run configuration object, use it to configure the execution. JSON file for CERN, DB records for GHENT */
   
@@ -427,21 +428,8 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
       for (unsigned totalChambers = 0; totalChambers < cosmicTestChambersStack->getNumberOfChambers() ; totalChambers++ ){
 	
 	chamberObj = cosmicTestChambersStack->getChamberNumber(totalChambers+1);
-	chamberObj->writeClusterSizeValues(); //
-	chamberObj->writeTimeEvolutionValues(); //
-	/* // check on the multiple hits, remove in next version
-	for (int ch=0 ; ch < 96 ; ch++){
-	  if(chamberObj->getChannel(ch+1)->hasMultipleHits()){
-	    cout << "Event " << converter->getEventNumber() << " Chamber " << totalChambers+1 << " Channel " << ch+1 << " hits";
-
-	    for(unsigned hitnumber=0;hitnumber < chamberObj->getChannel(ch+1)->getHits().size() ; hitnumber++){
-	      cout << " " << chamberObj->getChannel(ch+1)->getHits().at(hitnumber);
-	    }
-	    
-	    cout << endl;
-	  }
-	}
-	*/
+	chamberObj->writeClusterSizeValues(); // writes the existing cluster sizes as intergers into a vector that belongs to the chamber
+	chamberObj->writeTimeEvolutionValues(); // 
 	
 	assert(mapOfCurrentEventReconstructedHits[totalChambers+1].size());
 	vector<double> partitionsAndChannelsVector = mapOfCurrentEventReconstructedHits[totalChambers+1];
@@ -457,41 +445,14 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
 	  chamberObj->findResidualValueForChannelInPartitions(channelNum,partitionsAndChannelsVector);
 	  // if the channel doesn't got any hits, search for a hits in the next partitions and write 
 	  if (!channelGotHit){
-	    chamberObj->findResidualsInNeighbourPartitionsForChannelInPartition(partitionsAndChannelsVector);
-	    
-	    /*
-	    if (DEBUG) {
-	    if (chamberObj->getExtendedChamberConditions() != NULL ){
-	      
-	      cout << " Cannot found near enough hits for track found in event : " << converter->getEventNumber() << " in chamber " << totalChambers+1 << endl;
-	      
-	      for (unsigned iiii = 0 ; iiii < mapOfCurrentEventReconstructedHits.size() ; iiii++){
-		vector<double> tempVector = mapOfCurrentEventReconstructedHits[iiii+1];
-		 cout << "chamber number : " <<  iiii+1 << " partition number " << tempVector.at(0) << " channel " << tempVector.at(tempVector.size() - 1) << " " << " absolute channel " << (partitionNum-1)*32 + tempVector.at(tempVector.size() - 1) << endl;
-		 cout << "partitions number : ";
-		 for (unsigned aCounter = 0 ; aCounter < tempVector.size() - 1 ; aCounter++) { cout << tempVector.at(aCounter) << " "; }
-		 cout << endl;
-	      }
-	       
-	      cout << " Hits in the chamber " << totalChambers+1 << " channels : " << endl;
-	      for (int allStrips__ = 1 ; allStrips__ <= 32 ; allStrips__++){
-		channelObj = chamberObj->getChannel((partitionNum-1)*32 + allStrips__);
-		if (channelObj->hasHit()) {
-		  cout << (partitionNum-1)*32 + allStrips__ << " ";
-		}
-	      }
-	      cout << endl;
-	      
-	    }
-	    
-	    }
-	    */  
+	    chamberObj->findResidualsInNeighbourPartitionsForChannelInPartition(partitionsAndChannelsVector);     
 	    
 	  }  
 	  
 	  chamberObj->getChannel(chNum)->incrementEfficiencyCounters(channelGotHit);
 	  chamberObj->incrementEfficiencyCounters(channelGotHit);  
 	}
+	
 	else {
 	  for (unsigned partitionCounter = 0 ; partitionCounter < partitionsAndChannelsVector.size() - 1; partitionCounter++){
 	    partitionNum = partitionsAndChannelsVector.at(partitionCounter);
@@ -501,6 +462,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
 	  chamberObj->incrementAbsoluteChannelCounters(channelGotHit,channelNum);
 	}
       }
+      
       if (trackIsVertical) verticalTracks++;
       allTracks++;
       
@@ -520,22 +482,21 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   string track_title ;
   
   /** writing the results of the application */ 
-  /** TODO - make this part more short (an elegant) with defining a subroutine (the histogram write part) */
+  /** TODO - make this part more short (and elegant) with defining a subroutine (the histogram write part) */
   
   for (unsigned chamberNum = 0 ; chamberNum < cosmicTestChambersStack->getNumberOfChambers() ; chamberNum++){
     
-    if (cosmicTestChambersStack->getChamberNumber(chamberNum+1)->getExtendedChamberConditions() == NULL) continue ;
+    chamberObj = cosmicTestChambersStack->getChamberNumber(chamberNum+1);    
+    if (chamberObj->getExtendedChamberConditions() == NULL || chamberObj->getExtendedChamberConditions()->getIsReference()) continue ;
     
-    
-    cout << " Number of all tracks chamber " << chamberNum+1 << " : " << cosmicTestChambersStack->getChamberNumber(chamberNum+1)->getSumOfAllTracks() << endl;
-    cout << " Total and efficient tracks " << cosmicTestChambersStack->getChamberNumber(chamberNum+1)->getNumberOfEfficientTracks() << " "
-    << cosmicTestChambersStack->getChamberNumber(chamberNum+1)->getNumberOfAllTracks() << endl;
-    cout << " Total efficiency " << cosmicTestChambersStack->getChamberNumber(chamberNum+1)->getChamberEfficiency() << endl;
+    cout << " Number of all tracks chamber " << chamberNum+1 << " : " << chamberObj->getSumOfAllChannelTracks() << endl;
+    cout << " Total and efficient tracks " << chamberObj->getNumberOfEfficientTracks() << " "
+    << chamberObj->getNumberOfAllTracks() << endl;
+    cout << " Total efficiency " << chamberObj->getChamberEfficiency() << endl;
     
     stringstream ss;
-    ss << chamberNum+1;
-    
-    string chamber_Name =  "_" + ss.str() + "_" + cosmicTestChambersStack->getChamberNumber(chamberNum+1)->getExtendedChamberConditions()->getChamberName();
+    ss << chamberNum+1;    
+    string chamber_Name =  "_" + ss.str() + "_" + chamberObj->getExtendedChamberConditions()->getChamberName();
     
     efficiency_title = "efficiencyHisto_"+runToUse + chamber_Name+".root";
     string efficiency_title_pic = "efficiencyHisto_"+runToUse + chamber_Name+".png";
@@ -546,51 +507,29 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     string part_res_distro_title = "partition_residual_distro"+runToUse + chamber_Name + ".root" ;
     string absolute_channel_efficiency = "abs_channel_eff_"+runToUse + chamber_Name + ".root";
     
-    double stripEfficiencySum = 0;
-    double stripsWithAtLeastOneTrack = 0;
-    int sum_OfAllTracks = 0 ;
-    int sum_EffTracks = 0;
-    //setprecision(9);
-    
-    chamberObj = cosmicTestChambersStack->getChamberNumber(chamberNum+1);
-    
-    for (int i = 0 ; i < 96 ; i++){
-      channelObj = chamberObj->getChannel(i+1);
-      if (channelObj->getAllTracks() > 0 ){
-	stripEfficiencySum += channelObj->getEfficiency();
-	stripsWithAtLeastOneTrack ++;
-	sum_OfAllTracks += channelObj->getAllTracks();
-	sum_EffTracks += channelObj->getEfficientTracks();
-      }
-    }
-    
-    // now check the efficiency as average of the strip efficiency
-    cout << "Channel efficiency average for " << stripsWithAtLeastOneTrack << " strips with hits : " << stripEfficiencySum/stripsWithAtLeastOneTrack << ". Efficiency sum " << stripEfficiencySum << endl;
-    cout << "Track stats : sum of all tracks in strips : " << sum_OfAllTracks << ", sum of efficient tracks : " << sum_EffTracks << endl;
-    
     ss.clear();
-    efficiencyHisto = cosmicTestChambersStack->getChamberNumber(chamberNum+1)->getHistogramOfChannelsEfficiency(efficiency_title.c_str());
+    efficiencyHisto = chamberObj->getHistogramOfChannelsEfficiency(efficiency_title.c_str());
     efficiencyHisto->SetStats(false);
     efficiencyHisto->SaveAs(efficiency_title.c_str());
     
-    tracksDistributionHisto = cosmicTestChambersStack->getChamberNumber(chamberNum+1)->getHistogramOfTracksVsChannels(track_title.c_str());    
+    tracksDistributionHisto = chamberObj->getHistogramOfTracksVsChannels(track_title.c_str());    
     tracksDistributionHisto->SetStats(false);
     tracksDistributionHisto->SaveAs(track_title.c_str());
     
-    efficiencyDistro = cosmicTestChambersStack->getChamberNumber(chamberNum+1)->getDistributionOfChannelsEfficiency(eff_distro_title.c_str());
+    efficiencyDistro = chamberObj->getDistributionOfChannelsEfficiency(eff_distro_title.c_str());
     efficiencyDistro->SetMarkerColor(kBlue);
     efficiencyDistro->SetFillColor(kBlue);
     
     efficiencyDistro->SaveAs(eff_distro_title.c_str());
-    residualsHisto = cosmicTestChambersStack->getChamberNumber(chamberNum+1)->getResidualsHistogram(res_distro_title.c_str());
+    residualsHisto = chamberObj->getResidualsHistogram(res_distro_title.c_str());
     residualsHisto->SetMarkerColor(kBlue);
     residualsHisto->SetFillColor(kBlue);
     
     residualsHisto->SaveAs(res_distro_title.c_str());
-    part_residual_histo = cosmicTestChambersStack->getChamberNumber(chamberNum+1)->getNeighbourPartitionHitsHistogram(part_res_distro_title.c_str());
+    part_residual_histo = chamberObj->getNeighbourPartitionHitsHistogram(part_res_distro_title.c_str());
     part_residual_histo->SaveAs(part_res_distro_title.c_str());
     
-    absolute_channel_efficiency_histo = cosmicTestChambersStack->getChamberNumber(chamberNum+1)->getHistogramOfAbsoluteChannelsEfficiency(absolute_channel_efficiency.c_str());
+    absolute_channel_efficiency_histo = chamberObj->getHistogramOfAbsoluteChannelsEfficiency(absolute_channel_efficiency.c_str());
     absolute_channel_efficiency_histo->SaveAs(absolute_channel_efficiency.c_str());
     
     absolute_channel_efficiency_histo->Delete();
@@ -608,7 +547,9 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     }
     
     timeEvoHistoPointer = chamberObj->getTimeEvolutionProfileHistogram(("TimeResolutionPerStrip_"+chamberObj->getExtendedChamberConditions()->getChamberName()).c_str());
-    timeEvoHistoPointer->SaveAs(("TimeResolutionPerStrip_"+chamber_Name+".root").c_str());
+    timeEvoHistoPointer->SaveAs(("TimeResolutionPerStrip_"+chamber_Name+".root").c_str());            
+    chamberObj->updateSigmoidHistogramWithNewValue(sigmoidHistosFolder,chamberObj->getExtendedChamberConditions()->getChamberName(),runConfig->getTriggerLayer(),chamberObj->getExtendedChamberConditions()->getHVset(),chamberObj->getChamberEfficiency());
+    
   }
   
   rawdatafile->Close("R");

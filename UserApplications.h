@@ -29,5 +29,6 @@ void getGlobalPlotsForRunStack(int _argc,char * _argv[]); // mostly for CERN fil
 
 void getDistributionOfEventsByClustersInRefChambers(int _argc,char * _argv[]);
 
+void fitSigmoidHistogram(); // fit existing sigmoid 
 
 #endif

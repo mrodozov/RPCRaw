@@ -56,7 +56,6 @@
 #include "TVector3.h"
 #include <TEveTrack.h>
 #include "TEveTrackPropagator.h"
-#include "TEveTrack.h"
 #include "TEveVSDStructs.h"
 #include "TEveManager.h"
 #include "TEveViewer.h"

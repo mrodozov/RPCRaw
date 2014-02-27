@@ -134,11 +134,14 @@ public:
   TH1F * getHistogramOfAbsoluteChannelsEfficiency(const string & histoObjName);
   TH1F * getHistogramOfClusterSizeForPartition(const int & partitionNum);
   TH2F * getTimeEvolutionProfileHistogram (const string & histoObjName);
+  
   // Statistics methods 
   
-  int getSumOfAllTracks ();
+  int getSumOfAllChannelTracks ();
   
   // Global histograms
+  void updateSigmoidHistogramWithNewValue(const string & histoFolder,const string & chamberID,const string & triggerMode,const int & HV,const double & efficiencyValue);
+
   TH2F * getEfficiencyHistogramForGapOperationMode(const string & mode);
   void setEfficiencyVsHVentryForMode(const int & HV,const double & efficiency,const double & effUncertainty,const string & mode);
   void drawNestedSigmoidPlotForAllModes(const string & title);

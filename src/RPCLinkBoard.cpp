@@ -278,7 +278,7 @@ void RPCLinkBoard::writeClusterSizeValues(){
   vector<int> clusterSizeVector;
   for (int i = 0 ; i < this->getNumberOfClusters() ; i++){
     int partitionNum = this->getXYCoordinatesOfCluster(i+1).at(1);
-        
+    
     if(this->_clusterSizeEntries.find(partitionNum) != this->_clusterSizeEntries.end()){
       clusterSizeVector = this->_clusterSizeEntries[partitionNum];
     }
@@ -331,7 +331,7 @@ TH1F * RPCLinkBoard::getHistogramOfClusterSizeForPartition(const int & partition
   }
   histoName = "ClusterSize_" + histoName;
   
-  TH1F * clsSize = new TH1F(histoName.c_str(),histoName.c_str(),10,0.5,3.5);
+  TH1F * clsSize = new TH1F(histoName.c_str(),histoName.c_str(),10,1,11);
   for(int i = 0 ; i < this->getClusterSizeEntriesForPartition(partitionNum).size() ; i++){
     //cout << this->getClusterSizeEntriesForPartition(partitionNum).at(i) << endl;
     clsSize->Fill(this->getClusterSizeEntriesForPartition(partitionNum).at(i));
@@ -344,8 +344,6 @@ void RPCLinkBoard::writeTimeEvolutionValues(){
     this->getChannel(i+1)->writeMultiHitDifferences();
   }
 }
-
-
 
 const vector<vector<double> > & RPCLinkBoard::getTimeEvolutionVectorsForAllStrips(){
   vector< vector<double> > retval;
@@ -519,7 +517,7 @@ void RPCLinkBoard::findResidualsInNeighbourPartitionsForChannelInPartition(vecto
   }
 }
 
-int RPCLinkBoard::getSumOfAllTracks (){
+int RPCLinkBoard::getSumOfAllChannelTracks (){
   
   int tracksNumber = 0 ;
   
@@ -568,7 +566,7 @@ void  RPCLinkBoard::setCurrentRunDetails(RPCChamberConditionsBase * runDetails){
 }
 
 TH2F * RPCLinkBoard::getEfficiencyHistogramForGapOperationMode(const string & mode){
-  TH2F * retval = new TH2F((this->getExtendedChamberConditions()->getChamberName()+mode).c_str(),this->getExtendedChamberConditions()->getChamberName().c_str(),2100,8000,10100,550,0,110);
+  TH2F * retval = new TH2F((this->getExtendedChamberConditions()->getChamberName()+mode).c_str(),this->getExtendedChamberConditions()->getChamberName().c_str(),2100,8000,10100,660,0,120);
   map<int,double> values = this->_chamberEfficiencyVsGapHV.find(mode)->second;
   for (map<int,double>::iterator iter = values.begin();iter != values.end();iter++){
     retval->Fill(iter->first,iter->second);
@@ -622,6 +620,46 @@ void RPCLinkBoard::drawNestedSigmoidPlotForAllModes(const string & title){
   leg->SetBorderSize(0);
   leg->Draw();
   canvas->SaveAs(filename.c_str());
+  
+}
+
+void RPCLinkBoard::updateSigmoidHistogramWithNewValue(const string & histoFolder,const string & chamberID,const string & triggerMode,const int & HV,const double & efficiencyValue){
+  
+  string fullFileName = histoFolder+"SigmoidHistos_"+chamberID+".root";
+  string histoName = chamberID+"_"+triggerMode;
+  TFile * sigmoFile = new TFile(fullFileName.c_str(),"UPDATE");
+  TH2F * currentHisto ;
+  TKey *key;
+  TObject *obj;
+  // search for the name, if does not exists create the histogram for first time  
+  TIter nextkey( sigmoFile->GetListOfKeys() );
+  bool histoFound = false;
+  while (( key = (TKey*)nextkey()) != NULL ) {
+    obj = key->ReadObj();
+    if (obj->GetName() == histoName){
+      histoFound = true;
+      break; // if found
+    }
+  }
+  
+  // now if the histo is found just take it, if not create it
+  
+  if (histoFound){    
+    currentHisto = dynamic_cast<TH2F*>(sigmoFile->Get(histoName.c_str()));
+  }  
+  else{
+    currentHisto = new TH2F(histoName.c_str(),histoName.c_str(),2100,8000,10100,1100,0,110);
+  }
+  
+  currentHisto->Fill(HV,efficiencyValue);
+  currentHisto->SetMarkerStyle(kFullCircle);
+  currentHisto->SetMarkerColor(kBlue);
+  currentHisto->SetStats(kFALSE);
+  
+  // write the histo and close the file
+  currentHisto->Write(currentHisto->GetName(),TObject::kOverwrite);
+  sigmoFile->Close("R");
+  sigmoFile->Delete();
   
 }
 
