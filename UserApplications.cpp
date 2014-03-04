@@ -362,6 +362,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   RPCRawConverter * converter = new RPCRawConverter(rawdatafile);
   if(numberOfEventsToUse > converter->getTotalEvents()) numberOfEventsToUse = converter->getTotalEvents();
   cout << "all events " <<  converter->getTotalEvents() << endl;
+  numberOfEventsToUse = converter->getTotalEvents();
   converter->setGhentTDCtoRPCmap(ghentMap);
   int numberOfChamberObjectsNeeded = converter->getNumberOfChamberObjects();
   int numberOfTriggerObjsNeeded = converter->getNumberOfTriggerObjects();
@@ -383,6 +384,8 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   if(siteType == kIsGENTrawFile){
     runConfig->readConfigurationFromDBforRunAndSite(boost::lexical_cast<int>(runToUse),"Ghent");
   }
+  
+  cout << "Events according to config file: " << runConfig->getNumberOfEvents() << endl;
   
   vectorOfReferenceChambers = runConfig->getReferenceChambers();
   
@@ -408,7 +411,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   
   for (int i = 0 ; i < numberOfEventsToUse ; i++ , converter->nextEvent()){
     
-    //cout << " Event : " << converter->getEventNumber() << endl; // print the event if you like
+    cout << " Event : " << converter->getEventNumber() << endl; // print the event if you like
     
     if (siteType == kIsCERNrawFile && i < 2) continue; // skip just once if its CERN file. The first event is always empty
     

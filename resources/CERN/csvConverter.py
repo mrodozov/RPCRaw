@@ -24,6 +24,8 @@ runsList = []
 linesCounter = 0;
 listOfAllChambers = []
 
+listGapTypes = ['_tn','_tw','_b']
+
 for fileLine in content:
   
   listOfLineDetails = fileLine.split()
@@ -79,8 +81,7 @@ for fileLine in content:
     counter = 0
     singleRun = {'run':0,'HVapplied':0,'TriggerLayer':''}
     singleRun2 = {'run':0,'HVapplied':0,'TriggerLayer':''}
-    singleRun3 = {'run':0,'HVapplied':0,'TriggerLayer':''}
-    
+    singleRun3 = {'run':0,'HVapplied':0,'TriggerLayer':''}    
     singleRun['run'] =  listOfLineDetails[0]
     singleRun['HVapplied'] = listOfLineDetails[1]
     singleRun['TriggerLayer'] = listOfLineDetails[2]
@@ -135,29 +136,34 @@ def getSingleRunDetailsFromFile(filename,folder):
     if 'Stack' in Line:
       runDetailsJSONdict['StackID'] = lineDetails[2]
     
-    if 'CMS' in Line:
-      firstPart = False
-      secondFilePart = True
+    for _gapType in listGapTypes:
+      if  _gapType in Line:
+	firstPart = False
+	secondFilePart = True
+	break
+	
+    for _gapType in listGapTypes:
       
-    if 'CMS' in Line and secondFilePart:
-      chamberLineCounter += 1
+      if _gapType in Line and secondFilePart:
+	chamberLineCounter += 1
       
-      gapName = ''
+	gapName = ''
       
-      if chamberLineCounter == 1:
-	gapName = 'topnarrow'
-      elif chamberLineCounter == 2:
-	gapName = 'topwide'
-      else:
-	gapName = 'bottom'
-      gapDetailsDict = {'current':lineDetails[1],'vset':lineDetails[2],'vmon':lineDetails[3]}
+	if chamberLineCounter == 1:
+	  gapName = 'topnarrow'
+	elif chamberLineCounter == 2:
+	  gapName = 'topwide'
+	else:
+	  gapName = 'bottom'
+	gapDetailsDict = {'current':lineDetails[1],'vset':lineDetails[2],'vmon':lineDetails[3]}
       
-      stationAsString = lineDetails[4]
+	stationAsString = lineDetails[4]
       
-      singleChamberDetails[gapName] = gapDetailsDict
-      nameOnly = lineDetails[0][:lineDetails[0].rfind('_')-len(lineDetails[0])]
-      singleChamberDetails['name']=nameOnly
-      
+	singleChamberDetails[gapName] = gapDetailsDict
+	nameOnly = lineDetails[0][:lineDetails[0].rfind('_')-len(lineDetails[0])]
+	singleChamberDetails['name']=nameOnly
+	break
+	
     if 'FEBs' in Line:
       chamberLineCounter = 0
       del lineDetails[0]
@@ -194,8 +200,15 @@ for key in dictFromFile['chambersByShelfNumber']:
 # change the names of chambers in cDetails dictionary only once
 
 firstRunDetailsDict = getSingleRunDetailsFromFile(runsList[0]['run']+'.info',sys.argv[2])
+#print runsList[0]['run']
 firstRunChambersDetails = firstRunDetailsDict['chambersByShelfNumber']
+
+#DEBUG Promlem with names starting not with CMS- 
+
 for chamber in chamberDetails['chambers']:
+#  print chamber['shelf']
+#  print firstRunChambersDetails
+#  print firstRunChambersDetails[chamber['shelf']]['name']
   chamber['name'] = firstRunChambersDetails[chamber['shelf']]['name']
   
 # bring the logic for the output using all dictionaries
@@ -232,6 +245,9 @@ for run in runsList:
   runToWrite = {run['run']:singleRunDict}
   fileToWrite.write(json.dumps(runToWrite))
   fileToWrite.write('\n')
+  
+  
+
   
 fileToWrite.close()  
   

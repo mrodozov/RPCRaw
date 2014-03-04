@@ -29,7 +29,7 @@ RPCRawConverter::RPCRawConverter(TFile * inputFile){
   this->setCurrentFileType(this->getFileTypeForFile(inputFile));
   this->setCurrentFile(inputFile);
   this->initialyzeStructure();
-  
+  this->getCurrentTree()->SetMakeClass(1);
 }
 
 RPCRawConverter::RPCRawConverter(TWebFile * webFile){
@@ -38,7 +38,7 @@ RPCRawConverter::RPCRawConverter(TWebFile * webFile){
   this->setCurrentFileType(this->getFileTypeForFile(inputFile));
   this->setCurrentFile(inputFile);
   this->initialyzeStructure();
-  
+  this->getCurrentTree()->SetMakeClass(1);
 }
 
 /** */
@@ -178,15 +178,14 @@ void RPCRawConverter::getDataFromCERNinputFile(){
     nameOfBranch = objectArray->At(i)->GetName();
     aBranch = this->getCurrentTree()->GetBranch(nameOfBranch.c_str());
     //cout << nameOfBranch << " " << this->_eventCounter << endl;
-    aBranch->GetEntry(this->_eventCounter);
     
     switch (this->getBranchTypeFromBranchName(nameOfBranch)){
       
       case kIsCERNtriggerChannelBranch:
       {
 	this->_currentTTree->SetBranchAddress(nameOfBranch.c_str(),&channelsVector,&aBranch);
+	aBranch->GetEntry(this->_eventCounter);
 	triggerChannelVectors.push_back(*channelsVector);
-	channelsVector->clear();
 	
 	if(trigger_channels_counter == 31){
 	  if(!this->structureIsInitialized()){
@@ -201,7 +200,7 @@ void RPCRawConverter::getDataFromCERNinputFile(){
 	}
 	
 	trigger_channels_counter++;
-	
+	channelsVector->clear();
 	break;
       }
       
@@ -209,6 +208,7 @@ void RPCRawConverter::getDataFromCERNinputFile(){
       {
 	
 	this->getCurrentTree()->SetBranchAddress(nameOfBranch.c_str(),&channelsVector,&aBranch);
+	aBranch->GetEntry(this->_eventCounter);
 	chamberChannelVectors.push_back(*channelsVector);
 	int channelNumberInCurrentChamber = chamber_channels_counter - (96*chambersCounter);
 	
@@ -218,8 +218,6 @@ void RPCRawConverter::getDataFromCERNinputFile(){
 	else{
 	  partitionA.push_back(*channelsVector);
 	}
-	
-	channelsVector->clear();
 	
 	if (chamber_channels_counter != 0 && ((chamber_channels_counter+1 ) % 96) == 0){
  	  if(!this->structureIsInitialized()){
@@ -246,6 +244,7 @@ void RPCRawConverter::getDataFromCERNinputFile(){
 	}
 	chamber_channels_counter++ ;
 	
+	channelsVector->clear();
 	break;
       }
       
@@ -266,6 +265,7 @@ void RPCRawConverter::getDataFromCERNinputFile(){
 	// no default for this case, break and pass proper error
 	break;
       }
+      
     } 
     
   }
