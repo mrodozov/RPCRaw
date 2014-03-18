@@ -338,6 +338,9 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   int numberOfEventsToUse = atoi(arg_v[3]);
   TFile * rawdatafile = new TFile(rawdataFilename.c_str());
   string jsonFileWithConfig = arg_v[4] , runToUse = arg_v[5] , sigmoidHistosFolder = arg_v[6];
+  unsigned position = jsonFileWithConfig.find("data_");
+  string jsonFileNameOnly = jsonFileWithConfig.substr(position,jsonFileWithConfig.size()-position-5);
+  string resultsFolder = arg_v[7];
   //bool DEBUG = atoi(arg_v[7]);
   int timeWindow = 0 ,  timeReference = 0 ; // time windowses to use
   vector<int> vectorOfReferenceChambers; // vector of consecutive reference chambers, filled by the run config object
@@ -346,7 +349,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   RPCChamber * chamberObj; // pointer to point to each chamber , use it in a loop
   RPCLinkBoardChannel * channelObj; // pointer to point to each channel of each chamber , use it in a loop
   
-  /** this following structure (the vector) is used to get the result from the reconstruction. If track is reconstructed,
+  /** this following structure (the map with int keys and vectors values ) is used to get the result from the reconstruction. If track is reconstructed,
    * it contains the partitions and channel numbers obtained from the reconstructed line (from the fit). 
    * The structure is - the int (the key) gives the chamber number, while each vector of doubles corresponding 
    * to the key is structured like this : the last vector value is the channel number reconstructed (since the result given by the fit is not integer)
@@ -358,7 +361,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   map<int,vector<double> > mapOfCurrentEventReconstructedHits; 
   
   /** file converter, that addapts different inputs as common output, and loop on the events */
-
+  
   RPCRawConverter * converter = new RPCRawConverter(rawdatafile);
   if(numberOfEventsToUse > converter->getTotalEvents()) numberOfEventsToUse = converter->getTotalEvents();
   cout << "all events " <<  converter->getTotalEvents() << endl;
@@ -403,15 +406,17 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   
   for (unsigned chambersInConfig = 0; chambersInConfig < runConfig->getChambersDetails().size() ; chambersInConfig++){
     RPCChamberConditions * conditions = runConfig->getConcreteConditionsForChamber(chambersInConfig+1);
-    cosmicTestChambersStack->getChamberNumber(conditions->getShelfNumber())->setCurrentRunDetails(conditions);
-    cosmicTestChambersStack->getChamberNumber(conditions->getShelfNumber())->resetEfficiencyCounters();
+    chamberObj = cosmicTestChambersStack->getChamberNumber(conditions->getShelfNumber());
+    chamberObj->setCurrentRunDetails(conditions);
+    chamberObj->resetEfficiencyCounters();
+    chamberObj->initClusterTimeProfileHistogramWithUniqueName("ClusterTimeProfile_"+conditions->getChamberName());
   }
   
   // actual analysis program apart from definitions and config
   
   for (int i = 0 ; i < numberOfEventsToUse ; i++ , converter->nextEvent()){
     
-    cout << " Event : " << converter->getEventNumber() << endl; // print the event if you like
+    //cout << " Event : " << converter->getEventNumber() << endl; // print the event if you like
     
     if (siteType == kIsCERNrawFile && i < 2) continue; // skip just once if its CERN file. The first event is always empty
     
@@ -450,10 +455,20 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
 	  if (!channelGotHit){
 	    chamberObj->findResidualsInNeighbourPartitionsForChannelInPartition(partitionsAndChannelsVector);     
 	    
-	  }  
-	  
+	  }
+	  else {
+	      int clNum = chamberObj->getNumberOfClusterForStripNumber(chNum);
+	      if (clNum != -1 )  {
+		cout << "Cluster number :" << clNum << " ";
+		chamberObj->writeClustersTimeProfileForClusterNumber(clNum);
+		chamberObj->printClusterTimesForClusterNumber(clNum);
+		
+	      }
+	      
+	  }
 	  chamberObj->getChannel(chNum)->incrementEfficiencyCounters(channelGotHit);
 	  chamberObj->incrementEfficiencyCounters(channelGotHit);  
+	  
 	}
 	
 	else {
@@ -489,8 +504,9 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   
   for (unsigned chamberNum = 0 ; chamberNum < cosmicTestChambersStack->getNumberOfChambers() ; chamberNum++){
     
+    
     chamberObj = cosmicTestChambersStack->getChamberNumber(chamberNum+1);    
-    if (chamberObj->getExtendedChamberConditions() == NULL || chamberObj->getExtendedChamberConditions()->getIsReference()) continue ;
+    if (chamberObj->getExtendedChamberConditions() == NULL ) continue;
     
     cout << " Number of all tracks chamber " << chamberNum+1 << " : " << chamberObj->getSumOfAllChannelTracks() << endl;
     cout << " Total and efficient tracks " << chamberObj->getNumberOfEfficientTracks() << " "
@@ -513,27 +529,27 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     ss.clear();
     efficiencyHisto = chamberObj->getHistogramOfChannelsEfficiency(efficiency_title.c_str());
     efficiencyHisto->SetStats(false);
-    efficiencyHisto->SaveAs(efficiency_title.c_str());
-    
-    tracksDistributionHisto = chamberObj->getHistogramOfTracksVsChannels(track_title.c_str());    
+    efficiencyHisto->SaveAs((resultsFolder+efficiency_title).c_str());
+
+    tracksDistributionHisto = chamberObj->getHistogramOfTracksVsChannels(track_title.c_str());
     tracksDistributionHisto->SetStats(false);
-    tracksDistributionHisto->SaveAs(track_title.c_str());
+    tracksDistributionHisto->SaveAs((resultsFolder+track_title).c_str());
     
     efficiencyDistro = chamberObj->getDistributionOfChannelsEfficiency(eff_distro_title.c_str());
     efficiencyDistro->SetMarkerColor(kBlue);
     efficiencyDistro->SetFillColor(kBlue);
-    
-    efficiencyDistro->SaveAs(eff_distro_title.c_str());
+
+    efficiencyDistro->SaveAs((resultsFolder+eff_distro_title).c_str());
     residualsHisto = chamberObj->getResidualsHistogram(res_distro_title.c_str());
     residualsHisto->SetMarkerColor(kBlue);
     residualsHisto->SetFillColor(kBlue);
     
-    residualsHisto->SaveAs(res_distro_title.c_str());
+    residualsHisto->SaveAs((resultsFolder+res_distro_title).c_str());
     part_residual_histo = chamberObj->getNeighbourPartitionHitsHistogram(part_res_distro_title.c_str());
-    part_residual_histo->SaveAs(part_res_distro_title.c_str());
+    part_residual_histo->SaveAs((resultsFolder+part_res_distro_title).c_str());
     
     absolute_channel_efficiency_histo = chamberObj->getHistogramOfAbsoluteChannelsEfficiency(absolute_channel_efficiency.c_str());
-    absolute_channel_efficiency_histo->SaveAs(absolute_channel_efficiency.c_str());
+    absolute_channel_efficiency_histo->SaveAs((resultsFolder+absolute_channel_efficiency).c_str());
     
     absolute_channel_efficiency_histo->Delete();
     part_residual_histo->Delete();
@@ -546,12 +562,16 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
       clsSizeHistograms = chamberObj->getHistogramOfClusterSizeForPartition(i+1);
       string histoFileToSave = clsSizeHistograms->GetName();
       histoFileToSave += ".root";
-      clsSizeHistograms->SaveAs(histoFileToSave.c_str());
+      clsSizeHistograms->SaveAs((resultsFolder+histoFileToSave).c_str());
     }
     
+    if (chamberObj->getExtendedChamberConditions() != NULL )  chamberObj->getPointerToClustersTimeProfileHisto()->SaveAs((resultsFolder+string(chamberObj->getPointerToClustersTimeProfileHisto()->GetName())+"_"+runToUse+".root").c_str());
+    
+    if (chamberObj->getExtendedChamberConditions() == NULL || chamberObj->getExtendedChamberConditions()->getIsReference()) continue ;
+    
     timeEvoHistoPointer = chamberObj->getTimeEvolutionProfileHistogram(("TimeResolutionPerStrip_"+chamberObj->getExtendedChamberConditions()->getChamberName()).c_str());
-    timeEvoHistoPointer->SaveAs(("TimeResolutionPerStrip_"+chamber_Name+".root").c_str());            
-    chamberObj->updateSigmoidHistogramWithNewValue(sigmoidHistosFolder,chamberObj->getExtendedChamberConditions()->getChamberName(),runConfig->getTriggerLayer(),chamberObj->getExtendedChamberConditions()->getHVset(),chamberObj->getChamberEfficiency());
+    timeEvoHistoPointer->SaveAs((resultsFolder+"TimeResolutionPerStrip_"+"_"+runToUse+"_"+chamber_Name+".root").c_str());            
+    chamberObj->updateSigmoidHistogramWithNewValue(sigmoidHistosFolder,chamberObj->getExtendedChamberConditions()->getChamberName()+"_"+jsonFileNameOnly+"_",runConfig->getTriggerLayer(),chamberObj->getExtendedChamberConditions()->getHVset(),chamberObj->getChamberEfficiency());
     
   }
   

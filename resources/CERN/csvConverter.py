@@ -1,6 +1,6 @@
 import sys,json,copy
-
-file = ''; #empty 
+file = ''
+#empty 
 
 if sys.argv and sys.argv >= 1:
   try:

@@ -9,9 +9,11 @@ ROOTINC = $(shell root-config --cflags)
 ROOTLIBS = $(shell root-config --glibs)
 
 ifeq (Darwin,$(KERNEL))
+# Macports installer http://www.macports.org/
 # How to install GCC 4.7 on OSX apart from the LLVM-g++ 4.2 version
 # http://stackoverflow.com/questions/14153725/installing-gcc-4-7-1-on-os-x
-# How to install jsoncpp
+# How to install boost libs on OSX with mac ports
+# http://stackoverflow.com/questions/104322/how-do-you-install-boost-on-macos
 	CC=g++-mp-4.7
 	ORACLE_LIBS = -locci -lclntsh 
 	ORACLE_INCDIR = -I /Users/mrodozov/Desktop/OracleSDK/instantclient_11_2/sdk/include/

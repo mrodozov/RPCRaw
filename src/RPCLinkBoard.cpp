@@ -4,6 +4,7 @@
 
 #include "../interface/RPCLinkBoard.h"
 #include <assert.h>
+#include <algorithm>
 #include <boost/lexical_cast.hpp>
 
 using namespace std;
@@ -50,6 +51,7 @@ RPCLinkBoard::RPCLinkBoard () : ExRoll() {
 RPCLinkBoard::RPCLinkBoard (const string& RollOnlineName) : ExRoll(RollOnlineName) {
   // set whats required here
   this->_chamberConditions = NULL;
+  this->clusterProfileHistogram = NULL;  
 }
 
 RPCLinkBoard::~RPCLinkBoard (){
@@ -663,4 +665,69 @@ void RPCLinkBoard::updateSigmoidHistogramWithNewValue(const string & histoFolder
   
 }
 
+// Clusterization time profile
+
+void RPCLinkBoard::printClusterTimesForClusterNumber(const int & clusterNumber){
+  for (int i = 0 ; i < this->getClusterNumber(clusterNumber).size() ; i++){
+    cout << this->getStrip(this->getClusterNumber(clusterNumber).at(i))->getHits().at(0) << " ";
+  }
+  cout << endl;
+}
+
+int RPCLinkBoard::getNumberOfClusterForStripNumber(const int & channel){
+  int retval = -1;
+  if (channel >= 1 && channel <= 96 ){
+  for (int i = 0 ; i < this->getNumberOfClusters() ; i++){
+    for (int j = 0 ; j < this->getClusterNumber(i+1).size() ; j++){
+      if (this->getClusterNumber(i+1).at(j) == channel){
+	retval = i+1;
+	break;
+      }      
+    }
+    if (retval != -1) break; 
+  }
+  }
+  return retval;
+}
+
+void RPCLinkBoard::initClusterTimeProfileHistogramWithUniqueName(const string & uniqueName){
+  this->clusterProfileHistogram = new TH2F(uniqueName.c_str(),uniqueName.c_str(),600,-20,40,90,-4,+4);
+}
+
+void RPCLinkBoard::writeClustersTimeProfileForClusterNumber (const int & clusterNumber) {
+  
+  
+  if (this->getPointerToClustersTimeProfileHisto() != NULL && this->getNumberOfClusters() >= clusterNumber && this->getClusterNumber(clusterNumber).size() > 1 ){
+    vector<int> theCluster = this->getClusterNumber(clusterNumber);
+    int middleChannelTimeReference = 0;
+    int centerOfCluster = 0;
+    if (theCluster.size() % 2 == 0) {
+      // its even, get the two numbes in the center
+      int leftElementIndex = theCluster.size() / 2;
+      int rightElementIndex = leftElementIndex+1 ;
+      centerOfCluster =  this->getStrip( theCluster.at(leftElementIndex-1) )->getHits().at(0) < this->getStrip( theCluster.at(rightElementIndex-1) )->getHits().at(0) ? leftElementIndex : rightElementIndex; 
+      
+    }
+    else {
+      // its odd, get the middle channel
+      centerOfCluster = (this->getClusterNumber(clusterNumber).size() - 1)/2 + 1;
+    }
+    middleChannelTimeReference = this->getChannel(theCluster.at(centerOfCluster-1))->getHits().at(0);
+    
+    cout << " Center of cluster is: " << centerOfCluster << " value is: " << middleChannelTimeReference  << ", ";
+    
+    int startingPoint = centerOfCluster - int(theCluster.size());
+    int endingPoint = startingPoint + int(theCluster.size());
+    
+    cout << endl << startingPoint << " " << endingPoint << endl;
+    
+    for (int i = 0 ; i < theCluster.size(); i++){
+      this->getPointerToClustersTimeProfileHisto()->Fill( int(this->getChannel( theCluster.at(i))->getHits().at(0)) - middleChannelTimeReference,i - centerOfCluster + 1);
+      cout << "cluster entry " << i+1 << " fill at " << i - centerOfCluster + 1 << " fill value " <<   int(this->getChannel(theCluster.at(i))->getHits().at(0)) - middleChannelTimeReference << endl;
+    }
+  }
+  
+}
+
+// endof previous
 

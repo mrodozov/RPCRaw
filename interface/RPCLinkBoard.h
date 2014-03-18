@@ -29,7 +29,8 @@ class RPCLinkBoard : public ExRoll {
   RPCChamberConditionsBase * _chamberConditions;
   map<string, map<int,double> > _chamberEfficiencyVsGapHV;
   // get each partition cluster size
-  
+  TH2F * clusterProfileHistogram;
+    
 protected:
   
 public:
@@ -84,10 +85,12 @@ public:
   
   int getNumberOfClusters() ;//{ return this->_clusterChannelNumbers.size(); } // get the number of clusters in the chamber if any 
   vector<int> getClusterNumber(int clusterNumber) ;
+  void printClusterTimesForClusterNumber(const int & clusterNumber);
   int getSizeOfCluster(int clusterNumber);// { return this->getClusterNumber(clusterNumber).size(); } // get number of 
   vector<vector<int> > getStripsHitsTimes(); // get vector of vector - where each vector is cluster of the hits times 
   vector<int> getStripsHitsTimesForCluster(int clusterNumber);//{ return this->getStripsHitsTimes().at(clusterNumber-1);} 
   int getAverageTimeForCluster(int clusterNumber); // get the average value of the cluster time values : average of getStripsHitsTimes 
+  int getNumberOfClusterForStripNumber(const int & channelNumber); // return -1 if the channel is not in cluster
   
   vector<double> getXYCoordinatesOfCluster(const int & clusterNumber); // get the cluster XY position. X position is given in terms of channel number ,where X position never exceeds the total number of channels in one Etha partition in that chamber, Y position is according to the Etha partition number (1,2 or 3)
   vector<double> getXYZcoordinatesOfCluster(const int & clusterNumber); // get XY coordinates plus one more coordinate based on the station (shelf) number using the get station 
@@ -121,11 +124,15 @@ public:
   void writeClusterSizeValues(); // use to fill cluster size values after each event
   const vector<int> & getClusterSizeEntriesForPartition(const int & partitionNum); // use partition number starting from 1 
   void resetClusterSizeEntries(); // erase the records for cluster size for the run
+  void initClusterTimeProfileHistogramWithUniqueName(const string & uniqueName);
   
   // time evolution methods
-  void writeTimeEvolutionValues();
-  const vector<vector<double> > & getTimeEvolutionVectorsForAllStrips();  
   
+  void writeTimeEvolutionValues();
+  void writeTimeEvolutionValuesInTimeWindowAroundRefTime(const int & referenceTime,const int & timeWindow); // time reference is the first hit in 
+  const vector<vector<double> > & getTimeEvolutionVectorsForAllStrips();
+  void writeClustersTimeProfileForClusterNumber(const int & clusterNumber); // for each cluster get the channel with least time , use it as zero entry and draw the other channels around it
+    
   /** get histograms from the records of the object */
   
   TH1F * getHistogramOfChannelsEfficiency(const string & histoObjName);
@@ -134,6 +141,7 @@ public:
   TH1F * getHistogramOfAbsoluteChannelsEfficiency(const string & histoObjName);
   TH1F * getHistogramOfClusterSizeForPartition(const int & partitionNum);
   TH2F * getTimeEvolutionProfileHistogram (const string & histoObjName);
+  TH2F * getPointerToClustersTimeProfileHisto(){ return this->clusterProfileHistogram; } //
   
   // Statistics methods 
   
@@ -141,7 +149,7 @@ public:
   
   // Global histograms
   void updateSigmoidHistogramWithNewValue(const string & histoFolder,const string & chamberID,const string & triggerMode,const int & HV,const double & efficiencyValue);
-
+  
   TH2F * getEfficiencyHistogramForGapOperationMode(const string & mode);
   void setEfficiencyVsHVentryForMode(const int & HV,const double & efficiency,const double & effUncertainty,const string & mode);
   void drawNestedSigmoidPlotForAllModes(const string & title);
