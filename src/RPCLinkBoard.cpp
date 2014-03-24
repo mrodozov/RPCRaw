@@ -138,11 +138,8 @@ void RPCLinkBoard::findAllClustersForTriggerTimeReferenceAndTimeWindow(int trigg
 	if (k-j < maxClusterSize+1){
 	  this->_clusterChannelNumbers.push_back(j);
 	}
-	
 	// else do nothing, just do not allow wider clusters
-	
 	//cout << endl;
-	
 	j = k; // skip all strips in the cluster and continue from the next one
 	k = 0 ; // reset the internal counter
 	
@@ -312,7 +309,8 @@ void RPCLinkBoard::resetClusterSizeEntries(){
 
 TH2F * RPCLinkBoard::getTimeEvolutionProfileHistogram(const string & histoObjName){
   TH2F * timeEvoStripProfileHisto = new TH2F(histoObjName.c_str(),histoObjName.c_str(),1000,0,1000,98,0,98);
-  
+  timeEvoStripProfileHisto->GetXaxis()->SetTitle("Time difference in ");
+  timeEvoStripProfileHisto->GetYaxis()->SetTitle("Channel number");
   for (int i = 0 ; i < 96 ; i++){
     vector<double> singleStripTimeResolutionVector = this->getChannel(i+1)->getTimeEvolutionVector();
     
@@ -343,7 +341,7 @@ TH1F * RPCLinkBoard::getHistogramOfClusterSizeForPartition(const int & partition
 
 void RPCLinkBoard::writeTimeEvolutionValues(){
   for (int i = 0 ; i < 96 ; i++){
-    this->getChannel(i+1)->writeMultiHitDifferences();
+    this->getChannel(i+1)->writeMultiHitDifferences(1000); // use this as default value, it too big so it would contain all
   }
 }
 
@@ -714,19 +712,51 @@ void RPCLinkBoard::writeClustersTimeProfileForClusterNumber (const int & cluster
     }
     middleChannelTimeReference = this->getChannel(theCluster.at(centerOfCluster-1))->getHits().at(0);
     
-    cout << " Center of cluster is: " << centerOfCluster << " value is: " << middleChannelTimeReference  << ", ";
+    //cout << " Center of cluster is: " << centerOfCluster << " value is: " << middleChannelTimeReference  << ", ";
     
     int startingPoint = centerOfCluster - int(theCluster.size());
     int endingPoint = startingPoint + int(theCluster.size());
     
-    cout << endl << startingPoint << " " << endingPoint << endl;
+    //cout << endl << startingPoint << " " << endingPoint << endl;
     
     for (int i = 0 ; i < theCluster.size(); i++){
       this->getPointerToClustersTimeProfileHisto()->Fill( int(this->getChannel( theCluster.at(i))->getHits().at(0)) - middleChannelTimeReference,i - centerOfCluster + 1);
-      cout << "cluster entry " << i+1 << " fill at " << i - centerOfCluster + 1 << " fill value " <<   int(this->getChannel(theCluster.at(i))->getHits().at(0)) - middleChannelTimeReference << endl;
+      //cout << "cluster entry " << i+1 << " fill at " << i - centerOfCluster + 1 << " fill value " <<   int(this->getChannel(theCluster.at(i))->getHits().at(0)) - middleChannelTimeReference << endl;
     }
   }
+}
+
+void RPCLinkBoard::incrementChannelHitCountersForCurrentEvent(){
+  for (int i = 0 ; i < 96 ; i++){
+    this->getChannel(i+1)->incrementNumberOfCounts();
+  }
+}
+
+void RPCLinkBoard::resetChannelHitCounters(){
+  for (int i = 0 ; i < 96 ; i++){
+    this->getChannel(i+1)->resetNumberOfCounts();
+  }
+}
+
+TH1F * RPCLinkBoard::getHistogramOfChannelRates(const string & histoObjName,const double & totalTimeInSeconds_denominator){
   
+  TH1F * noiseHisto = new TH1F(histoObjName.c_str(),histoObjName.c_str(),96,1,96);
+  noiseHisto->SetLineColor(kBlue);
+  noiseHisto->SetFillColor(kBlue);
+  noiseHisto->GetXaxis()->SetTitle("Channel number");
+  noiseHisto->GetYaxis()->SetTitle("Rate in Hz");
+  
+  for(int i = 0 ; i < 96 ; i++){
+    noiseHisto->SetBinContent(i+1, (double)((double)this->getChannel(i+1)->getNumberOfCounts() / totalTimeInSeconds_denominator));
+  }
+  
+  return noiseHisto;
+}
+
+void RPCLinkBoard::writeTimeEvolutionValuesInTimeWindowAroundRefTime(const int & timeWindow){
+  for (int i = 0 ; i < 96 ; i++){
+    this->getChannel(i+1)->writeMultiHitDifferences(timeWindow);
+  }
 }
 
 // endof previous

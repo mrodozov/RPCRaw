@@ -17,6 +17,7 @@ class RPCLinkBoardChannel : public ExStrip {
   int allTracks;
   int efficientTracks;
   vector<double> timeEvolutionDifferences;
+  int numberOfCounts; // incremental number of hits
   
 protected:
   
@@ -29,13 +30,13 @@ public:
   const std::vector<unsigned> & getHits () const;// { return *this->_vectorOfhits;} // get the vector of hits
   bool hasHit(); // returns true if the channel has at least one hit 
   bool hasMultipleHits (); // returns true if the channel has more than one hit 
-  void setEfficiency (const double & channelEfficiency);// { this->_channelEfficiency = channelEfficiency; } // set the efficiency value. the value is first calculated 
-  double getEfficiency () ;// { return (this->efficientTracks/this->allTracks)*100  ;}  // get the efficiency of this channel
+  void setEfficiency (const double & channelEfficiency);// { this->_channelEfficiency = channelEfficiency; } // set the efficiency value. the value is first calculated
+  double getEfficiency () ;// { return (this->efficientTracks/this->allTracks)*100  ;}  // get the efficiency of this channel based on the ratio of efficient tracks over total tracks
   
-  // overload in next inheritance in case of need 
+  // overload in next inheritance in case of need , use it to reset counters 
   virtual void resetAllCounters(); 
   
-  void writeMultiHitDifferences();
+  void writeMultiHitDifferences(const int & timeWindow);
   void incrementEfficiencyCounters(const bool & hitIsFound);
   void resetEfficiencyCounters();
   void resetTimeEvoEntriesVector();
@@ -44,6 +45,9 @@ public:
   const int & getLinkBoardChannelNumberInChamber() { return this->getOnlineNumber() ; } // returns the number of the channel within the chamber (so called online number), which is different from the strip number. Between 1 and 96
   const int & getStripNumberInRoll() { return this->getOfflineNumber(); } // returns the number of the channel within the Roll (CMSSW convention). Strip objects within one chamber may have the same strip number as another Strip object from the same chamber, but each number is specified for given partition, where the combination of partition number (or label) and the strip number is always unique
   const vector<double> & getTimeEvolutionVector() { return this->timeEvolutionDifferences; }
+  void incrementNumberOfCounts() { this->numberOfCounts += this->getHits().size(); }
+  const int & getNumberOfCounts() { return this->numberOfCounts; }
+  void resetNumberOfCounts () { this->numberOfCounts = 0; }
   
 };
 

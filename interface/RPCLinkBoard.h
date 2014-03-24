@@ -30,7 +30,7 @@ class RPCLinkBoard : public ExRoll {
   map<string, map<int,double> > _chamberEfficiencyVsGapHV;
   // get each partition cluster size
   TH2F * clusterProfileHistogram;
-    
+  
 protected:
   
 public:
@@ -129,10 +129,15 @@ public:
   // time evolution methods
   
   void writeTimeEvolutionValues();
-  void writeTimeEvolutionValuesInTimeWindowAroundRefTime(const int & referenceTime,const int & timeWindow); // time reference is the first hit in 
+  void writeTimeEvolutionValuesInTimeWindowAroundRefTime(const int & timeWindow); // time reference is the first hit in 
   const vector<vector<double> > & getTimeEvolutionVectorsForAllStrips();
   void writeClustersTimeProfileForClusterNumber(const int & clusterNumber); // for each cluster get the channel with least time , use it as zero entry and draw the other channels around it
-    
+  
+  // noise of the chamber
+  
+  void incrementChannelHitCountersForCurrentEvent();
+  void resetChannelHitCounters();
+  
   /** get histograms from the records of the object */
   
   TH1F * getHistogramOfChannelsEfficiency(const string & histoObjName);
@@ -141,7 +146,8 @@ public:
   TH1F * getHistogramOfAbsoluteChannelsEfficiency(const string & histoObjName);
   TH1F * getHistogramOfClusterSizeForPartition(const int & partitionNum);
   TH2F * getTimeEvolutionProfileHistogram (const string & histoObjName);
-  TH2F * getPointerToClustersTimeProfileHisto(){ return this->clusterProfileHistogram; } //
+  TH2F * getPointerToClustersTimeProfileHisto(){ return this->clusterProfileHistogram; } // 
+  TH1F * getHistogramOfChannelRates(const string & histoObjName,const double & totalTimeInSeconds_denominator); // get noise histogram of the chamber. First argument is the histogram object name, second is the time in seconds for all the events
   
   // Statistics methods 
   

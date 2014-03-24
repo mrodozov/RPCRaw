@@ -5,9 +5,7 @@
 #include "../interface/RPCChambersCluster.h"
 
 using namespace std;
-using namespace ROOT::Math;
 
-//using namespace RooFit;
 
 void RPCChambersCluster::createNewClusterOfChambersWithRE4type(const int & nChambers,const string & RE4type){
   if (this->_numberOfChambers){ // not ok, some chambers are already created , one has first to erase them
@@ -501,8 +499,6 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
   
   if (fileType == kIsCERNrawFile ){
     
-  //TODO Add implementation for 4 reference chambers 
-    
     assert(vectorOfReferenceChambers.size() == 3 || vectorOfReferenceChambers.size() == 4);
     
     for ( int i = 0 ; i < this->getChamberNumber(vectorOfReferenceChambers[0])->getNumberOfClusters() ; i++ ){
@@ -510,7 +506,7 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
 	for( int k = 0 ; k < this->getChamberNumber(vectorOfReferenceChambers[vectorOfReferenceChambers.size()-1])->getNumberOfClusters() ; k++ ){
 	  
 	  vector<int> singleCombination;
-	
+	  
 	  singleCombination.push_back(i+1);
 	  singleCombination.push_back(j+1);
 	  singleCombination.push_back(k+1);
@@ -525,8 +521,6 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
 	}      
       }
     }
-    
-    
   }
   
   if (fileType == kIsBARCrawFile || fileType == kIsGENTrawFile ){

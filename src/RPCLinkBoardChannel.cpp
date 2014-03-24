@@ -17,9 +17,7 @@ const std::vector<unsigned> & RPCLinkBoardChannel::getHits () const {
 
 void RPCLinkBoardChannel::setEfficiency (const double & channelEfficiency) { this->_channelEfficiency = channelEfficiency; }
 
-const int & RPCLinkBoardChannel::getAllTracks () const { 
-  return this->allTracks;
-}
+const int & RPCLinkBoardChannel::getAllTracks () const {  return this->allTracks; }
 
 const int & RPCLinkBoardChannel::getEfficientTracks () const { return this->efficientTracks;}
 
@@ -31,11 +29,17 @@ bool RPCLinkBoardChannel::hasMultipleHits (){
   return (this->hasHit() && this->_vectorOfhits->size() > 1);
 }
 
-void RPCLinkBoardChannel::writeMultiHitDifferences(){
+void RPCLinkBoardChannel::writeMultiHitDifferences(const int & timeWindow){
+  int timeOfFirstHit = 0;
   if (this->hasMultipleHits()){
+    //cout << "multi hits " << endl;
+    timeOfFirstHit = this->getHits().at(0);
     for (int i = 0 ; i < this->getHits().size() - 1 ; i++) {
+      //if ( this->getHits().at(i+1) + timeWindow > timeOfFirstHit ) break;
       this->timeEvolutionDifferences.push_back( this->getHits().at(i+1) - this->getHits().at(i) );
+      //cout << this->getHits().at(i+1) << " " << this->getHits().at(i) << endl;
     }
+    //cout << endl;
   }
 }
 
@@ -49,9 +53,7 @@ RPCLinkBoardChannel::~RPCLinkBoardChannel(){
 }
 
 void RPCLinkBoardChannel::incrementEfficiencyCounters(const bool & hitIsFound){
-  if(hitIsFound){
-    this->efficientTracks++;
-  }
+  if(hitIsFound) this->efficientTracks++;
   this->allTracks++;
 }
 
