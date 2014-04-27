@@ -97,7 +97,7 @@ public:
   
   // Residuals methods
   
-  void findResidualValueForChannelInPartitions(const double & reconstructedChannel,vector<double> partitions);
+  void findResidualValueForChannelInPartitions(const double & reconstructedChannel,vector<double> partitionsAndChannelVector); // use this method to search for hits in neighbor partitions in case hit in the expected partition was not found 
   void findResidualsInNeighbourPartitionsForChannelInPartition(vector<double> partitions); // test to search for Y offset in vertical tracks only
   void fillResidualValue(const double & residualValue);//{ this->residuals.push_back(residualValue); }
   void fillNeighbourResidualValue(const int & residuals);
@@ -114,7 +114,8 @@ public:
   double getChamberEfficiency(); // calculate chamber efficiency on the top of the global hits detected by the chamber
   int getNumberOfAllTracks () { return this->totalReconstructedTracks ;}
   int getNumberOfEfficientTracks () { return this->totalReconstructedTracksWithHit ; }
-  bool isMatchingFiredChannelInPartition(const int & trackValue,const int & partition,const int & clusterWidth);
+  bool isMatchingFiredChannelInPartition(const int & trackValue,const int & partition,const int & clusterWidth); // search for hits 
+  bool isMatchingFiredChannelInAnyPartition(const int & trackValue,const int & clusterWidth); // 
   void resetEfficiencyCounters();
   void resetChannelsEfficiencyCounters() ; //{ for (int i=0; i < 96 ; i++) this->getChannel(i+1)->resetEfficiencyCounters(); } 
   void incrementAbsoluteChannelCounters(const bool & hitIsFound,const int & absoluteChannelNumber); // absoluteChannelNumber means channel number without specified partition number
@@ -136,6 +137,7 @@ public:
   // noise of the chamber
   
   void incrementChannelHitCountersForCurrentEvent();
+  void incrementNumberOfCountsOutOfReferenceWindow(const int & reference,const int & window);
   void resetChannelHitCounters();
   
   /** get histograms from the records of the object */
@@ -148,10 +150,13 @@ public:
   TH2F * getTimeEvolutionProfileHistogram (const string & histoObjName);
   TH2F * getPointerToClustersTimeProfileHisto(){ return this->clusterProfileHistogram; } // 
   TH1F * getHistogramOfChannelRates(const string & histoObjName,const double & totalTimeInSeconds_denominator); // get noise histogram of the chamber. First argument is the histogram object name, second is the time in seconds for all the events
+  TGraphAsymmErrors * getChannelsEfficiencyErrorGraph (const string & graphName);
+  TH1F * getHistoOfChannelHitCounts(const string & hitsDistribution);
   
   // Statistics methods 
   
   int getSumOfAllChannelTracks ();
+  void writeNumberOfChannelHits();
   
   // Global histograms
   void updateSigmoidHistogramWithNewValue(const string & histoFolder,const string & chamberID,const string & triggerMode,const int & HV,const double & efficiencyValue);

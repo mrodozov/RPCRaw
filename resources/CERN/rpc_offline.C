@@ -378,7 +378,6 @@ TFile * hfile2 = new TFile(filename,"RECREATE");
         refch2.close();
         
         
-        
         // REFERENCE STATION FOR 4/3 CHAMBERS
         ifstream refch3("/srv/www/htdocs/offlinerefchamber_t3.txt");
         if (refch3.is_open()) {
@@ -391,8 +390,6 @@ TFile * hfile2 = new TFile(filename,"RECREATE");
         }
         refch3.close();
         
-        
-        
         ifstream refch4("/srv/www/htdocs/offlinerefchamber_t4.txt");
         if (refch4.is_open()) {
             while(refch4.good()) {
@@ -403,8 +400,6 @@ TFile * hfile2 = new TFile(filename,"RECREATE");
             reference_station_t4 = -1;
         }
         refch4.close();
-        
-        
         
     }
     

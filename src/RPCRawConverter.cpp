@@ -210,6 +210,8 @@ void RPCRawConverter::getDataFromCERNinputFile(){
 	this->getCurrentTree()->SetBranchAddress(nameOfBranch.c_str(),&channelsVector,&aBranch);
 	aBranch->GetEntry(this->_eventCounter);
 	chamberChannelVectors.push_back(*channelsVector);
+	
+	/*
 	int channelNumberInCurrentChamber = chamber_channels_counter - (96*chambersCounter);
 	
 	if(channelNumberInCurrentChamber < 64){
@@ -218,6 +220,7 @@ void RPCRawConverter::getDataFromCERNinputFile(){
 	else{
 	  partitionA.push_back(*channelsVector);
 	}
+	*/
 	
 	if (chamber_channels_counter != 0 && ((chamber_channels_counter+1 ) % 96) == 0){
  	  if(!this->structureIsInitialized()){
@@ -229,16 +232,16 @@ void RPCRawConverter::getDataFromCERNinputFile(){
 	    // the elements should excist, don't clear but just change them
 	    // construct the vector to be used with swapped partitions
 	    
-	    chamberChannelVectors.assign(partitionA.begin(),partitionA.end());    
-	    for (unsigned vectoriter = 0;vectoriter < partitionsBC.size();vectoriter++){
-	      chamberChannelVectors.push_back(partitionsBC.at(vectoriter));
-	    }
+	    //chamberChannelVectors.assign(partitionA.begin(),partitionA.end());    
+	    //for (unsigned vectoriter = 0;vectoriter < partitionsBC.size();vectoriter++){
+	    //  chamberChannelVectors.push_back(partitionsBC.at(vectoriter));
+	    //}
 	    
 	    this->_chamberObjectsRecords.at(chambersCounter) = chamberChannelVectors;
  	  }
 	  chambersCounter++; // number of chambers, if needed somewhere
-	  partitionA.clear();
-	  partitionsBC.clear();
+	  //partitionA.clear();
+	  //partitionsBC.clear();
 	  chamberChannelVectors.clear();
 	  
 	}
@@ -246,6 +249,7 @@ void RPCRawConverter::getDataFromCERNinputFile(){
 	
 	channelsVector->clear();
 	break;
+	
       }
       
       case kIsCERNHitsPerChannelBranch:

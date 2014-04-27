@@ -3,6 +3,7 @@
 */
 
 #include "../interface/RPCChambersCluster.h"
+#include <boost/lexical_cast.hpp>
 
 using namespace std;
 
@@ -481,10 +482,12 @@ void RPCChambersCluster::variousStudyExperimentalFunction(TFile * fileToSave,TH1
 //   badTracks->Delete();
 //   goodTracks->Close("R");
 //   goodTracks->Delete();
-  
+
 }
 
-map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> vectorOfReferenceChambers, const int & timeWindow,const int & timeReference,bool & isVerticalTrack,const int & Chi2goodness, const ESiteFileType & fileType){
+map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> vectorOfReferenceChambers, const int & timeWindow,const int & timeReference,bool & isVerticalTrack,const bool & keepRecoTrack,TFile * fileForRecoTracks,const int & eventNum,const int & Chi2goodness, const ESiteFileType & fileType){
+  
+  // 
   
   map<int,vector<double> > mapOfHits; //
   // the default value for Chi2goodness is 20 
@@ -499,7 +502,7 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
   
   if (fileType == kIsCERNrawFile ){
     
-    assert(vectorOfReferenceChambers.size() == 3 || vectorOfReferenceChambers.size() == 4);
+    assert(vectorOfReferenceChambers.size() == 3 );
     
     for ( int i = 0 ; i < this->getChamberNumber(vectorOfReferenceChambers[0])->getNumberOfClusters() ; i++ ){
       for( int j = 0 ; j < this->getChamberNumber(vectorOfReferenceChambers[1])->getNumberOfClusters() ; j++ ){
@@ -518,7 +521,7 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
 	  
 	  vectorOfClusterNumberCombinations.push_back(singleCombination);
 	  
-	}      
+	}
       }
     }
   }
@@ -627,13 +630,7 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
 	// check where the chamber is according to the reference chambers
 	vector<double> vectorOfpartitionsAndHit;
 	double channelNum = fitfunc->Eval(currentChNumber+1);
-	
-	if(channelNum < 0 || channelNum > 96/this->getChamberNumber(1)->getClones()){
-	  // clear the map and break the loop, it would continue from the next cluster combination
-	  mapOfHits.clear();
-	  break;
-	}
-	
+
 	/** four cases 1. the chamber is before the first reference 2. the chamber is after the last reference 3. the chamber is between two references 4. the chamber is a reference */
 	
 	for(int refCheck = 0 ; refCheck < vectorOfReferenceChambers.size(); refCheck++){
@@ -641,7 +638,7 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
 	  if (currentChNumber+1 == vectorOfReferenceChambers.at(refCheck)){
 	    currentChamberIsReference = true;
 	    break;
-	  }	      
+	  }
 	  if ( vectorOfReferenceChambers.at(refCheck) > currentChNumber+1 && refCheck == 0 ){
 	    // its before the first reference chamber
 	    nextReference = vectorOfReferenceChambers.at(refCheck);
@@ -649,6 +646,7 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
 	    break;
 	    
 	  }
+	  
 	  if ( vectorOfReferenceChambers.at(refCheck) < currentChNumber+1 && refCheck == vectorOfReferenceChambers.size() - 1 ){
 	    // its after the last chamber
 	    prevReference = vectorOfReferenceChambers.at(refCheck);
@@ -664,6 +662,8 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
 	    break;    
 	  }
 	}
+	
+	// end of partition possibilities
 	
 	if(!currentChamberIsReference){
 	  
@@ -685,9 +685,19 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
 	    }    
 	  }
 	  
-	  if (partitionPenetrated == 1){
+	  if (partitionPenetrated == 1 ){
 	    prevReferencePartition = yCoordinate;
-	    nextReferencePartition = yCoordinate;
+	    nextReferencePartition = yCoordinate;    
+	    
+	    int firstRef = vectorOfReferenceChambers.at(0);
+	    int lastRef = vectorOfReferenceChambers.at(vectorOfReferenceChambers.size() - 1);
+	    int ccham =  currentChNumber+1;
+	    
+	    if(! (lastRef > ccham && firstRef < ccham) ){
+	      // all partitions are possible, chambers are out of the reference scope
+	      prevReferencePartition = this->getChamberNumber(1)->getClones(); 
+	      nextReferencePartition = 1; // 3 in case of ecap chamber      
+	    }
 	  }
 	  
 	  if (positive){ startCounter = prevReferencePartition; endCounter = nextReferencePartition; }
@@ -696,7 +706,7 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
 	  for (int currentCounter = startCounter ; currentCounter <= endCounter; currentCounter ++ ){
 	    assert(currentCounter > 0 && currentCounter < 4);
 	    vectorOfpartitionsAndHit.push_back(currentCounter);    
-	  }        
+	  }
 	}
 	
 	else{
@@ -711,15 +721,17 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
 	if (channelNumberToStore < 96/this->getChamberNumber(1)->getClones()){
 	  channelNumberToStore += 1;
 	} // add one to represent the fired channel, or none if the channel is on the right border
-
+	
 	vectorOfpartitionsAndHit.push_back(channelNumberToStore); // the last element is the number of the channel
 	
-	/** Debug lines
-	cout << "Chamber is " << currentChNumber+1 << " " ;
-	for (int thesize = 0 ; thesize < vectorOfpartitionsAndHit.size() ; thesize++){
+	// Debug lines
+	/**
+	cout << "Chamber is " << currentChNumber+1 << " partitions " ;
+	for (int thesize = 0 ; thesize < vectorOfpartitionsAndHit.size() - 1; thesize++){
 	  cout << vectorOfpartitionsAndHit.at(thesize) << " " ;
 	}
-	cout << endl;
+	
+	cout << "channel " << vectorOfpartitionsAndHit.at(vectorOfpartitionsAndHit.size()-1) << endl;
 	*/
 	
 	mapOfHits[currentChNumber+1] = vectorOfpartitionsAndHit;
@@ -729,15 +741,14 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
     
     //histXZ->SaveAs("reconstructed_track.root"); // if one wants to see the track histogram
     fitfunc->Delete();
+    if (keepRecoTrack){
+      histXZ->SetName(boost::lexical_cast<string>(eventNum).c_str());
+      fileForRecoTracks->Write(histXZ->GetName(),TObject::kOverwrite);
+    }
+    
     histXZ->Delete();
     
-  }
-  
-  for (int aCount = 0 ; aCount < mapOfHits.size() ; aCount++){
-    if (mapOfHits[aCount+1].size() > 2){
-      isVerticalTrack = false;
-    }
-  }
+  }  
   
   return mapOfHits;
 }

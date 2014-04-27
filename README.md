@@ -4,7 +4,6 @@
 - [Orcale SDK - Mac](http://www.oracle.com/technetwork/topics/intel-macsoft-096467.html)
 - [Mac gcc 4.7 compiler (compatible with C++11 standard)](http://stackoverflow.com/questions/14153725/installing-gcc-4-7-1-on-os-x)
 - [ROOT - Mac or Linux](http://root.cern.ch/drupal/content/installing-root-source)
-- [jsoncpp (optional)](http://sourceforge.net/projects/jsoncpp/)
 
 ## Test files could be found here
 

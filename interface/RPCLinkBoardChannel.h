@@ -18,6 +18,7 @@ class RPCLinkBoardChannel : public ExStrip {
   int efficientTracks;
   vector<double> timeEvolutionDifferences;
   int numberOfCounts; // incremental number of hits
+  int numberOfNoisyCounts; // hits outside the acceptable window
   
 protected:
   
@@ -46,8 +47,11 @@ public:
   const int & getStripNumberInRoll() { return this->getOfflineNumber(); } // returns the number of the channel within the Roll (CMSSW convention). Strip objects within one chamber may have the same strip number as another Strip object from the same chamber, but each number is specified for given partition, where the combination of partition number (or label) and the strip number is always unique
   const vector<double> & getTimeEvolutionVector() { return this->timeEvolutionDifferences; }
   void incrementNumberOfCounts() { this->numberOfCounts += this->getHits().size(); }
+  void incrementNumberOfCountsOutOfReferenceWindow(const int & reference,const int & window);
   const int & getNumberOfCounts() { return this->numberOfCounts; }
+  const int & getNumberOfNoisyCounts () { return this->numberOfNoisyCounts; }
   void resetNumberOfCounts () { this->numberOfCounts = 0; }
+  void resetNumberOfNoisyCounts () { this->numberOfNoisyCounts = 0; }
   
 };
 

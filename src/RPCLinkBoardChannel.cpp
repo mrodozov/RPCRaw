@@ -64,6 +64,8 @@ void RPCLinkBoardChannel::resetTimeEvoEntriesVector(){
 void RPCLinkBoardChannel::resetAllCounters(){
   this->resetTimeEvoEntriesVector();
   this->resetEfficiencyCounters();
+  this->resetNumberOfCounts();
+  this->resetNumberOfNoisyCounts();
 }
 
 void RPCLinkBoardChannel::resetEfficiencyCounters(){
@@ -79,4 +81,14 @@ double RPCLinkBoardChannel::getEfficiency () {
   }
   
   else return -1; // if there was no track crossing the channel, its not inefficient
+}
+
+void RPCLinkBoardChannel::incrementNumberOfCountsOutOfReferenceWindow(const int & reference,const int & window){
+  int minimum = reference - window;
+  int maximum = reference + window;
+  for (int i = 0 ; i < this->getHits().size() ; i++){
+    if ( this->getHits().at(i) <  minimum  ){
+      this->numberOfNoisyCounts ++;
+    }
+  }
 }

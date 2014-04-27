@@ -102,7 +102,7 @@ const vector< vector<unsigned> > & RPCLinkBoard::getStripsHitsDataVector () cons
 
 void RPCLinkBoard::findAllClustersForTriggerTimeReferenceAndTimeWindow(int triggerTimeReference,int timeWindow,int maxClusterSize){
   
-  // first clean if anything left
+  // first clean if anything have lefted
   if(this->getNumberOfClusters()){
     this->_clusterChannelNumbers.clear();
   }
@@ -246,18 +246,29 @@ bool RPCChamber::isMatchingFiredChannelInPartition (const int & trackValue,const
   
   if (trackValue-halfClusterWidth < 1 ) { startChannel = channelNumberOffset+1 ;}
   if (trackValue+halfClusterWidth > numberOfChannelsInOnePartition ) { endChannel = channelNumberOffset + numberOfChannelsInOnePartition; }
-  
-  // check if the case exceeds the first or the last strip in a given partition. The evaluation value 
-  
-  for (int i = startChannel ; i <= endChannel ; i++){
     
+  
+  for (int i = startChannel ; i <= endChannel ; i++){ 
     if (this->getChannel(i)->hasHit()){
+      retval = true;
+      break;
+    }    
+  }
+  
+  return retval;
+}
+
+bool RPCLinkBoard::isMatchingFiredChannelInAnyPartition(const int & trackValue,const int & clusterWidth){
+  bool retval = false;
+  for (int i = 0 ; i < this->getClones() ; i++){
+    if (this->isMatchingFiredChannelInPartition(trackValue,i+1,clusterWidth)) {
       retval = true;
       break;
     }
   }
   
   return retval;
+  
 }
 
 void RPCLinkBoard::incrementEfficiencyCounters(const bool & hitIsFound){
@@ -308,7 +319,7 @@ void RPCLinkBoard::resetClusterSizeEntries(){
 }
 
 TH2F * RPCLinkBoard::getTimeEvolutionProfileHistogram(const string & histoObjName){
-  TH2F * timeEvoStripProfileHisto = new TH2F(histoObjName.c_str(),histoObjName.c_str(),1000,0,1000,98,0,98);
+  TH2F * timeEvoStripProfileHisto = new TH2F(histoObjName.c_str(),histoObjName.c_str(),5000,0,5000,98,0,98);
   timeEvoStripProfileHisto->GetXaxis()->SetTitle("Time difference in ");
   timeEvoStripProfileHisto->GetYaxis()->SetTitle("Channel number");
   for (int i = 0 ; i < 96 ; i++){
@@ -391,8 +402,30 @@ TH1F * RPCLinkBoard::getHistogramOfChannelsEfficiency(const string & histoObjNam
   
   for (int i = 0 ; i < 96 ; i++){
     histogram->SetBinContent(i+1,this->getChannel(i+1)->getEfficiency());
-  }
+  }  
+  
   return histogram;
+}
+
+TGraphAsymmErrors * RPCLinkBoard::getChannelsEfficiencyErrorGraph (const string & graphName){
+  
+  TH1F * pass = new TH1F((graphName+"_pass").c_str(),"pass",96,1,96);
+  TH1F * total = new TH1F((graphName+"_total").c_str(),"total",96,1,96);
+  TGraphAsymmErrors * graph = new TGraphAsymmErrors(pass);
+  graph->SetName(graphName.c_str());
+  graph->SetTitle(graphName.c_str());
+  
+  for (int i = 0 ; i < 96 ; i++){
+     pass->SetBinContent(i+1,this->getChannel(i+1)->getEfficientTracks());
+     total->SetBinContent(i+1,this->getChannel(i+1)->getAllTracks());
+  }
+  
+  graph->Divide(pass,total);  
+  pass->Delete();
+  total->Delete();
+  
+  return graph;
+  
 }
 
 TH1F * RPCLinkBoard::getDistributionOfChannelsEfficiency(const string & histoObjName){
@@ -498,15 +531,14 @@ void RPCLinkBoard::fillNeighbourResidualValue(const int & residualValue){  this-
 void RPCLinkBoard::findResidualsInNeighbourPartitionsForChannelInPartition(vector<double> partitions) {
   
   assert(!partitions.empty());
-  if (partitions.size() == 2){
-    
+  if (partitions.size() == 2){ 
+    // this vector should have the reconstructed channel number and the expected partition 
     int partitionNumber = partitions.at(0);
     int channelNumber = partitions.at(1);
     
     for(int i = 0 ; i < this->getClones() ; i++){      
       if(i+1 != partitionNumber && this->isMatchingFiredChannelInPartition(channelNumber,i+1,5)){
-	
-	// search for matching channels in neighbour partitions 
+	// search for matching channels in neighbour partitions
 	int subtractionResult = partitionNumber - (i+1);
 	this->fillNeighbourResidualValue(subtractionResult);
 	if ( subtractionResult > 3 || subtractionResult < -3){
@@ -689,7 +721,7 @@ int RPCLinkBoard::getNumberOfClusterForStripNumber(const int & channel){
 }
 
 void RPCLinkBoard::initClusterTimeProfileHistogramWithUniqueName(const string & uniqueName){
-  this->clusterProfileHistogram = new TH2F(uniqueName.c_str(),uniqueName.c_str(),600,-20,40,90,-4,+4);
+  this->clusterProfileHistogram = new TH2F(uniqueName.c_str(),uniqueName.c_str(),61,-20.5,40.5,9,-4.5,+4.5);
 }
 
 void RPCLinkBoard::writeClustersTimeProfileForClusterNumber (const int & clusterNumber) {
@@ -728,13 +760,20 @@ void RPCLinkBoard::writeClustersTimeProfileForClusterNumber (const int & cluster
 
 void RPCLinkBoard::incrementChannelHitCountersForCurrentEvent(){
   for (int i = 0 ; i < 96 ; i++){
-    this->getChannel(i+1)->incrementNumberOfCounts();
+    this->getChannel(i+1)->incrementNumberOfCounts();    
+  }
+}
+
+void RPCLinkBoard::incrementNumberOfCountsOutOfReferenceWindow(const int & reference,const int & window){
+  for (int i = 0 ; i < 96 ; i++){
+    this->getChannel(i+1)->incrementNumberOfCountsOutOfReferenceWindow(reference,window);
   }
 }
 
 void RPCLinkBoard::resetChannelHitCounters(){
   for (int i = 0 ; i < 96 ; i++){
     this->getChannel(i+1)->resetNumberOfCounts();
+    this->getChannel(i+1)->resetNumberOfNoisyCounts();
   }
 }
 
@@ -747,7 +786,7 @@ TH1F * RPCLinkBoard::getHistogramOfChannelRates(const string & histoObjName,cons
   noiseHisto->GetYaxis()->SetTitle("Rate in Hz");
   
   for(int i = 0 ; i < 96 ; i++){
-    noiseHisto->SetBinContent(i+1, (double)((double)this->getChannel(i+1)->getNumberOfCounts() / totalTimeInSeconds_denominator));
+    noiseHisto->SetBinContent(i+1, (double)((double)this->getChannel(i+1)->getNumberOfNoisyCounts() / totalTimeInSeconds_denominator));
   }
   
   return noiseHisto;
@@ -757,6 +796,15 @@ void RPCLinkBoard::writeTimeEvolutionValuesInTimeWindowAroundRefTime(const int &
   for (int i = 0 ; i < 96 ; i++){
     this->getChannel(i+1)->writeMultiHitDifferences(timeWindow);
   }
+}
+
+TH1F * RPCLinkBoard::getHistoOfChannelHitCounts(const string & hitsDistribution){
+  TH1F * channelsHitsDistribution = new TH1F(hitsDistribution.c_str(),hitsDistribution.c_str(),96,1,96);
+  for (int i = 0 ; i < 96 ; i++){
+    channelsHitsDistribution->SetBinContent(i+1,this->getChannel(i+1)->getNumberOfCounts());
+  }
+  
+  return channelsHitsDistribution;
 }
 
 // endof previous
