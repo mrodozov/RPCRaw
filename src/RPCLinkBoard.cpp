@@ -292,11 +292,11 @@ void RPCLinkBoard::writeClusterSizeValues(){
     if(this->_clusterSizeEntries.find(partitionNum) != this->_clusterSizeEntries.end()){
       clusterSizeVector = this->_clusterSizeEntries[partitionNum];
     }
-    
-    //cout << this->getClusterNumber(i+1).size() << endl;
-    clusterSizeVector.push_back(this->getClusterNumber(i+1).size());
-    this->_clusterSizeEntries[partitionNum] = clusterSizeVector;
-    
+    if (this->getClusterNumber(i+1).size() < 5){
+      //cout << this->getClusterNumber(i+1).size() << endl;
+      clusterSizeVector.push_back(this->getClusterNumber(i+1).size());
+      this->_clusterSizeEntries[partitionNum] = clusterSizeVector;
+    }
   }
 }
 
@@ -805,6 +805,14 @@ TH1F * RPCLinkBoard::getHistoOfChannelHitCounts(const string & hitsDistribution)
   }
   
   return channelsHitsDistribution;
+}
+
+bool RPCLinkBoard::channelIsCloseToEdgeWithPrecision(const int & channelNumber,const int & numberOfChannelsPrecision){
+  int absChNumber = channelNumber % (96/this->getNumberOfClones());
+  bool retval = false;
+  if (absChNumber - numberOfChannelsPrecision < this->getFirstStripNumberOfClone(1) || absChNumber + numberOfChannelsPrecision > this->getLastStripNumberOfClone(1)) retval = true;
+  
+  return retval;
 }
 
 // endof previous

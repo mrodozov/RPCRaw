@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
     
     stringstream stst;
     ifstream in(argv[1]);
-    strcpy(temp1,"/home/user/re4data/TDC/");
+    strcpy(temp1,"/home/user/re4data/TDC/"); //this is the runnumber 
     strcat(temp1,argv[1]);
     strcat(temp1,".root");
     

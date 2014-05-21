@@ -343,12 +343,14 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   string jsonFileNameOnly = jsonFileWithConfig.substr(position,jsonFileWithConfig.size()-position-5);
   string resultsFolder = arg_v[7];
   //bool DEBUG = atoi(arg_v[7]);
+  string failedTrackFile = resultsFolder+arg_v[8]; ofstream printingStream; printingStream.open(failedTrackFile.c_str());
   int timeWindow = 0 ,  timeReference = 0 ; // time windowses to use
   vector<int> vectorOfReferenceChambers; // vector of consecutive reference chambers, filled by the run config object
-  int allTracks = 0, verticalTracks=0; int noTrackCounter = 0; // track counters just to keep eye on the stats
+  int allTracks = 0, verticalTracks=0; int noTrackCounter = 0 , eventsWithoutSufficientReferencesDueToMissingClusters = 0; // track counters just to keep eye on the stats
+  int showerEvents = 0;
   // some pointer for further use 
   RPCChamber * chamberObj; // pointer to point to each chamber , use it in a loop
-  RPCLinkBoardChannel * channelObj; // pointer to point to each channel of each chamber , use it in a loop
+  //RPCLinkBoardChannel * channelObj; // pointer to point to each channel of each chamber , use it in a loop
   TFile * tracksFile = new TFile((resultsFolder+runToUse+"_tracksFile.root").c_str(),"RECREATE");
   
   /** this following structure (the map with int keys and vectors values ) is used to get the result from the reconstruction. If track is reconstructed,
@@ -369,8 +371,9 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   cout << "all events " <<  converter->getTotalEvents() << endl;
   converter->setGhentTDCtoRPCmap(ghentMap);
   int numberOfChamberObjectsNeeded = converter->getNumberOfChamberObjects();
+  cout << numberOfChamberObjectsNeeded << endl;
   int numberOfTriggerObjsNeeded = converter->getNumberOfTriggerObjects();
-  //numberOfEventsToUse = converter->getTotalEvents();
+  numberOfEventsToUse = converter->getTotalEvents();
   
   /** create a run configuration object, use it to configure the execution. JSON file for CERN, DB records for GHENT */
   
@@ -389,7 +392,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     runConfig->readConfigurationFromDBforRunAndSite(boost::lexical_cast<int>(runToUse),"Ghent");
   }
   
-  cout << "Events according to config file: " << runConfig->getNumberOfEvents() << endl;
+  //cout << "Events according to config file: " << runConfig->getNumberOfEvents() << endl;
   
   vectorOfReferenceChambers = runConfig->getReferenceChambers();
   
@@ -422,7 +425,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   
   for (int i = 0 ; i < numberOfEventsToUse ; i++ , converter->nextEvent()){
     
-    cout << " Event : " << converter->getEventNumber() << endl; // print the event if you like
+    //cout << " Event : " << converter->getEventNumber() << endl; // print the event if you like
     
     if (siteType == kIsCERNrawFile && i < 2) continue; // skip just once if its CERN file. The first event is always empty
     
@@ -433,60 +436,41 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     bool trackIsVertical = true;
     bool keepReconstructedTrack = false;
     int eventNum = converter->getEventNumber();
-    mapOfCurrentEventReconstructedHits = cosmicTestChambersStack->getReconstructedHits(vectorOfReferenceChambers,timeWindow,timeReference,trackIsVertical,keepReconstructedTrack,tracksFile,eventNum,20,siteType);
     
-    // Put all analysis steps that does not require reconstructed track here. 
-    // print all clusters and their channel numbers 
+    mapOfCurrentEventReconstructedHits = cosmicTestChambersStack->getReconstructedHits(vectorOfReferenceChambers,timeWindow,timeReference,trackIsVertical,keepReconstructedTrack,tracksFile,eventNum,0.5,siteType);
     
-    for (unsigned allChams = 0 ; allChams < cosmicTestChambersStack->getNumberOfChambers() ; allChams++){
-      chamberObj = cosmicTestChambersStack->getChamberNumber(allChams+1);
-      if (chamberObj->getExtendedChamberConditions() == NULL ) continue;
-      
-      /*
-      cout << "Chamber number: " << allChams+1 << endl;
-      for (int chn = 0 ; chn < 96 ; chn++){
-	if (chamberObj->getStrip(chn+1)->hasHit()){
-	  cout << chn << " ";
+    if (mapOfCurrentEventReconstructedHits.empty() || cosmicTestChambersStack->isShowerEvent() ){ // if the map is empty there was no reconstructed track
+      //cout << " No track reconstructed for event " << converter->getEventNumber() << endl;
+      for (int allRefChams = 0 ; allRefChams < vectorOfReferenceChambers.size() ; allRefChams++){
+	if (cosmicTestChambersStack->getChamberNumber(vectorOfReferenceChambers.at(allRefChams))->getNumberOfClusters() == 0){	  
+	  eventsWithoutSufficientReferencesDueToMissingClusters += 1;
+	  break;
 	}
       }
-      cout << endl;
-      */
       
-      chamberObj->writeClusterSizeValues();
-      chamberObj->writeTimeEvolutionValuesInTimeWindowAroundRefTime(100); // 100 units should be enough
-      chamberObj->incrementNumberOfCountsOutOfReferenceWindow(timeReference,timeWindow);
-      chamberObj->incrementChannelHitCountersForCurrentEvent();
-      
-      for (int clustNum = 0 ; clustNum < chamberObj->getNumberOfClusters() ; clustNum++){
-	chamberObj->writeClustersTimeProfileForClusterNumber(clustNum+1);
-      }
-    }
-    
-    if (mapOfCurrentEventReconstructedHits.empty()){ // if the map is empty there was no reconstructed track
-      //cout << " No track reconstructed for event " << converter->getEventNumber() << endl;
+      if (cosmicTestChambersStack->isShowerEvent()) showerEvents++;
       noTrackCounter ++;
       continue; // skip execution, there is no track reconstucted
     }
     
-    else { // else, track was found       
-      
-      cout << "reconstructed hits" << endl;
-      for (map<int,vector<double> >::iterator mapIter = mapOfCurrentEventReconstructedHits.begin() ; mapIter != mapOfCurrentEventReconstructedHits.end() ; mapIter++){
-	
-	cout << " Chamber " << mapIter->first << " partitions " ;
-	for (int recparts = 0 ; recparts < mapIter->second.size() - 1; recparts ++){
-	  cout << mapIter->second.at(recparts) << " ";
-	}
-	cout << " channel " << mapIter->second.at(mapIter->second.size()-1) << endl;
-	
-      }
+    else { // else, track was found                   
+            
+      bool trackFailedOnce = false;
       
       for (unsigned totalChambers = 0; totalChambers < cosmicTestChambersStack->getNumberOfChambers() ; totalChambers++ ){
 	assert(mapOfCurrentEventReconstructedHits[totalChambers+1].size());
 	chamberObj = cosmicTestChambersStack->getChamberNumber(totalChambers+1);
 	vector<double> partitionsAndChannelsVector = mapOfCurrentEventReconstructedHits[totalChambers+1];
 	int channelNum = partitionsAndChannelsVector.at(partitionsAndChannelsVector.size()-1); // the last element is the channel
-	if (channelNum > 96/chamberObj->getClones() || channelNum < 0) continue;  // reconstructed channel number went out of scope, skip
+	if (channelNum > 96/chamberObj->getClones() || channelNum < 1 || chamberObj->getExtendedChamberConditions() == NULL ) continue;  // reconstructed channel number went out of scope, skip
+	
+	chamberObj->writeClusterSizeValues();
+	chamberObj->writeTimeEvolutionValuesInTimeWindowAroundRefTime(100); // 100 units should be enough
+	chamberObj->incrementNumberOfCountsOutOfReferenceWindow(timeReference,timeWindow);
+	chamberObj->incrementChannelHitCountersForCurrentEvent();
+	for (int clustNum = 0 ; clustNum < chamberObj->getNumberOfClusters() ; clustNum++){
+	  chamberObj->writeClustersTimeProfileForClusterNumber(clustNum+1);
+	}
 	
 	int partitionNum = 0;
 	bool channelGotHit = false;
@@ -495,15 +479,16 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
 	for (unsigned partitionCounter = 0 ; partitionCounter < partitionsAndChannelsVector.size() - 1; partitionCounter++){ // loop on all partition posibilities combination, if its only one it would break after the first loop
 	  
 	  partitionNum = partitionsAndChannelsVector.at(partitionCounter);
-	  channelGotHit = chamberObj->isMatchingFiredChannelInPartition(channelNum,partitionNum,5);
+	  channelGotHit = chamberObj->isMatchingFiredChannelInPartition(channelNum,partitionNum,30);
 	  if(channelGotHit) break;
 	  
 	}
 	
-	if (partitionsAndChannelsVector.size() == 2 && totalChambers+1 > vectorOfReferenceChambers.at(0) && totalChambers+1 < vectorOfReferenceChambers.at(vectorOfReferenceChambers.size()-1)){ // search for hit in concrete partition and residuals
+	if (partitionsAndChannelsVector.size() == 2 && totalChambers+1 >= vectorOfReferenceChambers.at(0) && totalChambers+1 <= vectorOfReferenceChambers.at(vectorOfReferenceChambers.size()-1)){ // search for hit in concrete partition and residuals
 	  
+	  //chNum += (partitionNum - 1)*(96/chamberObj->getClones());
+	  if (channelNum > 96 / chamberObj->getClones() || channelNum < 1) continue; // buugggg
 	  chNum += (partitionNum - 1)*(96/chamberObj->getClones());
-	  if (chNum > 96 || chNum < 1) continue;
 	  chamberObj->getChannel(chNum)->incrementEfficiencyCounters(channelGotHit);
 	  if (channelGotHit){
 	    chamberObj->findResidualValueForChannelInPartitions(channelNum,partitionsAndChannelsVector); // measure residuals if there was a hit   
@@ -511,30 +496,77 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
 	  
 	  else {
 	    
-	     chamberObj->findResidualsInNeighbourPartitionsForChannelInPartition(partitionsAndChannelsVector); // search for neighbour partition hits if there was none in the expected partition
-	     cout << " chamber " << totalChambers+1 << " channel " << chNum << " partition " << partitionNum << endl << "hits : ";
-	     for (int allClusters = 0 ; allClusters < chamberObj->getNumberOfClusters() ; allClusters++){
-	       for (int cls = 0 ; cls < chamberObj->getClusterNumber(allClusters+1).size() ; cls++){
-		 cout << chamberObj->getClusterNumber(allClusters+1).at(cls) << " ";
-	      }
-	      cout << endl;
-	    }
-	    cout << endl;
-	    // ! adding this is just to check that if we bring the right mapping, we would increase the efficiency     
-	    channelGotHit = true;     
+	    chamberObj->findResidualsInNeighbourPartitionsForChannelInPartition(partitionsAndChannelsVector); // search for neighbour partition hits if there was none in the expected partition
+	     
 	  }
 	}
 	
-	chamberObj->incrementAbsoluteChannelCounters(channelGotHit,channelNum); // absolute channel efficiency
-	chamberObj->incrementEfficiencyCounters(channelGotHit); // chamber efficiency 
+	/*
+	if(!channelGotHit && chamberObj->getExtendedChamberConditions()->getIsReference()){
+	  
+	  cout << "NO MATCH ! Chamber " << totalChambers+1 << " partition " << partitionNum << " channel " << channelNum << endl;
+	  
+	  for (int allClusters = 0 ; allClusters < chamberObj->getNumberOfClusters() ; allClusters++){
+	       for (unsigned cls = 0 ; cls < chamberObj->getClusterNumber(allClusters+1).size() ; cls++){
+		 cout << chamberObj->getClusterNumber(allClusters+1).at(cls) << " ";
+	      }
+	  }
+	  
+	}
+	*/
 	
-      }
+	channelGotHit = chamberObj->isMatchingFiredChannelInAnyPartition(channelNum,30); // search channel number regardless of the partitions 
+	
+	
+	if (!channelGotHit && !trackFailedOnce){
+	  printingStream << eventNum << "\n" ;  
+	  cout << "Event : " << eventNum << endl;
+	  //balblabla and here switch the trigger so that you print the lousy track only once	  
+	  trackFailedOnce = true;
+	  
+	  printingStream  << " Event: " << eventNum << "\n";
+	  printingStream.clear();
+	  
+	  // print the tracks record and all hits for this event , to compare where was the mismatch
+	  for (int chmbrNum = 0 ; chmbrNum < cosmicTestChambersStack->getNumberOfChambers() ; chmbrNum++){
+	    if (cosmicTestChambersStack->getChamberNumber(chmbrNum+1)->getExtendedChamberConditions() == NULL) continue;
+	    
+	    printingStream << " Chamber " << chmbrNum+1 << " partitions : ";
+	    vector<double> trackVector__ = mapOfCurrentEventReconstructedHits[chmbrNum+1];
+	    
+	    for (int parttns = 0 ; parttns < trackVector__.size() - 1 ; parttns++){
+	      printingStream << trackVector__.at(parttns) << " ";
+	    }
+	    
+	    printingStream << " channel " << trackVector__.at(trackVector__.size()-1) << "\n" << " hits : ";
+	    
+	    
+	    for ( int clstrsInChmbr = 0 ; clstrsInChmbr < cosmicTestChambersStack->getChamberNumber(chmbrNum+1)->getNumberOfClusters() ; clstrsInChmbr++ ){
+	      
+	      vector<int> currntClstr = cosmicTestChambersStack->getChamberNumber(chmbrNum+1)->getClusterNumber(clstrsInChmbr+1);
+	      for (int sizeOfclstr = 0 ; sizeOfclstr < currntClstr.size() ; sizeOfclstr++){
+		printingStream << currntClstr.at(sizeOfclstr) << " ";
+	      }
+	      printingStream << " ";
+	    }
+	        
+	    printingStream << "\n";
+	    printingStream.clear();
+	  }
+	}
+	
+	if (!chamberObj->channelIsCloseToEdgeWithPrecision(channelNum,2)){
+	
+	  chamberObj->incrementAbsoluteChannelCounters(channelGotHit,channelNum); // absolute channel efficiency
+	  chamberObj->incrementEfficiencyCounters(channelGotHit); // chamber efficiency 
+	
+	}
+      }            
       
       if (trackIsVertical) verticalTracks++;
       allTracks++;
       
-    }
-        
+    }        
   }
   
   tracksFile->Save();
@@ -542,10 +574,11 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   tracksFile->Delete();
   
   // and thats it, the entire program, here comes the output
-  
-  cout << " all reconstructed tracks " << allTracks << endl;
-  cout << " vertical tracks " << verticalTracks << endl;
-  cout << " no tracks for " << noTrackCounter << " events" << endl;
+  printingStream << " tracks missed due to no clusters in one of the ref chambers " << eventsWithoutSufficientReferencesDueToMissingClusters << endl;
+  printingStream << " number of shower events " << showerEvents << endl;
+  printingStream << " all reconstructed tracks " << allTracks << endl;
+  printingStream << " vertical tracks " << verticalTracks << endl;
+  printingStream << " no tracks for " << noTrackCounter << " events" << endl;
   
   TH1F * efficiencyHisto,* efficiencyDistro, * residualsHisto, * part_residual_histo;
   TH1F * tracksDistributionHisto,* absolute_channel_efficiency_histo,* clsSizeHistograms,* noiseHisto, * hitsStatHisto;
@@ -564,10 +597,12 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     chamberObj = cosmicTestChambersStack->getChamberNumber(chamberNum+1);    
     if (chamberObj->getExtendedChamberConditions() == NULL ) continue; // there is no chamber on this shelf
     
-    cout << " Number of all tracks chamber " << chamberNum+1 << " : " << chamberObj->getSumOfAllChannelTracks() << endl;
-    cout << " Total and efficient tracks " << chamberObj->getNumberOfEfficientTracks() << " "
+    printingStream << " Number of all tracks chamber " << chamberNum+1 << " : " << chamberObj->getSumOfAllChannelTracks() << endl;
+    printingStream << " Total and efficient tracks " << chamberObj->getNumberOfEfficientTracks() << " "
     << chamberObj->getNumberOfAllTracks() << endl;
-    cout << " Total efficiency " << chamberObj->getChamberEfficiency() << endl;
+    printingStream << " Total efficiency " << chamberObj->getChamberEfficiency() << endl;
+    
+    printingStream.clear();
     
     string chamber_Name = chamberObj->getExtendedChamberConditions()->getChamberName();
     outputfile->cd();
@@ -661,6 +696,8 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     noiseHisto->Delete();
     
   }
+  
+  printingStream.close();
   
   outputfile->Save();
   outputfile->Close("R");

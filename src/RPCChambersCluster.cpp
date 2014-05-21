@@ -485,7 +485,7 @@ void RPCChambersCluster::variousStudyExperimentalFunction(TFile * fileToSave,TH1
 
 }
 
-map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> vectorOfReferenceChambers, const int & timeWindow,const int & timeReference,bool & isVerticalTrack,const bool & keepRecoTrack,TFile * fileForRecoTracks,const int & eventNum,const int & Chi2goodness, const ESiteFileType & fileType){
+map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> vectorOfReferenceChambers, const int & timeWindow,const int & timeReference,bool & isVerticalTrack,const bool & keepRecoTrack,TFile * fileForRecoTracks,const int & eventNum,const double & Chi2goodness, const ESiteFileType & fileType){
   
   // 
   
@@ -494,7 +494,7 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
   double best_chi2goodnes_value = Chi2goodness+10 ; // this variable is used as reference so that it holds the best chi2 found for a track, so its used only a track with better chi2 to be accepted
   
   for (int i = 0 ; i < this->getNumberOfChambers() ; i++){
-    this->getChamberNumber(i+1)->findAllClustersForTriggerTimeReferenceAndTimeWindow(timeReference,timeWindow);
+    this->getChamberNumber(i+1)->findAllClustersForTriggerTimeReferenceAndTimeWindow(timeReference,timeWindow,5);
     //cout  << "Chamber is " << i+1 << endl;
   }
   
@@ -958,3 +958,16 @@ void RPCChambersCluster::configureChambersWithConfigObject(RPCRunConfig * runCon
   }
 }
 
+bool RPCChambersCluster::isShowerEvent(){
+  int sumOfScintilatorsWithHitTop = 0;
+  int sumOfScintilatorsWithHitBot = 0;
+  int retval = false;
+  for (int i = 0 ; i < 15 ; i++){
+    if ( this->getTriggerObjectNumber(1)->getChannel(i+1)->hasHit() ) sumOfScintilatorsWithHitTop ++;
+    if ( this->getTriggerObjectNumber(1)->getChannel(i+1+16)->hasHit() ) sumOfScintilatorsWithHitBot ++;
+  }
+  
+  if ( sumOfScintilatorsWithHitTop > 3 || sumOfScintilatorsWithHitBot > 3) retval = true;
+  
+  return retval;
+}
