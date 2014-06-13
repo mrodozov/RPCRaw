@@ -120,7 +120,7 @@ public:
   void resetChannelsEfficiencyCounters() ; //{ for (int i=0; i < 96 ; i++) this->getChannel(i+1)->resetEfficiencyCounters(); } 
   void incrementAbsoluteChannelCounters(const bool & hitIsFound,const int & absoluteChannelNumber); // absoluteChannelNumber means channel number without specified partition number
   void clearAbsoluteChannelsCounters();
-  bool channelIsCloseToEdgeWithPrecision(const int & channelNumber,const int & numberOfChannelsPrecision); // check if channelNumber is close to the edge with precision numberOfChannelsPrecision
+  bool channelIsCloseToEdge(const int & channelNumber,const int & numberOfChannelsPrecision); // check if channelNumber is close to the edge with precision numberOfChannelsPrecision
   
   // cluster size methods
   

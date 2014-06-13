@@ -342,8 +342,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   unsigned position = jsonFileWithConfig.find("data_");
   string jsonFileNameOnly = jsonFileWithConfig.substr(position,jsonFileWithConfig.size()-position-5);
   string resultsFolder = arg_v[7];
-  //bool DEBUG = atoi(arg_v[7]);
-  string failedTrackFile = resultsFolder+arg_v[8]; ofstream printingStream; printingStream.open(failedTrackFile.c_str());
+  string failedTrackFile = resultsFolder+runToUse+"_failedTracks.txt"; ofstream printingStream; printingStream.open(failedTrackFile.c_str());
   int timeWindow = 0 ,  timeReference = 0 ; // time windowses to use
   vector<int> vectorOfReferenceChambers; // vector of consecutive reference chambers, filled by the run config object
   int allTracks = 0, verticalTracks=0; int noTrackCounter = 0 , eventsWithoutSufficientReferencesDueToMissingClusters = 0; // track counters just to keep eye on the stats
@@ -373,7 +372,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   int numberOfChamberObjectsNeeded = converter->getNumberOfChamberObjects();
   cout << numberOfChamberObjectsNeeded << endl;
   int numberOfTriggerObjsNeeded = converter->getNumberOfTriggerObjects();
-  numberOfEventsToUse = converter->getTotalEvents();
+  numberOfEventsToUse = 100 ;//converter->getTotalEvents();
   
   /** create a run configuration object, use it to configure the execution. JSON file for CERN, DB records for GHENT */
   
@@ -415,6 +414,9 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     chamberObj->resetEfficiencyCounters();
     chamberObj->resetChannelHitCounters();
     chamberObj->initClusterTimeProfileHistogramWithUniqueName("ClusterTimeProfile_"+conditions->getChamberName());
+    string ownname = chamberObj->getPointerToClustersTimeProfileHisto()->GetName();
+    ownname += ".root";
+    chamberObj->getPointerToClustersTimeProfileHisto()->SaveAs(ownname.c_str());
   }
   
   // actual analysis program apart from definitions and config
@@ -454,7 +456,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     }
     
     else { // else, track was found                   
-            
+      
       bool trackFailedOnce = false;
       
       for (unsigned totalChambers = 0; totalChambers < cosmicTestChambersStack->getNumberOfChambers() ; totalChambers++ ){
@@ -487,7 +489,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
 	if (partitionsAndChannelsVector.size() == 2 && totalChambers+1 >= vectorOfReferenceChambers.at(0) && totalChambers+1 <= vectorOfReferenceChambers.at(vectorOfReferenceChambers.size()-1)){ // search for hit in concrete partition and residuals
 	  
 	  //chNum += (partitionNum - 1)*(96/chamberObj->getClones());
-	  if (channelNum > 96 / chamberObj->getClones() || channelNum < 1) continue; // buugggg
+	  if (channelNum > 96 / chamberObj->getClones() || channelNum < 1) continue; // so there is a bug, that should have been skipped already
 	  chNum += (partitionNum - 1)*(96/chamberObj->getClones());
 	  chamberObj->getChannel(chNum)->incrementEfficiencyCounters(channelGotHit);
 	  if (channelGotHit){
@@ -497,26 +499,11 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
 	  else {
 	    
 	    chamberObj->findResidualsInNeighbourPartitionsForChannelInPartition(partitionsAndChannelsVector); // search for neighbour partition hits if there was none in the expected partition
-	     
+	    
 	  }
 	}
-	
-	/*
-	if(!channelGotHit && chamberObj->getExtendedChamberConditions()->getIsReference()){
-	  
-	  cout << "NO MATCH ! Chamber " << totalChambers+1 << " partition " << partitionNum << " channel " << channelNum << endl;
-	  
-	  for (int allClusters = 0 ; allClusters < chamberObj->getNumberOfClusters() ; allClusters++){
-	       for (unsigned cls = 0 ; cls < chamberObj->getClusterNumber(allClusters+1).size() ; cls++){
-		 cout << chamberObj->getClusterNumber(allClusters+1).at(cls) << " ";
-	      }
-	  }
-	  
-	}
-	*/
 	
 	channelGotHit = chamberObj->isMatchingFiredChannelInAnyPartition(channelNum,30); // search channel number regardless of the partitions 
-	
 	
 	if (!channelGotHit && !trackFailedOnce){
 	  printingStream << eventNum << "\n" ;  
@@ -538,8 +525,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
 	      printingStream << trackVector__.at(parttns) << " ";
 	    }
 	    
-	    printingStream << " channel " << trackVector__.at(trackVector__.size()-1) << "\n" << " hits : ";
-	    
+	    printingStream << " channel " << trackVector__.at(trackVector__.size()-1) << "\n" << " hits : ";    
 	    
 	    for ( int clstrsInChmbr = 0 ; clstrsInChmbr < cosmicTestChambersStack->getChamberNumber(chmbrNum+1)->getNumberOfClusters() ; clstrsInChmbr++ ){
 	      
@@ -549,18 +535,17 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
 	      }
 	      printingStream << " ";
 	    }
-	        
+	    
 	    printingStream << "\n";
 	    printingStream.clear();
 	  }
 	}
 	
-	if (!chamberObj->channelIsCloseToEdgeWithPrecision(channelNum,2)){
+	if (!channelGotHit && chamberObj->channelIsCloseToEdge(channelNum,2)) continue; // if there was an inefficiency and it was due to 
 	
-	  chamberObj->incrementAbsoluteChannelCounters(channelGotHit,channelNum); // absolute channel efficiency
-	  chamberObj->incrementEfficiencyCounters(channelGotHit); // chamber efficiency 
+	chamberObj->incrementAbsoluteChannelCounters(channelGotHit,channelNum); // absolute channel efficiency
+	chamberObj->incrementEfficiencyCounters(channelGotHit); // chamber efficiency 
 	
-	}
       }            
       
       if (trackIsVertical) verticalTracks++;
@@ -587,9 +572,10 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   string track_title ;
   TGraphAsymmErrors * channelEfficiencyGraph;
   
-  /** writing the results of the application */ 
+  /** writing the results of the execution */ 
   /** TODO - make this part more short (and elegant) with defining a subroutine (the histogram write part) */
   // Save all histograms in single file for the run
+  
   TFile * outputfile = new TFile((resultsFolder+runToUse+"_results.root").c_str(),"RECREATE",""); // file to write results
   
   for (unsigned chamberNum = 0 ; chamberNum < cosmicTestChambersStack->getNumberOfChambers() ; chamberNum++){
@@ -665,8 +651,14 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
       //outputfile->Write(clsSizeHistograms->GetName(),TObject::kOverwrite);
     }
     
-    //if (chamberObj->getExtendedChamberConditions() != NULL )  chamberObj->getPointerToClustersTimeProfileHisto()->Write();
-    //outputfile->Write(chamberObj->getPointerToClustersTimeProfileHisto()->GetName(),TObject::kOverwrite);
+    if (chamberObj->getExtendedChamberConditions() != NULL )  {
+      //string nameOfHisto = 
+      //chamberObj->getPointerToClustersTimeProfileHisto()->GetName();
+      //string nameOfHisto = "_clsTimeProfile.root";
+      //chamberObj->getPointerToClustersTimeProfileHisto()->SaveAs(nameOfHisto.c_str());
+      
+    }
+      //outputfile->Write(chamberObj->getPointerToClustersTimeProfileHisto()->GetName(),TObject::kOverwrite);
     
     timeEvoHistoPointer = chamberObj->getTimeEvolutionProfileHistogram(("TimeResolutionPerStrip_"+chamber_Name).c_str());
     timeEvoHistoPointer->Write();    
@@ -692,7 +684,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     efficiencyHisto->Delete();
     tracksDistributionHisto->Delete();
     timeEvoHistoPointer->Delete();
-    //chamberObj->getPointerToClustersTimeProfileHisto()->Delete();
+    chamberObj->getPointerToClustersTimeProfileHisto()->Delete();
     noiseHisto->Delete();
     
   }

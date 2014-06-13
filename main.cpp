@@ -1,13 +1,13 @@
-/** author : Mircho Rodozov, mrodozov@cern.ch 
+/** author : Mircho Rodozov, mrodozov@cern.ch
  * created on : 10.08.13
 */
+
 #include <iostream>
 #include <sstream>
 #include <fstream>
 #include <assert.h>
 #include <stdio.h>
 #include "UserApplications.h" // it includes all headers anyway, even occi
-
 
 int main(int argc,char ** argv){
   
@@ -24,6 +24,6 @@ int main(int argc,char ** argv){
   //configObjectsTest(argc,argv);  
   //getGlobalPlotsForRunStack(argc,argv);  
   //getDistributionOfEventsByClustersInRefChambers(argc,argv);
-    
+  
   return 0;
 }
