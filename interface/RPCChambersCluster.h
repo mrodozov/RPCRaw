@@ -38,6 +38,8 @@ public:
   const unsigned & getNumberOfChambers() const { return this->_numberOfChambers;} // return the number of current chamber objects. set it from createNewClusterOfChambers
   const unsigned & getNumberOfTriggerObjects() const { return this->_numberOfTriggers;} // set it from createNewClusterOfTriggerObjects 
   
+  bool isShowerEvent ();
+  
   virtual RPCLinkBoard * getChamberNumber(const int & chamberNumber);
   virtual RPCLinkBoard * getTriggerObjectNumber(const int & triggerObjectNumber);
   
@@ -50,7 +52,7 @@ public:
   void variousStudyExperimentalFunction(TFile * fileToSave,TH1F * histo[10],const int & eventNum); // put each track on histogram along with all the rest of the hits
   
   // one does not simply tries to understand this method in a few minutes
-  map<int,vector<double> > getReconstructedHits(vector<int> vectorOfReferenceChambers,const int & timeWindow,const int & timeReference,bool & isVerticalTrack,const bool & keepRecoTrack,TFile * fileToWriteRecoTracks,const int & eventNum,const int &Chi2Goodnes = 20,const ESiteFileType & fileType = kIsCERNrawFile);
+  map<int,vector<double> > getReconstructedHits(vector<unsigned> vectorOfReferenceChambers,const int & timeWindow,const int & timeReference,bool & isVerticalTrack,const bool & keepRecoTrack,TFile * fileToWriteRecoTracks,const int & eventNum,const double &Chi2Goodnes = 1,const ESiteFileType & fileType = kIsCERNrawFile);
   
   /** this method goes trough all the reference chambers */
   

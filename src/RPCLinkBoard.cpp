@@ -292,15 +292,15 @@ void RPCLinkBoard::writeClusterSizeValues(){
     if(this->_clusterSizeEntries.find(partitionNum) != this->_clusterSizeEntries.end()){
       clusterSizeVector = this->_clusterSizeEntries[partitionNum];
     }
-    
-    //cout << this->getClusterNumber(i+1).size() << endl;
-    clusterSizeVector.push_back(this->getClusterNumber(i+1).size());
-    this->_clusterSizeEntries[partitionNum] = clusterSizeVector;
-    
+    if (this->getClusterNumber(i+1).size() < 5){
+      //cout << this->getClusterNumber(i+1).size() << endl;
+      clusterSizeVector.push_back(this->getClusterNumber(i+1).size());
+      this->_clusterSizeEntries[partitionNum] = clusterSizeVector;
+    }
   }
 }
 
-const vector<int> & RPCLinkBoard::getClusterSizeEntriesForPartition(const int & partitionNum){
+const vector<int> RPCLinkBoard::getClusterSizeEntriesForPartition(const int & partitionNum){
   vector<int> retval;
   if (this->_clusterSizeEntries.find(partitionNum) != this->_clusterSizeEntries.end()){
     return this->_clusterSizeEntries[partitionNum];   
@@ -356,7 +356,7 @@ void RPCLinkBoard::writeTimeEvolutionValues(){
   }
 }
 
-const vector<vector<double> > & RPCLinkBoard::getTimeEvolutionVectorsForAllStrips(){
+const vector<vector<double> > RPCLinkBoard::getTimeEvolutionVectorsForAllStrips(){
   vector< vector<double> > retval;
   for (int i = 0 ; i < 96 ; i++){
     retval.push_back(this->getChannel(i+1)->getTimeEvolutionVector());
@@ -805,6 +805,14 @@ TH1F * RPCLinkBoard::getHistoOfChannelHitCounts(const string & hitsDistribution)
   }
   
   return channelsHitsDistribution;
+}
+
+bool RPCLinkBoard::channelIsCloseToEdgeWithPrecision(const int & channelNumber,const int & numberOfChannelsPrecision){
+  int absChNumber = channelNumber % (96/this->getNumberOfClones());
+  bool retval = false;
+  if (absChNumber - numberOfChannelsPrecision < this->getFirstStripNumberOfClone(1) || absChNumber + numberOfChannelsPrecision > this->getLastStripNumberOfClone(1)) retval = true;
+  
+  return retval;
 }
 
 // endof previous

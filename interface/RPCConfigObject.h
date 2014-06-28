@@ -54,12 +54,12 @@ public:
 class RPCRunConfig : public RPCAbstractRunConfig {
   
   RPCDBReader * _dbReader;
-  vector<int> referenceChambers;
+  vector<unsigned> referenceChambers;
   
 public:
   
-  void setReferenceChambers(const vector<int> & referenceChambersVector){ this->referenceChambers = referenceChambersVector;}
-  const vector<int> & getReferenceChambers(){ return this->referenceChambers;}
+  void setReferenceChambers(const vector<unsigned> & referenceChambersVector){ this->referenceChambers = referenceChambersVector;}
+  const vector<unsigned> & getReferenceChambers(){ return this->referenceChambers;}
   void setRunNumber(const int & runNumber);
   const int & getRunNumber();
   void setTriggerLayer(const string & layer);
