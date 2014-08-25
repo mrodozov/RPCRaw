@@ -129,7 +129,7 @@ void RPCRunConfig::readConfigurationFromDBforRunAndSite(const int & run,const st
   }
   
   this->_dbReader->closeCurrentConnection();
-    
+  
 }
 
 void RPCRunConfig::readConfigurationFromJSONDocument(const string & jsonDocument,const string & runToUse){

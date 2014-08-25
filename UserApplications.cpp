@@ -352,6 +352,18 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   RPCChamber * chamberObj; // pointer to point to each chamber , use it in a loop
   //RPCLinkBoardChannel * channelObj; // pointer to point to each channel of each chamber , use it in a loop
   TFile * tracksFile = new TFile((resultsFolder+runToUse+"_tracksFile.root").c_str(),"RECREATE");
+  tracksFile->mkdir("goodTracks");
+  tracksFile->mkdir("badTracks");
+  TH2F * topScintilatorCoordinates = new TH2F("TopScintCoord","Top scintilators coordinates",900,-30,60,120,1,16);
+  TH2F * bottomScintilatorCoordinates = new TH2F("BotScintCoord","Bottom scintilators coordinates",900,-30,60,120,16,32);
+  topScintilatorCoordinates->GetXaxis()->SetTitle("X coordinate (in strip width units)");
+  topScintilatorCoordinates->GetYaxis()->SetTitle("Scintilator channel number");
+  bottomScintilatorCoordinates->GetXaxis()->SetTitle("X coordinate (in strip width units)");
+  bottomScintilatorCoordinates->GetYaxis()->SetTitle("Scintilator channel number");
+  TH1F * scintilatorsStatsHisto = new TH1F("ScintilatorTH1","Scintilators occupancy",32,1,32);
+  
+  
+  
   
   /** this following structure (the map with int keys and vectors values ) is used to get the result from the reconstruction. If track is reconstructed,
    * it contains the partitions and channel numbers obtained from the reconstructed line (from the fit). 
@@ -371,9 +383,9 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   cout << "all events " <<  converter->getTotalEvents() << endl;
   converter->setGhentTDCtoRPCmap(ghentMap);
   int numberOfChamberObjectsNeeded = converter->getNumberOfChamberObjects();
-  cout << numberOfChamberObjectsNeeded << endl;
+  cout << "number of chamber objects created " << numberOfChamberObjectsNeeded << endl;
   int numberOfTriggerObjsNeeded = converter->getNumberOfTriggerObjects();
-  numberOfEventsToUse = converter->getTotalEvents();
+  //numberOfEventsToUse = converter->getTotalEvents();
   
   /** create a run configuration object, use it to configure the execution. JSON file for CERN, DB records for GHENT */
   
@@ -403,6 +415,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   RPCChambersCluster * cosmicTestChambersStack = new RPCChambersCluster(numberOfChamberObjectsNeeded,numberOfTriggerObjsNeeded,kRPC_RE_4_2_chamber);
   cosmicTestChambersStack->setDataSourceForNchambers(numberOfChamberObjectsNeeded,converter->getChambersData());
   cosmicTestChambersStack->setDataSourceForNtriggerObjects(numberOfTriggerObjsNeeded,converter->getTriggersData());
+  
   
   for(unsigned i = 0 ; i < cosmicTestChambersStack->getNumberOfChambers() ; i++){
     cosmicTestChambersStack->getChamberNumber(i+1)->resetEfficiencyCounters();
@@ -434,10 +447,17 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     totalTimeBeforeWindow += timeReference-timeWindow;
     
     bool trackIsVertical = true;
-    bool keepReconstructedTrack = false;
+    double topScintXCoordinate = 0;
+    double botScintXCoordinate = 0;
+    bool keepReconstructedTrack = true;
     int eventNum = converter->getEventNumber();
     
-    mapOfCurrentEventReconstructedHits = cosmicTestChambersStack->getReconstructedHits(vectorOfReferenceChambers,timeWindow,timeReference,trackIsVertical,keepReconstructedTrack,tracksFile,eventNum,0.5,siteType);
+    mapOfCurrentEventReconstructedHits = cosmicTestChambersStack->getReconstructedHits(vectorOfReferenceChambers,timeWindow,timeReference,trackIsVertical,topScintXCoordinate,botScintXCoordinate,keepReconstructedTrack,tracksFile,eventNum,0.98,siteType);
+    
+    // get scintilators stats
+    for (int scint = 0 ; scint < 31 ; scint++){
+      if(cosmicTestChambersStack->getTriggerObjectNumber(1)->getChannel(scint+1)->hasHit()) scintilatorsStatsHisto->Fill(scint+1);
+    }
     
     if (mapOfCurrentEventReconstructedHits.empty() || cosmicTestChambersStack->isShowerEvent() ){ // if the map is empty there was no reconstructed track
       //cout << " No track reconstructed for event " << converter->getEventNumber() << endl;
@@ -454,7 +474,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     }
     
     else { // else, track was found                   
-            
+      
       bool trackFailedOnce = false;
       
       for (unsigned totalChambers = 0; totalChambers < cosmicTestChambersStack->getNumberOfChambers() ; totalChambers++ ){
@@ -465,7 +485,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
 	if (channelNum > 96/chamberObj->getClones() || channelNum < 1 || chamberObj->getExtendedChamberConditions() == NULL ) continue;  // reconstructed channel number went out of scope, skip
 	
 	chamberObj->writeClusterSizeValues();
-	chamberObj->writeTimeEvolutionValuesInTimeWindowAroundRefTime(100); // 100 units should be enough
+	chamberObj->writeTimeEvolutionValuesInTimeWindowAroundRefTime(250); // 250 units are 25 ns
 	chamberObj->incrementNumberOfCountsOutOfReferenceWindow(timeReference,timeWindow);
 	chamberObj->incrementChannelHitCountersForCurrentEvent();
 	for (int clustNum = 0 ; clustNum < chamberObj->getNumberOfClusters() ; clustNum++){
@@ -482,12 +502,13 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
 	  channelGotHit = chamberObj->isMatchingFiredChannelInPartition(channelNum,partitionNum,3);
 	  if(channelGotHit) break;
 	  
+	  
 	}
 	
 	if (partitionsAndChannelsVector.size() == 2 && totalChambers+1 >= vectorOfReferenceChambers.at(0) && totalChambers+1 <= vectorOfReferenceChambers.at(vectorOfReferenceChambers.size()-1)){ // search for hit in concrete partition and residuals
 	  
 	  //chNum += (partitionNum - 1)*(96/chamberObj->getClones());
-	  if (channelNum > 96 / chamberObj->getClones() || channelNum < 1) continue; // buugggg
+	  if (channelNum > 96 / chamberObj->getClones() || channelNum < 1) continue; 
 	  chNum += (partitionNum - 1)*(96/chamberObj->getClones());
 	  chamberObj->getChannel(chNum)->incrementEfficiencyCounters(channelGotHit);
 	  if (channelGotHit){
@@ -566,12 +587,23 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
       if (trackIsVertical) verticalTracks++;
       allTracks++;
       
+      // scintilators coordinates histos, we require single hit in the top scintilators and single in the bottom
+      int hitsInTopScint = 0;
+      int hitsInBotScint = 0;
+      
+      for (int i=0; i < 31  ; i++){
+	if (cosmicTestChambersStack->getTriggerObjectNumber(1)->getChannel(i+1)->hasHit()){
+	//cout << "Top hit coordinates " << topScintXCoordinate << " Bottom hit coordinates " << botScintXCoordinate << " for channel " << i+1 << endl;
+	if (i < 15 )  topScintilatorCoordinates->Fill(topScintXCoordinate,i+1);
+	if (i >= 15 && i < 31 ) bottomScintilatorCoordinates->Fill(botScintXCoordinate,i+1);
+	}
+      }
     }        
+    
+    
+    
   }
   
-  tracksFile->Save();
-  tracksFile->Close("R");
-  tracksFile->Delete();
   
   // and thats it, the entire program, here comes the output
   printingStream << " tracks missed due to no clusters in one of the ref chambers " << eventsWithoutSufficientReferencesDueToMissingClusters << endl;
@@ -590,6 +622,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   /** writing the results of the application */ 
   /** TODO - make this part more short (and elegant) with defining a subroutine (the histogram write part) */
   // Save all histograms in single file for the run
+  
   TFile * outputfile = new TFile((resultsFolder+runToUse+"_results.root").c_str(),"RECREATE",""); // file to write results
   
   for (unsigned chamberNum = 0 ; chamberNum < cosmicTestChambersStack->getNumberOfChambers() ; chamberNum++){
@@ -665,8 +698,9 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
       //outputfile->Write(clsSizeHistograms->GetName(),TObject::kOverwrite);
     }
     
-    //if (chamberObj->getExtendedChamberConditions() != NULL )  chamberObj->getPointerToClustersTimeProfileHisto()->Write();
-    //outputfile->Write(chamberObj->getPointerToClustersTimeProfileHisto()->GetName(),TObject::kOverwrite);
+    if (chamberObj->getExtendedChamberConditions() != NULL )
+    chamberObj->getPointerToClustersTimeProfileHisto()->Write();
+    outputfile->Write(chamberObj->getPointerToClustersTimeProfileHisto()->GetName(),TObject::kOverwrite);
     
     timeEvoHistoPointer = chamberObj->getTimeEvolutionProfileHistogram(("TimeResolutionPerStrip_"+chamber_Name).c_str());
     timeEvoHistoPointer->Write();    
@@ -692,12 +726,25 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     efficiencyHisto->Delete();
     tracksDistributionHisto->Delete();
     timeEvoHistoPointer->Delete();
-    //chamberObj->getPointerToClustersTimeProfileHisto()->Delete();
-    noiseHisto->Delete();
+    chamberObj->getPointerToClustersTimeProfileHisto()->Delete();
+    noiseHisto->Delete();   
     
   }
   
   printingStream.close();
+  
+  outputfile->cd();
+  topScintilatorCoordinates->Write();
+  bottomScintilatorCoordinates->Write();
+  scintilatorsStatsHisto->Write();
+  
+  topScintilatorCoordinates->Delete();
+  bottomScintilatorCoordinates->Delete();
+  scintilatorsStatsHisto->Delete();
+  
+  tracksFile->Save();
+  tracksFile->Close("R");
+  tracksFile->Delete();
   
   outputfile->Save();
   outputfile->Close("R");

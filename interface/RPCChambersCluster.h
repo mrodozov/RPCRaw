@@ -16,7 +16,7 @@
 class RPCChambersCluster {
   
   map<unsigned,RollInterface*> _chambersPointer ;
-  map<unsigned,RollInterface*> _triggerObjectsPointer ;
+  map<unsigned,RollInterface*> _triggerObjectsPointer ; // trigger object is actually scintilator, but for the sake of time we use the channel number and vector of hits from chamber class 
   unsigned _numberOfChambers;
   unsigned _numberOfTriggers;
   
@@ -52,7 +52,7 @@ public:
   void variousStudyExperimentalFunction(TFile * fileToSave,TH1F * histo[10],const int & eventNum); // put each track on histogram along with all the rest of the hits
   
   // one does not simply tries to understand this method in a few minutes
-  map<int,vector<double> > getReconstructedHits(vector<unsigned> vectorOfReferenceChambers,const int & timeWindow,const int & timeReference,bool & isVerticalTrack,const bool & keepRecoTrack,TFile * fileToWriteRecoTracks,const int & eventNum,const double &Chi2Goodnes = 1,const ESiteFileType & fileType = kIsCERNrawFile);
+  map<int,vector<double> > getReconstructedHits(vector<unsigned> vectorOfReferenceChambers,const int & timeWindow,const int & timeReference,bool & isVerticalTrack,double & topScintilatorXcoordinate,double & bottomScintilatorXcoordinate,const bool & keepRecoTrack,TFile * fileToWriteRecoTracks,const int & eventNum,const double & correlationFactor = 0.9,const ESiteFileType & fileType = kIsCERNrawFile);
   
   /** this method goes trough all the reference chambers */
   
@@ -61,7 +61,11 @@ public:
   
   /** helper method to get the vector of partitions between two references, with reference vectors for 1. number of reference chambers 2. cluster numbers in the reference chambers   */
   vector<vector<int> > getPartitionsVectorForVectorOfReferenceChambers(const int & chamberNumber,const vector<int> & vectorOfReferenceChambers,const vector<int> & vectorOfClusterNumbersCombination);
-  void configureChambersWithConfigObject(RPCRunConfig * runConfigObject);
+  void configureChambersWithConfigObject(RPCAbstractRunConfig * runConfigObject);
+  
+  void getScintilatorsCoordinates();  
+  
+  
   
 };
 
