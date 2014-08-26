@@ -52,7 +52,7 @@ public:
   void variousStudyExperimentalFunction(TFile * fileToSave,TH1F * histo[10],const int & eventNum); // put each track on histogram along with all the rest of the hits
   
   // one does not simply tries to understand this method in a few minutes
-  map<int,vector<double> > getReconstructedHits(vector<unsigned> vectorOfReferenceChambers,const int & timeWindow,const int & timeReference,bool & isVerticalTrack,double & topScintilatorXcoordinate,double & bottomScintilatorXcoordinate,const bool & keepRecoTrack,TFile * fileToWriteRecoTracks,const int & eventNum,const double & correlationFactor = 0.9,const ESiteFileType & fileType = kIsCERNrawFile);
+  map<int,vector<double> > getReconstructedHits(vector<unsigned> vectorOfReferenceChambers,const int & timeWindow,const int & timeReference,bool & isVerticalTrack,map<int,double> & scintilatorsCoordinates,const bool & keepRecoTrack,TFile * fileToWriteRecoTracks,const int & eventNum,const double & correlationFactor = 0.98,const ESiteFileType & fileType = kIsCERNrawFile);
   
   /** this method goes trough all the reference chambers */
   

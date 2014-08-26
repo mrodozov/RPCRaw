@@ -485,7 +485,7 @@ void RPCChambersCluster::variousStudyExperimentalFunction(TFile * fileToSave,TH1
 
 }
 
-map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<unsigned> vectorOfReferenceChambers, const int & timeWindow,const int & timeReference,bool & isVerticalTrack,double & topScintilatorXcoordinate,double & bottomScintilatorXcoordinate,const bool & keepRecoTrack,TFile * fileForRecoTracks,const int & eventNum,const double & correlationFactor, const ESiteFileType & fileType){
+map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<unsigned> vectorOfReferenceChambers, const int & timeWindow,const int & timeReference,bool & isVerticalTrack,map<int,double> & scintilatorsCoordinates,const bool & keepRecoTrack,TFile * fileForRecoTracks,const int & eventNum,const double & correlationFactor, const ESiteFileType & fileType){
   
   // 
   
@@ -764,11 +764,14 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<unsigne
 	
       }      
       
-      // ----------
+      // ---------- scintilators coordinates estimate
       
-      topScintilatorXcoordinate = fitfunc->Eval(0);
-      bottomScintilatorXcoordinate = fitfunc->Eval(lastFitPoint+1);
-      
+      for (int scintNum = 0 ; scintNum < 31 ; scintNum++){
+	if(this->getTriggerObjectNumber(1)->getChannel(scintNum+1)->hasHit() && vectorOfClusterNumberCombinations.size() == 1 ) {
+	  if (scintNum < 10) scintilatorsCoordinates[scintNum+1] = graphXZ->Eval(0);
+	  else scintilatorsCoordinates[scintNum+1] = graphXZ->Eval(lastFitPoint+1);
+	}
+      }      
     }
     
     if (keepRecoTrack){      
@@ -891,6 +894,8 @@ int RPCChambersCluster::getTimeReferenceValueForSiteType(ESiteFileType fileType)
   // the values returned should be based on study of the trigger (scintilator) channels 
   // the time reference is your trigger event time. within one event this is te coordinate to follow
   
+  // TODO - get the coordinates of the scintilators and exclude the events with two top or two bottom scintilator hits that are impossible in principle
+  
   assert(this->getNumberOfTriggerObjects() > 0); // it is expected we have set the chambers and triggers
   RPCChamber * triggerObj = this->getTriggerObjectNumber(1);
   int timeReference = 0;
@@ -900,12 +905,13 @@ int RPCChambersCluster::getTimeReferenceValueForSiteType(ESiteFileType fileType)
   switch (fileType)
   {
     case kIsCERNrawFile:
-    
+      
+      // scintilator occupancy show two groups by 10 channels - from 1 to 10 and from 17 to 27, probably top and bottom 
       
       assert(triggerObj->getChannel(32)->hasHit());
       coincidence_time = triggerObj->getChannel(32)->getHits().at(0);
       
-      for (int i = 0 ; i < 13 ; i++){
+      for (int i = 0 ; i < 10 ; i++){
 	if(triggerObj->getChannel(i+1)->hasHit() ){
 	  
 	  if ( difference_reference == 0 || ( coincidence_time - triggerObj->getChannel(i+1)->getHits().at(0) ) < difference_reference ) {
@@ -919,7 +925,7 @@ int RPCChambersCluster::getTimeReferenceValueForSiteType(ESiteFileType fileType)
       
       difference_reference = 0;
       
-      for (int i = 13 ; i < 31 ; i++) {
+      for (int i = 16 ; i < 26 ; i++) {
 	if(triggerObj->getChannel(i+1)->hasHit() ){
 	  
 	  if ( difference_reference == 0 || ( coincidence_time - triggerObj->getChannel(i+1)->getHits().at(0) ) < difference_reference ) {

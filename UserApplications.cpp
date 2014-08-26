@@ -360,9 +360,14 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   topScintilatorCoordinates->GetYaxis()->SetTitle("Scintilator channel number");
   bottomScintilatorCoordinates->GetXaxis()->SetTitle("X coordinate (in strip width units)");
   bottomScintilatorCoordinates->GetYaxis()->SetTitle("Scintilator channel number");
-  TH1F * scintilatorsStatsHisto = new TH1F("ScintilatorTH1","Scintilators occupancy",32,1,32);
+  TH1F * scintilatorsStatsHisto = new TH1F("ScintilatorTH1","Scintilators occupancy",160,1,32);
   
+  vector<vector<double> > scintCoordValues;
   
+  for (int scints = 0 ; scints < 31 ; scints++){
+    vector<double> new_scint_coord_holder;
+    scintCoordValues.push_back(new_scint_coord_holder);
+  }
   
   
   /** this following structure (the map with int keys and vectors values ) is used to get the result from the reconstruction. If track is reconstructed,
@@ -447,12 +452,11 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     totalTimeBeforeWindow += timeReference-timeWindow;
     
     bool trackIsVertical = true;
-    double topScintXCoordinate = 0;
-    double botScintXCoordinate = 0;
+    map<int,double> scintCoordinates;
     bool keepReconstructedTrack = true;
     int eventNum = converter->getEventNumber();
     
-    mapOfCurrentEventReconstructedHits = cosmicTestChambersStack->getReconstructedHits(vectorOfReferenceChambers,timeWindow,timeReference,trackIsVertical,topScintXCoordinate,botScintXCoordinate,keepReconstructedTrack,tracksFile,eventNum,0.98,siteType);
+    mapOfCurrentEventReconstructedHits = cosmicTestChambersStack->getReconstructedHits(vectorOfReferenceChambers,timeWindow,timeReference,trackIsVertical,scintCoordinates,keepReconstructedTrack,tracksFile,eventNum,0.98,siteType);
     
     // get scintilators stats
     for (int scint = 0 ; scint < 31 ; scint++){
@@ -582,26 +586,30 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
 	  chamberObj->incrementEfficiencyCounters(channelGotHit); // chamber efficiency 
 	
 	}
-      }            
+      }
       
-      if (trackIsVertical) verticalTracks++;
-      allTracks++;
-      
-      // scintilators coordinates histos, we require single hit in the top scintilators and single in the bottom
-      int hitsInTopScint = 0;
-      int hitsInBotScint = 0;
-      
-      for (int i=0; i < 31  ; i++){
-	if (cosmicTestChambersStack->getTriggerObjectNumber(1)->getChannel(i+1)->hasHit()){
-	//cout << "Top hit coordinates " << topScintXCoordinate << " Bottom hit coordinates " << botScintXCoordinate << " for channel " << i+1 << endl;
-	if (i < 15 )  topScintilatorCoordinates->Fill(topScintXCoordinate,i+1);
-	if (i >= 15 && i < 31 ) bottomScintilatorCoordinates->Fill(botScintXCoordinate,i+1);
+      if (trackIsVertical) {
+	verticalTracks++;
+	
+	// scintilators coordinates histos, we require single hit in the top scintilators and single in the bottom, and track into single partition
+
+	if (scintCoordinates.size() == 2){
+	  for (map<int,double>::iterator it = scintCoordinates.begin(); it != scintCoordinates.end() ; it++){
+	    if (it->first <= 10) topScintilatorCoordinates->Fill(it->second,it->first);
+	    else bottomScintilatorCoordinates->Fill(it->second,it->first);
+	    cout << "Scint num " << it->first << " coordinates " << it->second << endl;
+	    scintCoordValues.at(it->first - 1).push_back(it->second);
+	  }
+	}
+	else { // more than two scintilators hit 	
+	  cout << "More then two hits, print" << endl;
+	  for (map<int,double>::iterator it = scintCoordinates.begin() ; it != scintCoordinates.end() ; it++) cout << "sc num " << it->first << " coords " << it->second << endl;
 	}
       }
-    }        
-    
-    
-    
+      
+      allTracks++;
+      
+    }
   }
   
   
@@ -737,6 +745,17 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   topScintilatorCoordinates->Write();
   bottomScintilatorCoordinates->Write();
   scintilatorsStatsHisto->Write();
+  string scintNumber = "";
+  for (int scints = 0 ; scints < 31 ; scints ++) {
+    if (scintCoordValues.at(scints).size() == 0) continue;
+    scintNumber = boost::lexical_cast<string>(scints+1);
+    TH1F * scintilator = new TH1F (("Scint"+scintNumber).c_str(),("Scintilator "+scintNumber+" coordinates distribution").c_str(),90,-30,60);
+    for (unsigned entries = 0 ; entries < scintCoordValues.at(scints).size() ; entries ++) {
+      scintilator->Fill(scintCoordValues.at(scints).at(entries));
+    }
+    scintilator->Write();    
+    scintilator->Delete();
+  }
   
   topScintilatorCoordinates->Delete();
   bottomScintilatorCoordinates->Delete();
