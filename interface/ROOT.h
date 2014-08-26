@@ -33,6 +33,7 @@
 #include "TString.h"
 #include "TROOT.h"
 #include "TPad.h"
+#include "TGraph.h"
 #include "TGraphErrors.h"
 #include "TPaveText.h"
 #include "TF2.h"

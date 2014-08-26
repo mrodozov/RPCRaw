@@ -33,9 +33,19 @@ void RPCLinkBoardChannel::writeMultiHitDifferences(const int & timeWindow){
   int timeOfFirstHit = 0;
   if (this->hasMultipleHits()){
     //cout << "multi hits " << endl;
+    // discard hits with values less then 16000 for CERN case, find the first with higher value
+    
     timeOfFirstHit = this->getHits().at(0);
-    for (int i = 0 ; i < this->getHits().size() - 1 ; i++) {
-      //if ( this->getHits().at(i+1) + timeWindow > timeOfFirstHit ) break;
+    int properStartTime = 0;
+    
+    for (int i = 0 ; i < this->getHits().size() - 1 && timeOfFirstHit > 16000; i++) {
+      if (timeWindow == 250 && timeOfFirstHit < 16000) {
+	timeOfFirstHit = this->getHits().at(i);
+	if (timeOfFirstHit < 16000) continue;
+      }
+      
+      if ( this->getHits().at(i+1) + timeWindow > timeOfFirstHit ) break;
+      
       this->timeEvolutionDifferences.push_back( this->getHits().at(i+1) - this->getHits().at(i) );
       //cout << this->getHits().at(i+1) << " " << this->getHits().at(i) << endl;
     }

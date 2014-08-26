@@ -88,27 +88,27 @@ const vector<int> & RPCChamberConditions::getFEBTresholds() {
 
 /** additional optional methods */
 
-const double & RPCChamberConditions::getHVmonForGap(const int & gapNumber){
+const double RPCChamberConditions::getHVmonForGap(const int & gapNumber){
   assert(this->getGapsVmon().size() >= gapNumber);
   return this->getGapsVmon().at(gapNumber-1);
 }
 
-const double & RPCChamberConditions::getHVsetForGap(const int & gapNumber){
+const double RPCChamberConditions::getHVsetForGap(const int & gapNumber){
   assert(this->getGapsVset().size() >= gapNumber);
   return this->getGapsVset().at(gapNumber-1);
 }
 
-const double & RPCChamberConditions::getCurrentForGap(const int & gapNumber){
+const double RPCChamberConditions::getCurrentForGap(const int & gapNumber){
   assert(this->getGapsCurrent().size() >= gapNumber);
   return this->getGapsCurrent().at(gapNumber-1);
 }
 
-const string & RPCChamberConditions::getLabelForGap(const int & gapNumber){
+const string RPCChamberConditions::getLabelForGap(const int & gapNumber){
   assert(this->getGapLabels().size() >= gapNumber);
   return this->getGapLabels().at(gapNumber-1);
 }
 
-const int & RPCChamberConditions::getFEBTresholdForBoard(const int & febNumber){
+const int RPCChamberConditions::getFEBTresholdForBoard(const int & febNumber){
   assert(this->_FEBtresholds.size() >= febNumber);
   return this->_FEBtresholds.at(febNumber-1);
 }

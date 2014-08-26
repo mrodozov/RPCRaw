@@ -51,7 +51,7 @@ void RPCRunConfig::readConfigurationFromDBforRunAndSite(const int & run,const st
     pointerToGhentRefChambers[1] = reference2;
     reference1->setShelfNumber(1);    
     reference2->setShelfNumber(5);
-    vector<int> refChambers ;
+    vector<unsigned> refChambers ;
     refChambers.push_back(1);
     refChambers.push_back(5);
     this->setReferenceChambers(refChambers);
@@ -129,7 +129,7 @@ void RPCRunConfig::readConfigurationFromDBforRunAndSite(const int & run,const st
   }
   
   this->_dbReader->closeCurrentConnection();
-    
+  
 }
 
 void RPCRunConfig::readConfigurationFromJSONDocument(const string & jsonDocument,const string & runToUse){
@@ -193,7 +193,7 @@ void RPCRunConfig::readConfigurationFromJSONDocument(const string & jsonDocument
     this->setTriggerLayer(chambersDetails.get_child("gapsMode").data());
     this->setNumberOfEvents(boost::lexical_cast<int>(chambersDetails.get_child("events").data()));
     this->setRunNumber(boost::lexical_cast<int>(pt.begin()->first)); // should match runToUse argument
-    vector<int> refChambers;
+    vector<unsigned> refChambers;
     BOOST_FOREACH(boost::property_tree::ptree::value_type &v,chambersDetails.get_child("referenceChambers")){
       refChambers.push_back(boost::lexical_cast<int>(v.second.data()));
     }

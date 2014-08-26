@@ -107,11 +107,11 @@ public:
   void setTDCcable(const int & cableNum){this->_tdcCable = cableNum;}
   /** additional methods */
   
-  const double & getHVmonForGap(const int & gapNumber);
-  const double & getHVsetForGap(const int & gapNumber);
-  const double & getCurrentForGap(const int & gapNumber);
-  const string & getLabelForGap(const int & gapNumber);
-  const int & getFEBTresholdForBoard(const int & febNumber);
+  const double getHVmonForGap(const int & gapNumber);
+  const double getHVsetForGap(const int & gapNumber);
+  const double getCurrentForGap(const int & gapNumber);
+  const string getLabelForGap(const int & gapNumber);
+  const int getFEBTresholdForBoard(const int & febNumber);
   
   RPCChamberConditions();
   ~RPCChamberConditions();
