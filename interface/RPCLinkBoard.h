@@ -120,12 +120,12 @@ public:
   void resetChannelsEfficiencyCounters() ; //{ for (int i=0; i < 96 ; i++) this->getChannel(i+1)->resetEfficiencyCounters(); } 
   void incrementAbsoluteChannelCounters(const bool & hitIsFound,const int & absoluteChannelNumber); // absoluteChannelNumber means channel number without specified partition number
   void clearAbsoluteChannelsCounters();
-  bool channelIsCloseToEdge(const int & channelNumber,const int & numberOfChannelsPrecision); // check if channelNumber is close to the edge with precision numberOfChannelsPrecision
+  bool channelIsCloseToEdgeWithPrecision(const int & channelNumber,const int & numberOfChannelsPrecision); // check if channelNumber is close to the edge with precision numberOfChannelsPrecision
   
   // cluster size methods
   
   void writeClusterSizeValues(); // use to fill cluster size values after each event
-  const vector<int> & getClusterSizeEntriesForPartition(const int & partitionNum); // use partition number starting from 1 
+  const vector<int> getClusterSizeEntriesForPartition(const int & partitionNum); // use partition number starting from 1 
   void resetClusterSizeEntries(); // erase the records for cluster size for the run
   void initClusterTimeProfileHistogramWithUniqueName(const string & uniqueName);
   
@@ -133,7 +133,7 @@ public:
   
   void writeTimeEvolutionValues();
   void writeTimeEvolutionValuesInTimeWindowAroundRefTime(const int & timeWindow); // time reference is the first hit in 
-  const vector<vector<double> > & getTimeEvolutionVectorsForAllStrips();
+  const vector<vector<double> > getTimeEvolutionVectorsForAllStrips();
   void writeClustersTimeProfileForClusterNumber(const int & clusterNumber); // for each cluster get the channel with least time , use it as zero entry and draw the other channels around it
   
   // noise of the chamber

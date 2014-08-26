@@ -322,7 +322,7 @@ void RPCChambersCluster::variousStudyExperimentalFunction(TFile * fileToSave,TH1
     }
   }
   
-  // TODO // remove the following when the configuration object is introduced
+  // remove the following when the configuration object is introduced // done, change the implementation
   vectorOfReferenceChambers.push_back(1); vectorOfReferenceChambers.push_back(4); vectorOfReferenceChambers.push_back(6);
   
   /** Determination of track starts here */ // Move this part in separated method 
@@ -335,7 +335,7 @@ void RPCChambersCluster::variousStudyExperimentalFunction(TFile * fileToSave,TH1
       for( int k = 0 ; k < this->getChamberNumber(vectorOfReferenceChambers[2])->getNumberOfClusters() ; k++ ){
 	
 	// check the multiplicity. use 5 as upper limit number
-	// with the test run 2202 - CERN channel 33 is noisy so there is a condition only for it here TODO - remove the channel 33 condition
+	// with the test run 2202 - CERN channel 33 is noisy so there is a condition only for it here TO DO - remove the channel 33 condition // old function
 	
 	/** Hits : first , use the time to distinguish useless crap - like noisy channels 
 	 *  
@@ -384,7 +384,7 @@ void RPCChambersCluster::variousStudyExperimentalFunction(TFile * fileToSave,TH1
 	
 	
 	histXZ->SetMarkerColor(kBlue);
-	histXZ->SetMarkerStyle(kOpenTriangleDown); // TODO - open triangle down not found on noise server ? 
+	histXZ->SetMarkerStyle(kOpenTriangleDown); //  - open triangle down not found on noise server ? 
 	
 	double * xc = new double[3];
 	double * yc = new double[3];
@@ -485,13 +485,16 @@ void RPCChambersCluster::variousStudyExperimentalFunction(TFile * fileToSave,TH1
 
 }
 
-map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> vectorOfReferenceChambers, const int & timeWindow,const int & timeReference,bool & isVerticalTrack,const bool & keepRecoTrack,TFile * fileForRecoTracks,const int & eventNum,const double & Chi2goodness, const ESiteFileType & fileType){
+map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<unsigned> vectorOfReferenceChambers, const int & timeWindow,const int & timeReference,bool & isVerticalTrack,double & topScintilatorXcoordinate,double & bottomScintilatorXcoordinate,const bool & keepRecoTrack,TFile * fileForRecoTracks,const int & eventNum,const double & correlationFactor, const ESiteFileType & fileType){
   
   // 
   
   map<int,vector<double> > mapOfHits; //
   // the default value for Chi2goodness is 20 
-  double best_chi2goodnes_value = Chi2goodness+10 ; // this variable is used as reference so that it holds the best chi2 found for a track, so its used only a track with better chi2 to be accepted
+  //double best_chi2goodnes_value = Chi2goodness+10 ; // this variable is used as reference so that it holds the best chi2 found for a track, so its used only a track with better chi2 to be accepted
+  double currentBestCorrFact = -2;
+  
+  int lastFitPoint = 0;
   
   for (int i = 0 ; i < this->getNumberOfChambers() ; i++){
     this->getChamberNumber(i+1)->findAllClustersForTriggerTimeReferenceAndTimeWindow(timeReference,timeWindow,5);
@@ -503,6 +506,8 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
   if (fileType == kIsCERNrawFile ){
     
     assert(vectorOfReferenceChambers.size() == 3 );
+    
+    lastFitPoint = 9;
     
     for ( int i = 0 ; i < this->getChamberNumber(vectorOfReferenceChambers[0])->getNumberOfClusters() ; i++ ){
       for( int j = 0 ; j < this->getChamberNumber(vectorOfReferenceChambers[1])->getNumberOfClusters() ; j++ ){
@@ -528,6 +533,7 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
   
   if (fileType == kIsBARCrawFile || fileType == kIsGENTrawFile ){
     // add implementation for BARC and Ghent stand . 
+    lastFitPoint = 5;
     
     assert(vectorOfReferenceChambers.size() == 2);
     
@@ -582,18 +588,35 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
     if ( positive && negative ) continue;
     // cannot have a track that goes in both direction
     
+    /*
     TH1F * histXZ = new TH1F("fitHistogram","XZ plane",110,0,11);
-    histXZ->GetYaxis()->SetRangeUser(0,34);
+    histXZ->GetYaxis()->SetRangeUser(-20,52);
     histXZ->SetMarkerColor(kBlue);
     histXZ->SetMarkerStyle(kCircle);
     histXZ->GetXaxis()->SetTitle("Shelf number");
     histXZ->GetYaxis()->SetTitle("Channel number");
-    TF1 * fitfunc = new TF1("FitTrack","[0]+x*[1]",0,11);
+    */
+    
+    TF1 * fitfunc = new TF1("FitTrack","[0]+x*[1]",0,lastFitPoint+1);
+    
+    TGraphErrors * graphXZ = new TGraphErrors();
+    graphXZ->GetXaxis()->SetTitle("Shelf number");
+    graphXZ->GetYaxis()->SetTitle("Channel number");
+    //graphXZ->SetLineColor(0);
+    graphXZ->SetMarkerColor(kBlack);
+    graphXZ->SetMarkerStyle(kFullCircle);
+    graphXZ->SetName("fit graph");
+    graphXZ->SetTitle("XZ plane");
+    graphXZ->GetXaxis()->SetTitle("Muon station");
+    graphXZ->GetYaxis()->SetTitle("Channel number");
+    
+    fitfunc->SetLineColor(kBlue);        
     
     vector<double> coordinates;
     double xCoordinate = 0;
     int yCoordinate = 0;
     int zCoorinate = 0;
+    
     
     for (int ii=0 ; ii < vectorOfReferenceChambers.size() ; ii++){
       
@@ -602,14 +625,15 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
       yCoordinate = coordinates.at(1);
       zCoorinate = 10*vectorOfReferenceChambers[ii];
       Double_t errorValue = this->getChamberNumber(vectorOfReferenceChambers[ii])->getSizeOfCluster(clusterNum[ii]);
-      histXZ->SetBinContent(zCoorinate,xCoordinate);  
-      histXZ->SetBinError(zCoorinate,errorValue/2);
+//       histXZ->SetBinContent(zCoorinate,xCoordinate);  
+//       histXZ->SetBinError(zCoorinate,errorValue/2);
       //cout << xCoordinate << " " << yCoordinate << endl;
-      
+      graphXZ->SetPoint(ii,vectorOfReferenceChambers[ii],xCoordinate);
+      graphXZ->SetPointError(ii,0,errorValue/2);
     }
     
     Double_t params[2];
-    histXZ->Fit(fitfunc,"RQ");
+    graphXZ->Fit(fitfunc,"RFQ");
     fitfunc->GetParameters(params);
     
     //cout << "par1 " << params[0] << " par2 " << params[1] << " chi2 " << fitfunc->GetChisquare() << endl;
@@ -619,13 +643,15 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
     bool currentChamberIsReference = false;
     int startCounter = 0, endCounter = 0;
     
-    if ( fitfunc->GetChisquare() < Chi2goodness && fitfunc->GetChisquare() < best_chi2goodnes_value ) {
-      best_chi2goodnes_value = fitfunc->GetChisquare(); // the next loop this value would be evaluated
+    if ( abs(graphXZ->GetCorrelationFactor()) >= correlationFactor && abs(graphXZ->GetCorrelationFactor()) > currentBestCorrFact ) {
       // in case of only one partition, get the partition number of the first reference point
+      currentBestCorrFact = abs(graphXZ->GetCorrelationFactor());
       
       int referenceChambersIncrementor = 0;
       bool negativeChannelNumberIsFound = false;
       
+      // ---------
+            
       for ( int currentChNumber = 0 ; currentChNumber < this->getNumberOfChambers() ; currentChNumber++ ) {
 	// check where the chamber is according to the reference chambers
 	vector<double> vectorOfpartitionsAndHit;
@@ -737,16 +763,30 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<int> ve
 	mapOfHits[currentChNumber+1] = vectorOfpartitionsAndHit;
 	
       }      
+      
+      // ----------
+      
+      topScintilatorXcoordinate = fitfunc->Eval(0);
+      bottomScintilatorXcoordinate = fitfunc->Eval(lastFitPoint+1);
+      
     }
     
-    //histXZ->SaveAs("reconstructed_track.root"); // if one wants to see the track histogram
+    if (keepRecoTrack){      
+      graphXZ->SetName(boost::lexical_cast<string>(eventNum).c_str());
+      graphXZ->SetTitle(("Correlation factor is "+boost::lexical_cast<string>(graphXZ->GetCorrelationFactor())).c_str());
+      if(abs(graphXZ->GetCorrelationFactor()) >= correlationFactor) {
+	fileForRecoTracks->cd("goodTracks");
+      }
+      else{ fileForRecoTracks->cd("badTracks") ; }
+      
+      graphXZ->Write(graphXZ->GetName(),TObject::kOverwrite);
+      fileForRecoTracks->cd("");
+      //fileForRecoTracks->Write(graphXZ->GetName(),TObject::kOverwrite);
+    }
+    
     fitfunc->Delete();
-    if (keepRecoTrack){
-      histXZ->SetName(boost::lexical_cast<string>(eventNum).c_str());
-      fileForRecoTracks->Write(histXZ->GetName(),TObject::kOverwrite);
-    }
-    
-    histXZ->Delete();
+    //histXZ->Delete();
+    graphXZ->Delete();
     
   }  
   
@@ -952,9 +992,9 @@ int RPCChambersCluster::getTimeWindowForSiteType(ESiteFileType siteType){
   return timeWindow;
 }
 
-void RPCChambersCluster::configureChambersWithConfigObject(RPCRunConfig * runConfigObject){
+void RPCChambersCluster::configureChambersWithConfigObject(RPCAbstractRunConfig * runConfigObject){
   for (int i = 0 ; i < this->getNumberOfChambers() ; i++){
-    this->getChamberNumber(i+1)->setCurrentRunDetails(runConfigObject->getBasicConditionsForChamber(i+1));
+    this->getChamberNumber(i+1)->setCurrentRunDetails(dynamic_cast<RPCRunConfig*>(runConfigObject)->getBasicConditionsForChamber(i+1));
   }
 }
 
@@ -971,3 +1011,14 @@ bool RPCChambersCluster::isShowerEvent(){
   
   return retval;
 }
+
+
+void RPCChambersCluster::getScintilatorsCoordinates(){
+  
+  // use the trigger objects, their numbers
+  RPCLinkBoard * topScintilators = this->getTriggerObjectNumber(1);
+  RPCLinkBoard * bottomScintilators = this->getTriggerObjectNumber(2);
+  
+  
+}
+

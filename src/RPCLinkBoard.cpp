@@ -300,7 +300,7 @@ void RPCLinkBoard::writeClusterSizeValues(){
   }
 }
 
-const vector<int> & RPCLinkBoard::getClusterSizeEntriesForPartition(const int & partitionNum){
+const vector<int> RPCLinkBoard::getClusterSizeEntriesForPartition(const int & partitionNum){
   vector<int> retval;
   if (this->_clusterSizeEntries.find(partitionNum) != this->_clusterSizeEntries.end()){
     return this->_clusterSizeEntries[partitionNum];   
@@ -356,7 +356,7 @@ void RPCLinkBoard::writeTimeEvolutionValues(){
   }
 }
 
-const vector<vector<double> > & RPCLinkBoard::getTimeEvolutionVectorsForAllStrips(){
+const vector<vector<double> > RPCLinkBoard::getTimeEvolutionVectorsForAllStrips(){
   vector< vector<double> > retval;
   for (int i = 0 ; i < 96 ; i++){
     retval.push_back(this->getChannel(i+1)->getTimeEvolutionVector());
@@ -471,7 +471,7 @@ const vector<double> & RPCLinkBoard::getResiduals () const { return this->residu
 
 TH1F * RPCLinkBoard::getResidualsHistogram (const string & histoObjName){
   int bins = 96/this->getClones() * 2;
-  int axisLenght = 96/this->getClones()*2 + 2;
+  int axisLenght = 96/this->getClones();
   TH1F * residuals = new TH1F (histoObjName.c_str(),"Residual values",bins,-(axisLenght/2),axisLenght/2);
   
   for(int i = 0 ; i < this->getResiduals().size() ; i++){
@@ -481,6 +481,8 @@ TH1F * RPCLinkBoard::getResidualsHistogram (const string & histoObjName){
   return residuals;
   
 }
+
+
 
 TH1F * RPCLinkBoard::getNeighbourPartitionHitsHistogram(const string & histoTitle){
   
@@ -725,7 +727,7 @@ void RPCLinkBoard::initClusterTimeProfileHistogramWithUniqueName(const string & 
 void RPCLinkBoard::writeClustersTimeProfileForClusterNumber (const int & clusterNumber) {
   
   
-  if (this->getPointerToClustersTimeProfileHisto() != NULL && this->getNumberOfClusters() >= clusterNumber && this->getClusterNumber(clusterNumber).size() == 3 ){
+  if (this->getPointerToClustersTimeProfileHisto() != NULL && this->getNumberOfClusters() >= clusterNumber && this->getClusterNumber(clusterNumber).size() > 1 ){
     vector<int> theCluster = this->getClusterNumber(clusterNumber);
     int middleChannelTimeReference = 0;
     int centerOfCluster = 0;
@@ -805,7 +807,7 @@ TH1F * RPCLinkBoard::getHistoOfChannelHitCounts(const string & hitsDistribution)
   return channelsHitsDistribution;
 }
 
-bool RPCLinkBoard::channelIsCloseToEdge(const int & channelNumber,const int & numberOfChannelsPrecision){
+bool RPCLinkBoard::channelIsCloseToEdgeWithPrecision(const int & channelNumber,const int & numberOfChannelsPrecision){
   int absChNumber = channelNumber % (96/this->getNumberOfClones());
   bool retval = false;
   if (absChNumber - numberOfChannelsPrecision < this->getFirstStripNumberOfClone(1) || absChNumber + numberOfChannelsPrecision > this->getLastStripNumberOfClone(1)) retval = true;
