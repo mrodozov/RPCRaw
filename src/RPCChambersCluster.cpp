@@ -555,6 +555,8 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<unsigne
     }
   }
   
+  string topScintToString, botScintToString;
+  
   for (int combinationsVectorElement = 0 ; combinationsVectorElement < vectorOfClusterNumberCombinations.size() ; combinationsVectorElement ++){
     
     // the partition logic start  here - track could pass more than one partition
@@ -768,19 +770,37 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<unsigne
       
       for (int scintNum = 0 ; scintNum < 31 ; scintNum++){
 	if(this->getTriggerObjectNumber(1)->getChannel(scintNum+1)->hasHit() && vectorOfClusterNumberCombinations.size() == 1 ) {
-	  if (scintNum < 10) scintilatorsCoordinates[scintNum+1] = graphXZ->Eval(0);
-	  else scintilatorsCoordinates[scintNum+1] = graphXZ->Eval(lastFitPoint+1);
+	  if (scintNum < 10) { scintilatorsCoordinates[scintNum+1] = graphXZ->Eval(0); topScintToString = boost::lexical_cast<string>(scintNum+1); }
+	  else { scintilatorsCoordinates[scintNum+1] = graphXZ->Eval(lastFitPoint+1); botScintToString = boost::lexical_cast<string>(scintNum+1); }
 	}
       }      
     }
     
-    if (keepRecoTrack){      
+    // get only vertical tracks from the A partition if there are only two scint hits
+    if (keepRecoTrack && isVerticalTrack && !mapOfHits.empty() && scintilatorsCoordinates.size() == 2){
+      
       graphXZ->SetName(boost::lexical_cast<string>(eventNum).c_str());
-      graphXZ->SetTitle(("Correlation factor is "+boost::lexical_cast<string>(graphXZ->GetCorrelationFactor())).c_str());
+      string partition;
+      if (mapOfHits.find(vectorOfReferenceChambers.at(0))->second.at(0) == 1) partition = "A";
+      else if (mapOfHits.find(vectorOfReferenceChambers.at(0))->second.at(0) == 2) partition = "B";
+      else partition = "C";
+      
+      graphXZ->SetTitle(("Correlation factor is "+boost::lexical_cast<string>(graphXZ->GetCorrelationFactor()) + " trigger channels top: " + topScintToString + " bottom: " + botScintToString ).c_str());
       if(abs(graphXZ->GetCorrelationFactor()) >= correlationFactor) {
-	fileForRecoTracks->cd("goodTracks");
+	
+	string scintCombination="_"+topScintToString+"_"+botScintToString+"_"+partition;
+	TDirectory * dir = fileForRecoTracks->GetDirectory(scintCombination.c_str(),true);
+	
+	if(!dir) {  
+	  //fileForRecoTracks->ls();
+	  fileForRecoTracks->mkdir(scintCombination.c_str()) ;
+	  fileForRecoTracks->cd("");
+	} 
+	
+	fileForRecoTracks->cd(scintCombination.c_str());
+	//cout << fileForRecoTracks->GetPath() << endl;
       }
-      else{ fileForRecoTracks->cd("badTracks") ; }
+      else{ fileForRecoTracks->cd("") ; fileForRecoTracks->cd("badTracks") ; }
       
       graphXZ->Write(graphXZ->GetName(),TObject::kOverwrite);
       fileForRecoTracks->cd("");

@@ -363,12 +363,12 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   TH1F * scintilatorsStatsHisto = new TH1F("ScintilatorTH1","Scintilators occupancy",160,1,32);
   
   vector<vector<double> > scintCoordValues;
+  map<int,vector< double> > scintilatorAssociatedChannels; // key - scint number ; value - center of  the nearmost reference chamber cluster
   
   for (int scints = 0 ; scints < 31 ; scints++){
     vector<double> new_scint_coord_holder;
     scintCoordValues.push_back(new_scint_coord_holder);
   }
-  
   
   /** this following structure (the map with int keys and vectors values ) is used to get the result from the reconstruction. If track is reconstructed,
    * it contains the partitions and channel numbers obtained from the reconstructed line (from the fit). 
@@ -378,6 +378,10 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
    * channel number, in case the track was in more than one partition. If the track was in one partition only (vertical track),
    * then the 
    */
+  struct RPCRawHits {
+    vector<int> partitions; // possible partitions where the hit could be found
+    double channel; // cluster center as given by the fit function 
+  };
   
   map<int,vector<double> > mapOfCurrentEventReconstructedHits; 
   
@@ -420,8 +424,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
   RPCChambersCluster * cosmicTestChambersStack = new RPCChambersCluster(numberOfChamberObjectsNeeded,numberOfTriggerObjsNeeded,kRPC_RE_4_2_chamber);
   cosmicTestChambersStack->setDataSourceForNchambers(numberOfChamberObjectsNeeded,converter->getChambersData());
   cosmicTestChambersStack->setDataSourceForNtriggerObjects(numberOfTriggerObjsNeeded,converter->getTriggersData());
-  
-  
+    
   for(unsigned i = 0 ; i < cosmicTestChambersStack->getNumberOfChambers() ; i++){
     cosmicTestChambersStack->getChamberNumber(i+1)->resetEfficiencyCounters();
   }  
@@ -542,7 +545,6 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
 	
 	channelGotHit = chamberObj->isMatchingFiredChannelInAnyPartition(channelNum,30); // search channel number regardless of the partitions 
 	
-	
 	if (!channelGotHit && !trackFailedOnce){
 	  printingStream << eventNum << "\n" ;  
 	  cout << "Event : " << eventNum << endl;
@@ -564,8 +566,7 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
 	    }
 	    
 	    printingStream << " channel " << trackVector__.at(trackVector__.size()-1) << "\n" << " hits : ";
-	    
-	    
+	        
 	    for ( int clstrsInChmbr = 0 ; clstrsInChmbr < cosmicTestChambersStack->getChamberNumber(chmbrNum+1)->getNumberOfClusters() ; clstrsInChmbr++ ){
 	      
 	      vector<int> currntClstr = cosmicTestChambersStack->getChamberNumber(chmbrNum+1)->getClusterNumber(clstrsInChmbr+1);
@@ -591,14 +592,21 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
       if (trackIsVertical) {
 	verticalTracks++;
 	
-	// scintilators coordinates histos, we require single hit in the top scintilators and single in the bottom, and track into single partition
-
-	if (scintCoordinates.size() == 2){
+	// scintilators coordinates histos, we require single hit in the top scintilators and single in the bottom, and track into single partition and partition to be A
+	if (scintCoordinates.size() == 2 && mapOfCurrentEventReconstructedHits[vectorOfReferenceChambers.at(0)].at(0) == 1){
 	  for (map<int,double>::iterator it = scintCoordinates.begin(); it != scintCoordinates.end() ; it++){
-	    if (it->first <= 10) topScintilatorCoordinates->Fill(it->second,it->first);
-	    else bottomScintilatorCoordinates->Fill(it->second,it->first);
-	    cout << "Scint num " << it->first << " coordinates " << it->second << endl;
+	    double clusterCenter = 0;
+	    
+	    if  (it->first <= 10){topScintilatorCoordinates->Fill(it->second,it->first) ; clusterCenter = mapOfCurrentEventReconstructedHits[vectorOfReferenceChambers.at(0)].at(1) ; }
+	    else { bottomScintilatorCoordinates->Fill(it->second,it->first);  clusterCenter =  mapOfCurrentEventReconstructedHits[vectorOfReferenceChambers.at(vectorOfReferenceChambers.size()-1)].at(1) ; }
+	    //cout << "Scint num " << it->first << " coordinates " << it->second << endl;
 	    scintCoordValues.at(it->first - 1).push_back(it->second);
+	    
+	    if(cosmicTestChambersStack->getChamberNumber(vectorOfReferenceChambers.at(0))->getNumberOfClusters() == 1 && cosmicTestChambersStack->getChamberNumber(vectorOfReferenceChambers.at(vectorOfReferenceChambers.size()-1))->getNumberOfClusters() ==1 ){
+	      if  (scintilatorAssociatedChannels.find(it->first) != scintilatorAssociatedChannels.end() ) 
+	      { /* cout << "before crash" << endl */; scintilatorAssociatedChannels[it->first].push_back(clusterCenter); }
+	      else { vector<double> initVector; initVector.push_back(clusterCenter); ;scintilatorAssociatedChannels[it->first] = initVector; }
+	    }
 	  }
 	}
 	else { // more than two scintilators hit 	
@@ -750,12 +758,22 @@ void localEfficiencyStudy(int _argc,char ** arg_v){
     if (scintCoordValues.at(scints).size() == 0) continue;
     scintNumber = boost::lexical_cast<string>(scints+1);
     TH1F * scintilator = new TH1F (("Scint"+scintNumber).c_str(),("Scintilator "+scintNumber+" coordinates distribution").c_str(),90,-30,60);
+    TH1F * AssociatedNumbers = new TH1F(("ScintAssociatedChannels"+scintNumber).c_str(),("Associated number for scintilator "+scintNumber).c_str(),-10,250,40);
     for (unsigned entries = 0 ; entries < scintCoordValues.at(scints).size() ; entries ++) {
       scintilator->Fill(scintCoordValues.at(scints).at(entries));
     }
+    vector<double> scintCorespondingChannels = scintilatorAssociatedChannels.find(scints+1)->second;
+    for (unsigned entries = 0 ;entries < scintCorespondingChannels.size() ; entries++){
+      AssociatedNumbers->Fill(scintCorespondingChannels.at(entries));
+    }
+    
     scintilator->Write();    
     scintilator->Delete();
+    AssociatedNumbers->Write();
+    AssociatedNumbers->Delete();
+    
   }
+  
   
   topScintilatorCoordinates->Delete();
   bottomScintilatorCoordinates->Delete();
