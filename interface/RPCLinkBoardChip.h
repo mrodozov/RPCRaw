@@ -15,7 +15,7 @@ protected:
   
 public:
   
-  virtual RPCLinkBoardChannel* getChipStrip(const int& stripNumber);
+  virtual RPCLinkBoardChannel * getChipStrip(const int& stripNumber);
   virtual void assignStripsFromRoll(RollInterface* aRoll);
   
   RPCLinkBoardChip();

@@ -18,8 +18,8 @@ ifeq (Darwin,$(KERNEL))
 	ORACLE_LIBS = -locci -lclntsh 
 	ORACLE_INCDIR = -I /Users/mrodozov/Desktop/OracleSDK/instantclient_11_2/sdk/include/
 else
-	ORACLE_LIBS = -locci -lclntsh -lociei
-	ORACLE_INCDIR = -I /usr/include/oracle/12.1/client/
+	ORACLE_LIBS = -L/usr/lib/oracle/12.1/client64/lib -l occi -l clntsh -l ociei -l mql1 -l ipc1 -l nnz12  -l ons  -l clntshcore
+	ORACLE_INCDIR = -I /usr/include/oracle/12.1/client64/
 #	on lxplus libs and headers are under /afs/cern.ch/sw/lcg/external/oracle/
 endif
 
@@ -40,14 +40,14 @@ all: mainApp
 mainApp: main.cpp RPCRawConverter.o UserApplications.o $(LBobjects_names) $(ConfigObjects_names)
 	$(CC) main.cpp $(CFLAGS) -o mainApp build/RPCRawConverter.o build/UserApplications.o $(ROOTINC) $(ORACLE_INCDIR) $(ROOTLIBS) $(ORACLE_LIBS) $(ConfigObjects) $(LBobjects) $(COMPILE_AS_CPP11)
 
-UserApplications.o : UserApplications.cpp $(LBobjects_names) $(ConfigObjects_names) $(RAWobjects_names)
-	$(CC) $(CFLAGS) -c -Wall UserApplications.cpp -o build/UserApplications.o $(ROOTINC) 
+UserApplications.o : UserApplications.cpp $(LBobjects_names) $(ConfigObjects_names) $(RAWobjects_names) 
+	$(CC) $(CFLAGS) -c -Wall UserApplications.cpp -o build/UserApplications.o $(ROOTINC) $(ORACLE_INCDIR)
 
 RPCRawConverter.o : src/RPCRawConverter.cpp
 	$(CC) $(CFLAGS) -c -Wall src/RPCRawConverter.cpp -o build/RPCRawConverter.o $(ROOTINC)
 
 RPCDBReader.o : src/RPCDBReader.cpp
-	$(CC) $(CFLAGS) -c -Wall src/RPCDBReader.cpp -o build/RPCDBReader.o
+	$(CC) $(CFLAGS) -c -Wall src/RPCDBReader.cpp -o build/RPCDBReader.o $(ORACLE_INCDIR)
 
 Chip.o : src/RollCore/Chip.cpp ExtendedRoll.o
 	$(CC) $(CFLAGS) -c -Wall src/RollCore/Chip.cpp -o build/Chip.o $(ROOTINC)
@@ -77,13 +77,13 @@ RPCLinkBoardChip.o : Chip.o
 	$(CC) $(CFLAGS) -c src/RPCLinkBoardChip.cpp -o build/RPCLinkBoardChip.o $(ROOTINC)
 
 RPCChambersCluster.o : RPCLinkBoard.o
-	$(CC) $(CFLAGS) -c src/RPCChambersCluster.cpp -o build/RPCChambersCluster.o $(ROOTINC)
+	$(CC) $(CFLAGS) -c src/RPCChambersCluster.cpp -o build/RPCChambersCluster.o $(ROOTINC) $(ORACLE_INCDIR)
 
 RPCConfigObject.o : src/RPCConfigObject.cpp RPCChamberConditions.o 
-	$(CC) $(CFLAGS) -c src/RPCConfigObject.cpp -o build/RPCConfigObject.o
+	$(CC) $(CFLAGS) -c src/RPCConfigObject.cpp -o build/RPCConfigObject.o $(ORACLE_INCDIR)
 
 RPCChamberConditions.o : src/RPCChamberConditions.cpp
-	$(CC) $(CFLAGS) -c src/RPCChamberConditions.cpp -o build/RPCChamberConditions.o 
+	$(CC) $(CFLAGS) -c src/RPCChamberConditions.cpp -o build/RPCChamberConditions.o $(ORACLE_INCDIR)
 
 clean:
 	rm mainApp build/*.o *~

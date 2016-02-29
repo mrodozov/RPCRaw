@@ -13,7 +13,6 @@
 
 #include "TGaxis.h"
 #include "TAxis.h"
-#include "TAxisEditor.h"
 #include "TChain.h"
 #include "TKey.h"
 #include "TObject.h"
@@ -35,39 +34,14 @@
 #include "TPad.h"
 #include "TGraph.h"
 #include "TGraphErrors.h"
-#include "TPaveText.h"
+#include "TGraphAsymmErrors.h"
 #include "TF2.h"
 #include "TF1.h"
 #include "TF3.h"
-#include "TPaveStats.h"
-#include "TFormula.h"
-#include "TMath.h"
-#include "TRandom.h" 
 #include "TFitResult.h"
 #include "TFitResultPtr.h"
-#include "TVectorF.h"
-#include "TTimeStamp.h"
 #include "TBranch.h"
 #include "TDirectory.h"
-#include "TLeafElement.h"
-#include "TCollection.h"
-#include "TNtuple.h"
-#include "TApplication.h"
-#include "TStopwatch.h"
-#include "TVector3.h"
-#include <TEveTrack.h>
-#include "TEveTrackPropagator.h"
-#include "TEveVSDStructs.h"
-#include "TEveManager.h"
-#include "TEveViewer.h"
-#include "TError.h"
-#include "TClonesArray.h"
-#include "TGaxis.h"
-#include "TSelector.h"
-#include "TError.h"
-#include "TGraph2DErrors.h"
-#include <TGraph2D.h>
-#include <TGraphAsymmErrors.h>
 #include <TWebFile.h>
 
 #endif
