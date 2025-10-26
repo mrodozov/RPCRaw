@@ -28,7 +28,7 @@ void RPCChambersCluster::createNewClusterOfTriggerObjects(const int & nTriggerOb
     cout << "The object still holds existing chamber objects ! use deleteAllTriggers method to clear them first." << endl;
   }
   else {
-    for(int i = 0 ; i < nTriggerObjects ; i++){
+    for(unsigned i = 0 ; i < nTriggerObjects ; i++){
       RPCChamber * aTriggerObject = new RPCChamber(kRPC_RE_4_2_chamber); // defined in raw types file, take a look
       aTriggerObject->allocAndInit();
       aTriggerObject->setIsTriggerChamber(true);
@@ -40,14 +40,13 @@ void RPCChambersCluster::createNewClusterOfTriggerObjects(const int & nTriggerOb
 
 void RPCChambersCluster::setDataSourceForNchambers(const int & nChambers,const vector<vector<vector< unsigned> > > & dataSource){
   
-  for (int i = 0 ; i < nChambers ; i ++){
+  for (unsigned i = 0 ; i < nChambers ; i ++){
     this->getChamberNumber(i+1)->setStripsHitsDataFromSource(dataSource.at(i));
   }
 }
 
 void RPCChambersCluster::setDataSourceForNtriggerObjects(const int & nTriggerObject,const vector<vector<vector< unsigned> > > & dataSource){
-  
-  for (int i = 0 ; i < nTriggerObject ; i++ ){
+  for (unsigned i = 0 ; i < nTriggerObject ; i++ ){
     this->getTriggerObjectNumber(i+1)->setStripsHitsDataFromSource(dataSource.at(i));
   }  
 }
@@ -57,13 +56,12 @@ RPCChambersCluster::RPCChambersCluster (){
   this->_numberOfTriggers = 0;
 }
 
-RPCChambersCluster::RPCChambersCluster (const int & numberOfChambers,const int & numberOfTriggerObjs,const string & RE4TypeOfChambers){
+RPCChambersCluster::RPCChambersCluster (const int & numberOfChambers, const int & numberOfTriggerObjs, const string & RE4TypeOfChambers){
   //RPCChambersCluster(); // destructor is called if the default constructor is used as normal method
   this->_numberOfChambers = 0;
   this->_numberOfTriggers = 0;
   this->createNewClusterOfChambersWithRE4type(numberOfChambers,RE4TypeOfChambers);
-  this->createNewClusterOfTriggerObjects(numberOfTriggerObjs);
-  
+  this->createNewClusterOfTriggerObjects(numberOfTriggerObjs);  
 }
 
 RPCChambersCluster::~RPCChambersCluster () {
@@ -75,7 +73,7 @@ RPCChambersCluster::~RPCChambersCluster () {
 
 void RPCChambersCluster::deleteAllChambers () {
   if (this->getNumberOfChambers() > 0){
-    for (unsigned i=0;i < this->getNumberOfChambers();i++) {
+    for (unsigned i=0; i < this->getNumberOfChambers(); i++) {
       delete this->_chambersPointer.at(i);
     }
   }
@@ -86,7 +84,7 @@ void RPCChambersCluster::deleteAllChambers () {
 void RPCChambersCluster::deleteAllTriggerObjects(){
   if (this->getNumberOfTriggerObjects() > 0){
     RPCChamber * pointer;
-    for (int i=0; i < this->getNumberOfTriggerObjects();i++){
+    for (unsigned i=0; i < this->getNumberOfTriggerObjects();i++){
       delete this->_triggerObjectsPointer.at(i);
     }
   }
@@ -158,14 +156,14 @@ void RPCChambersCluster::variousStudyExperimentalFunction(TFile * fileToSave,TH1
     case kIsCERNrawFile:
       
       timeWindow = 500;
-      
       numberOfReferenceChambers = 3;
       
-      int countTwoHits=0;
-      for (int i = 0 ; i < 13 ; i++){
+      unsigned countTwoHits=0;
+      for (unsigned i = 0 ; i < 13 ; i++){
 	if(triggerObj->getChannel(i+1)->hasHit() ){
 	  
-	  if ( difference_reference == 0 || ( coincidence_time - triggerObj->getChannel(i+1)->getHits().at(0) ) < difference_reference ) {
+	  if ( (( coincidence_time - triggerObj->getChannel(i+1)->getHits().at(0) ) < difference_reference ) ||
+	       (difference_reference == 0) ) {
 	    
 	    difference_reference = coincidence_time - triggerObj->getChannel(i+1)->getHits().at(0);
 	    firstScintilatorTime = triggerObj->getChannel(i+1)->getHits().at(0);
@@ -176,10 +174,11 @@ void RPCChambersCluster::variousStudyExperimentalFunction(TFile * fileToSave,TH1
       
       difference_reference = 0;
       
-      for (int i = 13 ; i < 31 ; i++) {
+      for (unsigned i = 13 ; i < 31 ; i++) {
 	if(triggerObj->getChannel(i+1)->hasHit() ){
 	  
-	  if ( difference_reference == 0 || ( coincidence_time - triggerObj->getChannel(i+1)->getHits().at(0) ) < difference_reference ) {
+	  if ( (( coincidence_time - triggerObj->getChannel(i+1)->getHits().at(0) ) < difference_reference ) ||
+	       ( difference_reference == 0)) {
 	    
 	    difference_reference = coincidence_time - triggerObj->getChannel(i+1)->getHits().at(0);
 	    secondScintilatorTime = triggerObj->getChannel(i+1)->getHits().at(0);
@@ -192,8 +191,8 @@ void RPCChambersCluster::variousStudyExperimentalFunction(TFile * fileToSave,TH1
       /*
     case kIsGENTrawFile:
       timeWindow = 20;
-      for(int i = 0 ; i < 32 ; i++){
-	if(triggerObj->getChannel(i+1)->hasHit()) {
+      for (unsigned i = 0 ; i < 32 ; i++){
+	if (triggerObj->getChannel(i+1)->hasHit()) {
 	  triggerObj->getChannel(i+1)->getHits().at(0);
 	}
 	break;
@@ -202,43 +201,37 @@ void RPCChambersCluster::variousStudyExperimentalFunction(TFile * fileToSave,TH1
       timeWindow = 0; 
       timeReference = 0;
       */
-      
   }
   
-  timeReference = (firstScintilatorTime+secondScintilatorTime)/2;
-  
+  timeReference = (firstScintilatorTime+secondScintilatorTime)/2;  
   //cout << " time reference : " << timeReference << endl;
   //cout << " trigger entries : ";
-  for (int i=0; i < 32 ; i++){
+  for (unsigned i=0; i < 32 ; i++){
     if (triggerObj->getChannel(i+1)->hasHit()){
-//       cout << " trig channel : " << i+1 << " " << triggerObj->getChannel(i+1)->getHits().at(0) << " ";
+       //cout << " trig channel : " << i+1 << " " << triggerObj->getChannel(i+1)->getHits().at(0) << " ";
     }
   }
   
   cout << endl;
-//   cout << " most close trigger entries : top " << firstScintilatorTime << " bottom : " << secondScintilatorTime;
-//   cout << endl;
-  
-  
+  //cout << " most close trigger entries : top " << firstScintilatorTime << " bottom : " << secondScintilatorTime;
+  //cout << endl;
   hist1->Fill(abs(firstScintilatorTime-secondScintilatorTime));
   hist2->Fill(coincidence_time - firstScintilatorTime);
   hist3->Fill(coincidence_time - secondScintilatorTime);
+  //cout << "difference : " << firstScintilatorTime-secondScintilatorTime << endl;
   
-//   cout << "difference : " << firstScintilatorTime-secondScintilatorTime << endl;
-  
-  for (int totalChambers = 0 ; totalChambers < numberOfChambers ; totalChambers++){
+  for (unsigned totalChambers = 0 ; totalChambers < numberOfChambers ; totalChambers++){
     
     currentChamberObj = this->getChamberNumber(totalChambers+1);
-     cout << "Chamber " << totalChambers+1 ;
-    for (int j=0 ; j < 96 ;j++){
-      
+    cout << "Chamber " << totalChambers+1 ;
+    for (unsigned j=0 ; j < 96 ;j++){
       currentChamberObj = this->getChamberNumber(totalChambers+1);
       currentChannelObj = currentChamberObj->getChannel(j+1);      
       if (currentChannelObj->hasHit()){
- 	cout << " channel " << currentChannelObj->getOnlineNumber() << " time " << currentChannelObj->getHits().at(0);
+	cout << " channel " << currentChannelObj->getOnlineNumber() << " time " << currentChannelObj->getHits().at(0);
       }
     }
-     cout << endl;
+    cout << endl;
     currentChamberObj->findAllClustersForTriggerTimeReferenceAndTimeWindow(timeReference,timeWindow);    
     // now check the clusterization methods
     // fill number of cluster when there is at least one
@@ -248,14 +241,14 @@ void RPCChambersCluster::variousStudyExperimentalFunction(TFile * fileToSave,TH1
   }
   
   cout << "-------------------" << endl;
-//   cout << "Check new cluster methods" << endl;
+  //cout << "Check new cluster methods" << endl;
   
   
-  for (int totalChambers = 0 ; totalChambers < numberOfChambers ; totalChambers++){
+  for (unsigned totalChambers = 0 ; totalChambers < numberOfChambers ; totalChambers++){
     
     currentChamberObj = this->getChamberNumber(totalChambers+1);
-//     cout << "Chamber " << totalChambers+1 ;
-    for (int i = 0 ; i < currentChamberObj->getNumberOfClusters() ; i++){
+    // cout << "Chamber " << totalChambers+1 ;
+    for (unsigned i = 0 ; i < currentChamberObj->getNumberOfClusters() ; i++){
       
       // make the difference to get the tolerance within one cluster 
       
@@ -265,7 +258,7 @@ void RPCChambersCluster::variousStudyExperimentalFunction(TFile * fileToSave,TH1
       int sizeOfCurrentCluster = currentChamberObj->getClusterNumber(i+1).size();
       tempCluster = currentChamberObj->getClusterNumber(i+1);
       int numberOfHits = 0 ;
-      for (int j = 0 ; j < sizeOfCurrentCluster; j++){
+      for (unsigned j = 0 ; j < sizeOfCurrentCluster; j++){
 	// Fill the size here
 	SingleMultiHits->Fill(currentChamberObj->getStrip(tempCluster.at(j))->getHits().size());
 	
@@ -273,7 +266,7 @@ void RPCChambersCluster::variousStudyExperimentalFunction(TFile * fileToSave,TH1
       
       clsSize->Fill(sizeOfCurrentCluster);
       
-      for (int j = 0 ; j < sizeOfCurrentCluster ; j++ ){
+      for (unsigned j = 0 ; j < sizeOfCurrentCluster ; j++ ){
 	
 	currentValue = currentChamberObj->getStripsHitsTimesForCluster(i+1).at(j);
 	
@@ -300,24 +293,22 @@ void RPCChambersCluster::variousStudyExperimentalFunction(TFile * fileToSave,TH1
       topMinusEachChamberAvg->Fill(abs(firstScintilatorTime - avgTimeForCluster));
       bottomMinusEachChamberAvg->Fill(abs(secondScintilatorTime - avgTimeForCluster));
       
-//       cout << endl << "Cluster " << i+1 << " toptime " << biggestTime << " leasttime " << smallestTime ;
+      //cout << endl << "Cluster " << i+1 << " toptime " << biggestTime << " leasttime " << smallestTime ;
       
     }
     
-//     cout << endl;
+    // cout << endl;
   }
   
-//   cout << "-------Second check done-----------" << endl;
-  
+  //cout << "-------Second check done-----------" << endl;
   // try with single cluster per chamber 
   
   vector<int> vectorOfReferenceChambers;
   
-  for (int i=0; i < this->getNumberOfChambers() ; i ++){
+  for (unsigned i=0; i < this->getNumberOfChambers() ; i++){
     currentChamberObj = this->getChamberNumber(i+1);
     if (currentChamberObj->isReferenceChamber() && !currentChamberObj->getNumberOfClusters()){
-      // the reference chamber does not have a hit (cluster), probably inefficient (or else) , skip the execution
-      
+      // the reference chamber does not have a hit (cluster), probably inefficient (or else) , skip the execution      
       break;
     }
   }
@@ -329,10 +320,11 @@ void RPCChambersCluster::variousStudyExperimentalFunction(TFile * fileToSave,TH1
   
   //TFile * goodTracks = new TFile("GoodTracks.root","UPDATE");
   //TFile * badTracks = new TFile("BadTracks.root","UPDATE");
+  
   int globalCount = 1;
-  for ( int i = 0 ; i < this->getChamberNumber(vectorOfReferenceChambers[0])->getNumberOfClusters() ; i++ ){
-    for( int j = 0 ; j < this->getChamberNumber(vectorOfReferenceChambers[1])->getNumberOfClusters() ; j++ ){
-      for( int k = 0 ; k < this->getChamberNumber(vectorOfReferenceChambers[2])->getNumberOfClusters() ; k++ ){
+  for (unsigned i = 0 ; i < this->getChamberNumber(vectorOfReferenceChambers[0])->getNumberOfClusters() ; i++ ){
+    for (unsigned j = 0 ; j < this->getChamberNumber(vectorOfReferenceChambers[1])->getNumberOfClusters() ; j++ ){
+      for (unsigned k = 0 ; k < this->getChamberNumber(vectorOfReferenceChambers[2])->getNumberOfClusters() ; k++ ){
 	
 	// check the multiplicity. use 5 as upper limit number
 	// with the test run 2202 - CERN channel 33 is noisy so there is a condition only for it here TO DO - remove the channel 33 condition // old function
@@ -342,11 +334,11 @@ void RPCChambersCluster::variousStudyExperimentalFunction(TFile * fileToSave,TH1
 	 * 2. Check the partition plane (YZ plane) for vertical tracks. If the track is vertical don't search for consecutiveness and don't fill the YZ histo
 	 * 3. Check the partitions plane for consecutiveness - one could not expect track that passes 3 -> 1 -> 3 partitions
 	 * 
-	*/ 
+	*/
 	
-	if(this->getChamberNumber(vectorOfReferenceChambers[0])->getSizeOfCluster(i+1) > 5 ||
-	  this->getChamberNumber(vectorOfReferenceChambers[1])->getSizeOfCluster(j+1) > 5 ||
-	  this->getChamberNumber(vectorOfReferenceChambers[2])->getSizeOfCluster(k+1) > 5
+	if((this->getChamberNumber(vectorOfReferenceChambers[0])->getSizeOfCluster(i+1) > 5) ||
+	   (this->getChamberNumber(vectorOfReferenceChambers[1])->getSizeOfCluster(j+1) > 5) ||
+	   (this->getChamberNumber(vectorOfReferenceChambers[2])->getSizeOfCluster(k+1) > 5)
 	  ) continue;
 	
 	// the partition logic start  here - track could pass more than one partition
@@ -362,26 +354,25 @@ void RPCChambersCluster::variousStudyExperimentalFunction(TFile * fileToSave,TH1
 	RefChamberClusterPartition[1] = this->getChamberNumber(vectorOfReferenceChambers[1])->getXYCoordinatesOfCluster(j+1).at(1);
 	RefChamberClusterPartition[2] = this->getChamberNumber(vectorOfReferenceChambers[2])->getXYCoordinatesOfCluster(k+1).at(1);
 	
-	for ( int ii = 0; ii < 2 ; ii++ ){
+	for (unsigned ii = 0; ii < 2 ; ii++ ){
 	  direction = (RefChamberClusterPartition[ii] - RefChamberClusterPartition[ii+1]);
-	  if (direction != 0) { 
+	  if (direction) {
 	    direction = direction/abs(direction); 
 	    partitionPenetrated++;
+	    if (direction == -1)
+	      positive = true;
+	    else
+	      negative = true;	    
 	  } // get only the sign ( +1 or -1)
-	  if (direction && direction == -1)  positive = true;
-	  if (direction && direction == 1 )  negative = true;
-	  
 	}
 	
 	// cannot have a track that goes in both direction
 	// partition logic end here
 	stringstream ss;
 	ss << globalCount;
-	string histoCounter = ss.str();
+	string histoCounter = ss.str();	
 	
-	
-	TH2F * histXZ = new TH2F(histoCounter.c_str(),"XZ plane",110,0,110,68,0,34);
-	
+	TH2F * histXZ = new TH2F(histoCounter.c_str(),"XZ plane",110,0,110,68,0,34);	
 	
 	histXZ->SetMarkerColor(kBlue);
 	histXZ->SetMarkerStyle(kOpenTriangleDown); //  - open triangle down not found on noise server ? 
@@ -431,7 +422,7 @@ void RPCChambersCluster::variousStudyExperimentalFunction(TFile * fileToSave,TH1
 	histXZ->Fill(zc[2],xCoordinate);
 	cout << xCoordinate << " " << yCoordinate << endl;
 	
-	if ( positive && negative ) continue;
+	if ( positive && negative ) continue; // dafuq is this
 	
 	TF1 * fitfunc = new TF1("FitTrack","[0]+x*[1]",0,100);
 	Double_t * params = new Double_t[2];
@@ -440,29 +431,26 @@ void RPCChambersCluster::variousStudyExperimentalFunction(TFile * fileToSave,TH1
 	cout << "par1 " << params[0] << " par2 " << params[1] << " chi2 " << fitfunc->GetChisquare() << endl;
 	double channelToSearchHitIn ;
 	
-	for (int jj = 0 ; jj < this->getNumberOfChambers() ; jj++){
-	  if (jj+1 != vectorOfReferenceChambers[0] || jj+1 != vectorOfReferenceChambers[1] || jj+1 != vectorOfReferenceChambers[1])
-	    // add additional rule that the chamber should exist in the calibration object 
-	  {
-	    
+	for (unsigned jj = 0 ; jj < this->getNumberOfChambers() ; jj++){
+	  if (jj+1 != vectorOfReferenceChambers[0] ||
+	      jj+1 != vectorOfReferenceChambers[1] ||
+	      jj+1 != vectorOfReferenceChambers[1])
+	      // add additional rule that the chamber should exist in the calibration object
+	    // this looks like more nonsense but its probably isnt
+	  {	    
 	    channelToSearchHitIn = fitfunc->Eval((jj+1)*10);
 	    cout << "Evaluated for chamber number " << jj+1 << " value : " << channelToSearchHitIn << endl;
-	    
-	  }
-	  
+	  }	  
 	}
 	// now here - what to return, and how to get the hits in the chambers under test from the function
-	
-	
-	
-	if (fitfunc->GetChisquare() > 20) continue; // cut the execution 
-	if(fitfunc->GetChisquare() < 20){
+	//if (fitfunc->GetChisquare() > 20) continue; // cut the execution 
+	if(fitfunc->GetChisquare() <= 20)
 	  //goodTracks->Write(trackHistoName.c_str());
 	  histClustersPartitionDistr->Fill(partitionPenetrated);
 	  //histXZ->SaveAs((trackHistoName+".root").c_str());  
 	  // here search for hits in the chambers under test  
-	  
-	}
+	else
+	  continue;
 	
 	/*
 	else{
@@ -478,16 +466,14 @@ void RPCChambersCluster::variousStudyExperimentalFunction(TFile * fileToSave,TH1
       }
     }
   }
-//   badTracks->Close("R");
-//   badTracks->Delete();
-//   goodTracks->Close("R");
-//   goodTracks->Delete();
+   //badTracks->Close("R");
+   //badTracks->Delete();
+   //goodTracks->Close("R");
+   //goodTracks->Delete();
 
 }
 
 map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<unsigned> vectorOfReferenceChambers, const int & timeWindow,const int & timeReference,bool & isVerticalTrack,map<int,double> & scintilatorsCoordinates,const bool & keepRecoTrack,TFile * fileForRecoTracks,const int & eventNum,const double & correlationFactor, const ESiteFileType & fileType){
-  
-  // 
   
   map<int,vector<double> > mapOfHits; //
   // the default value for Chi2goodness is 20 
@@ -496,22 +482,22 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<unsigne
   
   int lastFitPoint = 0;
   
-  for (int i = 0 ; i < this->getNumberOfChambers() ; i++){
+  for (unsigned i = 0 ; i < this->getNumberOfChambers() ; i++){
     this->getChamberNumber(i+1)->findAllClustersForTriggerTimeReferenceAndTimeWindow(timeReference,timeWindow,5);
     //cout  << "Chamber is " << i+1 << endl;
   }
   
-  vector<vector<int> > vectorOfClusterNumberCombinations;  
+  vector<vector<int> > vectorOfClusterNumberCombinations;
+  //cartesian product - put this comment here to not search the logic in the code later
   
   if (fileType == kIsCERNrawFile ){
     
     assert(vectorOfReferenceChambers.size() == 3 );
-    
     lastFitPoint = 9;
     
-    for ( int i = 0 ; i < this->getChamberNumber(vectorOfReferenceChambers[0])->getNumberOfClusters() ; i++ ){
-      for( int j = 0 ; j < this->getChamberNumber(vectorOfReferenceChambers[1])->getNumberOfClusters() ; j++ ){
-	for( int k = 0 ; k < this->getChamberNumber(vectorOfReferenceChambers[vectorOfReferenceChambers.size()-1])->getNumberOfClusters() ; k++ ){
+    for (unsigned i = 0 ; i < this->getChamberNumber(vectorOfReferenceChambers[0])->getNumberOfClusters() ; i++ ){
+      for (unsigned j = 0 ; j < this->getChamberNumber(vectorOfReferenceChambers[1])->getNumberOfClusters() ; j++ ){
+	for (unsigned k = 0 ; k < this->getChamberNumber(vectorOfReferenceChambers[vectorOfReferenceChambers.size()-1])->getNumberOfClusters() ; k++ ){
 	  
 	  vector<int> singleCombination;
 	  
@@ -519,7 +505,7 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<unsigne
 	  singleCombination.push_back(j+1);
 	  singleCombination.push_back(k+1);
 	  
-	  for (int f = 0 ; f < singleCombination.size() ; f++){	  
+	  for (unsigned f = 0 ; f < singleCombination.size() ; f++){	  
 	    if(this->getChamberNumber(vectorOfReferenceChambers[f])->getSizeOfCluster(singleCombination.at(f)) > 5 ) continue;	  
 	    // don't insert combination if there is too big cluster. 
 	  }
@@ -537,18 +523,17 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<unsigne
     
     assert(vectorOfReferenceChambers.size() == 2);
     
-    for ( int i = 0 ; i < this->getChamberNumber(vectorOfReferenceChambers[0])->getNumberOfClusters() ; i++ ){
-      for( int j = 0 ; j < this->getChamberNumber(vectorOfReferenceChambers[1])->getNumberOfClusters() ; j++ ){
+    for (unsigned i = 0 ; i < this->getChamberNumber(vectorOfReferenceChambers[0])->getNumberOfClusters() ; i++ ){
+      for (unsigned j = 0 ; j < this->getChamberNumber(vectorOfReferenceChambers[1])->getNumberOfClusters() ; j++ ){
       
 	vector<int> singleCombination;
 	singleCombination.push_back(i+1);
 	singleCombination.push_back(j+1);
 	
-	for (int f = 0 ; f < singleCombination.size() ; f++){
+	for (unsigned f = 0 ; f < singleCombination.size() ; f++){
 	  if(this->getChamberNumber(vectorOfReferenceChambers[f])->getSizeOfCluster(singleCombination.at(f)) > 5 ) continue;
 	  // don't insert combination if there is too big cluster. 
-	}
-	
+	}	
 	vectorOfClusterNumberCombinations.push_back(singleCombination);
       
       }
@@ -557,7 +542,7 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<unsigne
   
   string topScintToString, botScintToString;
   
-  for (int combinationsVectorElement = 0 ; combinationsVectorElement < vectorOfClusterNumberCombinations.size() ; combinationsVectorElement ++){
+  for (unsigned combinationsVectorElement = 0 ; combinationsVectorElement < vectorOfClusterNumberCombinations.size() ; combinationsVectorElement ++){
     
     // the partition logic start  here - track could pass more than one partition
     
@@ -571,15 +556,15 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<unsigne
     
     vector<int> clusterNum = vectorOfClusterNumberCombinations.at(combinationsVectorElement);
     
-    for (int ii = 0; ii < clusterNum.size() ; ii++){
+    for (unsigned ii = 0; ii < clusterNum.size() ; ii++){
       RefChamberClusterPartition.push_back(this->getChamberNumber(vectorOfReferenceChambers[ii])->getXYCoordinatesOfCluster(clusterNum.at(ii)).at(1));
     }
     
     isVerticalTrack = true;
     
-    for ( int ii = 0; ii < RefChamberClusterPartition.size() - 1 ; ii++ ){
+    for (unsigned ii = 0; ii < RefChamberClusterPartition.size() - 1 ; ii++ ){
       direction = (RefChamberClusterPartition.at(ii) - RefChamberClusterPartition.at(ii+1));
-      if (direction != 0) { 
+      if (direction) { 
 	direction = direction/abs(direction); 
 	partitionPenetrated++;
       } // get only the sign ( +1 or -1)
@@ -587,7 +572,7 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<unsigne
       if (direction && direction == 1 )  { negative = true; isVerticalTrack = false; }
     }
     
-    if ( positive && negative ) continue;
+    if ( positive && negative ) continue; // wth is this
     // cannot have a track that goes in both direction
     
     /*
@@ -620,16 +605,16 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<unsigne
     int zCoorinate = 0;
     
     
-    for (int ii=0 ; ii < vectorOfReferenceChambers.size() ; ii++){
+    for (unsigned ii=0 ; ii < vectorOfReferenceChambers.size() ; ii++){
       
       coordinates = this->getChamberNumber(vectorOfReferenceChambers[ii])->getXYCoordinatesOfCluster(clusterNum[ii]);
       xCoordinate = coordinates.at(0);
       yCoordinate = coordinates.at(1);
       zCoorinate = 10*vectorOfReferenceChambers[ii];
       Double_t errorValue = this->getChamberNumber(vectorOfReferenceChambers[ii])->getSizeOfCluster(clusterNum[ii]);
-//       histXZ->SetBinContent(zCoorinate,xCoordinate);  
-//       histXZ->SetBinError(zCoorinate,errorValue/2);
-      //cout << xCoordinate << " " << yCoordinate << endl;
+      // histXZ->SetBinContent(zCoorinate,xCoordinate);  
+      // histXZ->SetBinError(zCoorinate,errorValue/2);
+      // cout << xCoordinate << " " << yCoordinate << endl;
       graphXZ->SetPoint(ii,vectorOfReferenceChambers[ii],xCoordinate);
       graphXZ->SetPointError(ii,0,errorValue/2);
     }
@@ -638,7 +623,7 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<unsigne
     graphXZ->Fit(fitfunc,"RFQ");
     fitfunc->GetParameters(params);
     
-    //cout << "par1 " << params[0] << " par2 " << params[1] << " chi2 " << fitfunc->GetChisquare() << endl;
+    // cout << "par1 " << params[0] << " par2 " << params[1] << " chi2 " << fitfunc->GetChisquare() << endl;
     // The resudials - difference between estimated fit value and the middle of the nearest cluster
     
     int prevReference = 0 , nextReference = 0 , prevReferencePartition = 0 , nextReferencePartition = 0; 
@@ -654,14 +639,14 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<unsigne
       
       // ---------
             
-      for ( int currentChNumber = 0 ; currentChNumber < this->getNumberOfChambers() ; currentChNumber++ ) {
+      for (unsigned currentChNumber = 0 ; currentChNumber < this->getNumberOfChambers() ; currentChNumber++ ) {
 	// check where the chamber is according to the reference chambers
 	vector<double> vectorOfpartitionsAndHit;
 	double channelNum = fitfunc->Eval(currentChNumber+1);
 
 	/** four cases 1. the chamber is before the first reference 2. the chamber is after the last reference 3. the chamber is between two references 4. the chamber is a reference */
 	
-	for(int refCheck = 0 ; refCheck < vectorOfReferenceChambers.size(); refCheck++){
+	for (unsigned refCheck = 0 ; refCheck < vectorOfReferenceChambers.size(); refCheck++){
 	  // find the surounding references
 	  if (currentChNumber+1 == vectorOfReferenceChambers.at(refCheck)){
 	    currentChamberIsReference = true;
@@ -731,7 +716,7 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<unsigne
 	  if (positive){ startCounter = prevReferencePartition; endCounter = nextReferencePartition; }
 	  else { startCounter = nextReferencePartition ; endCounter = prevReferencePartition ; }
 	  
-	  for (int currentCounter = startCounter ; currentCounter <= endCounter; currentCounter ++ ){
+	  for (unsigned currentCounter = startCounter ; currentCounter <= endCounter; currentCounter ++ ){
 	    assert(currentCounter > 0 && currentCounter < 4);
 	    vectorOfpartitionsAndHit.push_back(currentCounter);    
 	  }
@@ -755,7 +740,7 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<unsigne
 	// Debug lines
 	/**
 	cout << "Chamber is " << currentChNumber+1 << " partitions " ;
-	for (int thesize = 0 ; thesize < vectorOfpartitionsAndHit.size() - 1; thesize++){
+	for (unsigned thesize = 0 ; thesize < vectorOfpartitionsAndHit.size() - 1; thesize++){
 	  cout << vectorOfpartitionsAndHit.at(thesize) << " " ;
 	}
 	
@@ -768,7 +753,7 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<unsigne
       
       // ---------- scintilators coordinates estimate
       
-      for (int scintNum = 0 ; scintNum < 31 ; scintNum++){
+      for (unsigned scintNum = 0 ; scintNum < 31 ; scintNum++){
 	if(this->getTriggerObjectNumber(1)->getChannel(scintNum+1)->hasHit() && vectorOfClusterNumberCombinations.size() == 1 ) {
 	  if (scintNum < 10) { scintilatorsCoordinates[scintNum+1] = graphXZ->Eval(0); topScintToString = boost::lexical_cast<string>(scintNum+1); }
 	  else { scintilatorsCoordinates[scintNum+1] = graphXZ->Eval(lastFitPoint+1); botScintToString = boost::lexical_cast<string>(scintNum+1); }
@@ -828,11 +813,11 @@ vector<vector<int> > RPCChambersCluster::getPartitionsVectorForVectorOfReference
   
   vector<vector<int> > vectorOfPartitions;
   
-  for ( int currentChNumber = 0 ; currentChNumber < this->getNumberOfChambers() ; currentChNumber++ ) {
+  for (int currentChNumber = 0 ; currentChNumber < this->getNumberOfChambers() ; currentChNumber++ ) {
     // check where the chamber is according to the reference chambers
     vector<double> vectorOfpartitionsAndHit;
     
-    for(int refCheck = 0 ; refCheck < vectorOfReferenceChambers.size(); refCheck++){
+    for (unsigned refCheck = 0 ; refCheck < vectorOfReferenceChambers.size(); refCheck++){
       // find the surounding references
       yCoordinate = vectorOfReferenceChambers.at(0); // used when the track is vertical to assign this partition to all chambers as reference
       
@@ -892,7 +877,7 @@ vector<vector<int> > RPCChambersCluster::getPartitionsVectorForVectorOfReference
       if (positive){ startCounter = prevReferencePartition; endCounter = nextReferencePartition; }
       else { startCounter = nextReferencePartition ; endCounter = prevReferencePartition ; }
       
-      for (int currentCounter = startCounter ; currentCounter <= endCounter; currentCounter ++ ){
+      for (unsigned currentCounter = startCounter ; currentCounter <= endCounter; currentCounter ++ ){
 	if (currentCounter == 0 || currentCounter == 4){
 	  cout << "Problem with partition calculation" << endl;
 	}
@@ -931,7 +916,7 @@ int RPCChambersCluster::getTimeReferenceValueForSiteType(ESiteFileType fileType)
       assert(triggerObj->getChannel(32)->hasHit());
       coincidence_time = triggerObj->getChannel(32)->getHits().at(0);
       
-      for (int i = 0 ; i < 10 ; i++){
+      for (unsigned i = 0 ; i < 10 ; i++){
 	if(triggerObj->getChannel(i+1)->hasHit() ){
 	  
 	  if ( difference_reference == 0 || ( coincidence_time - triggerObj->getChannel(i+1)->getHits().at(0) ) < difference_reference ) {
@@ -945,7 +930,7 @@ int RPCChambersCluster::getTimeReferenceValueForSiteType(ESiteFileType fileType)
       
       difference_reference = 0;
       
-      for (int i = 16 ; i < 26 ; i++) {
+      for (unsigned i = 16 ; i < 26 ; i++) {
 	if(triggerObj->getChannel(i+1)->hasHit() ){
 	  
 	  if ( difference_reference == 0 || ( coincidence_time - triggerObj->getChannel(i+1)->getHits().at(0) ) < difference_reference ) {
@@ -966,14 +951,14 @@ int RPCChambersCluster::getTimeReferenceValueForSiteType(ESiteFileType fileType)
     
     case kIsGENTrawFile:
     
-      for(int i = 0 ; i < 16 ; i++){
-	if(triggerObj->getChannel(i+1)->hasHit()) {
+      for (int i = 0 ; i < 16 ; i++){
+	if (triggerObj->getChannel(i+1)->hasHit()) {
 	  firstScintilatorTime = triggerObj->getChannel(i+1)->getHits().at(0);
 	  break;
 	}
       }
-      for (int i = 16 ; i <32; i++){
-	if(triggerObj->getChannel(i+1)->hasHit()) {
+      for (unsigned i = 16 ; i <32; i++){
+	if (triggerObj->getChannel(i+1)->hasHit()) {
 	  secondScintilatorTime = triggerObj->getChannel(i+1)->getHits().at(0);
 	}
       }
@@ -989,37 +974,33 @@ int RPCChambersCluster::getTimeReferenceValueForSiteType(ESiteFileType fileType)
       break;
     
   }
-  
   return timeReference;
   
 }
 
 int RPCChambersCluster::getTimeWindowForSiteType(ESiteFileType siteType){
-  
-  // make the study with plots what should be this window width for each site 
-  
+  // make the study with plots what should be this window width for each site   
   int timeWindow = 0 ;
   
   switch(siteType){
     case kIsCERNrawFile:
-    
+
       timeWindow = 1000;
     break;
     case kIsGENTrawFile:
-    
+
       timeWindow = 50;
     break;
     case kIsBARCrawFile:
-    
+
       timeWindow = 0;
     break;
   }
-  
   return timeWindow;
 }
 
 void RPCChambersCluster::configureChambersWithConfigObject(RPCAbstractRunConfig * runConfigObject){
-  for (int i = 0 ; i < this->getNumberOfChambers() ; i++){
+  for (unsigned i = 0 ; i < this->getNumberOfChambers() ; i++){
     this->getChamberNumber(i+1)->setCurrentRunDetails(dynamic_cast<RPCRunConfig*>(runConfigObject)->getBasicConditionsForChamber(i+1));
   }
 }
@@ -1028,7 +1009,7 @@ bool RPCChambersCluster::isShowerEvent(){
   int sumOfScintilatorsWithHitTop = 0;
   int sumOfScintilatorsWithHitBot = 0;
   int retval = false;
-  for (int i = 0 ; i < 15 ; i++){
+  for (unsigned i = 0 ; i < 15 ; i++){
     if ( this->getTriggerObjectNumber(1)->getChannel(i+1)->hasHit() ) sumOfScintilatorsWithHitTop ++;
     if ( this->getTriggerObjectNumber(1)->getChannel(i+1+16)->hasHit() ) sumOfScintilatorsWithHitBot ++;
   }
