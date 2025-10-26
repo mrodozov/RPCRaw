@@ -14,7 +14,7 @@ void RPCChambersCluster::createNewClusterOfChambersWithRE4type(const int & nCham
   }
   else { // its ok to proceed
     //this->_chambersPointer = new RPCChamber[nChambers];
-    for (int i = 0 ; i < nChambers;i++){
+    for (unsigned i = 0 ; i < nChambers; i++){
       RPCChamber * aChamber = new RPCChamber(RE4type);
       aChamber->allocAndInit();
       this->_chambersPointer[i] = aChamber;
@@ -84,7 +84,7 @@ void RPCChambersCluster::deleteAllChambers () {
 void RPCChambersCluster::deleteAllTriggerObjects(){
   if (this->getNumberOfTriggerObjects() > 0){
     RPCChamber * pointer;
-    for (unsigned i=0; i < this->getNumberOfTriggerObjects();i++){
+    for (unsigned i=0; i < this->getNumberOfTriggerObjects(); i++){
       delete this->_triggerObjectsPointer.at(i);
     }
   }
@@ -224,7 +224,7 @@ void RPCChambersCluster::variousStudyExperimentalFunction(TFile * fileToSave,TH1
     
     currentChamberObj = this->getChamberNumber(totalChambers+1);
     cout << "Chamber " << totalChambers+1 ;
-    for (unsigned j=0 ; j < 96 ;j++){
+    for (unsigned j=0 ; j < 96 ; j++){
       currentChamberObj = this->getChamberNumber(totalChambers+1);
       currentChannelObj = currentChamberObj->getChannel(j+1);      
       if (currentChannelObj->hasHit()){
@@ -813,7 +813,7 @@ vector<vector<int> > RPCChambersCluster::getPartitionsVectorForVectorOfReference
   
   vector<vector<int> > vectorOfPartitions;
   
-  for (int currentChNumber = 0 ; currentChNumber < this->getNumberOfChambers() ; currentChNumber++ ) {
+  for (unsigned currentChNumber = 0 ; currentChNumber < this->getNumberOfChambers() ; currentChNumber++ ) {
     // check where the chamber is according to the reference chambers
     vector<double> vectorOfpartitionsAndHit;
     
@@ -951,7 +951,7 @@ int RPCChambersCluster::getTimeReferenceValueForSiteType(ESiteFileType fileType)
     
     case kIsGENTrawFile:
     
-      for (int i = 0 ; i < 16 ; i++){
+      for (unsigned i = 0 ; i < 16 ; i++){
 	if (triggerObj->getChannel(i+1)->hasHit()) {
 	  firstScintilatorTime = triggerObj->getChannel(i+1)->getHits().at(0);
 	  break;
