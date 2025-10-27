@@ -48,7 +48,7 @@ void RPCChambersCluster::setDataSourceForNchambers(const int & nChambers,const v
 void RPCChambersCluster::setDataSourceForNtriggerObjects(const int & nTriggerObject,const vector<vector<vector< unsigned> > > & dataSource){
   for (unsigned i = 0 ; i < nTriggerObject ; i++ ){
     this->getTriggerObjectNumber(i+1)->setStripsHitsDataFromSource(dataSource.at(i));
-  }  
+  }
 }
 
 RPCChambersCluster::RPCChambersCluster (){
@@ -282,7 +282,7 @@ void RPCChambersCluster::variousStudyExperimentalFunction(TFile * fileToSave,TH1
 	  }
 	  if( biggestTime <= currentValue){
 	    biggestTime = currentValue;
-	  } 
+	  }
 	}
       }
       
@@ -440,7 +440,7 @@ void RPCChambersCluster::variousStudyExperimentalFunction(TFile * fileToSave,TH1
 	  {	    
 	    channelToSearchHitIn = fitfunc->Eval((jj+1)*10);
 	    cout << "Evaluated for chamber number " << jj+1 << " value : " << channelToSearchHitIn << endl;
-	  }	  
+	  }
 	}
 	// now here - what to return, and how to get the hits in the chambers under test from the function
 	//if (fitfunc->GetChisquare() > 20) continue; // cut the execution 
@@ -455,7 +455,7 @@ void RPCChambersCluster::variousStudyExperimentalFunction(TFile * fileToSave,TH1
 	/*
 	else{
 	  badTracks->Write(trackHistoName.c_str());
-	}	
+	}
 	*/
 	
 	//trackHistoName+=".root";
@@ -517,7 +517,7 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<unsigne
     }
   }
   
-  if (fileType == kIsBARCrawFile || fileType == kIsGENTrawFile ){
+  if ((fileType == kIsBARCrawFile) || (fileType == kIsGENTrawFile) ){
     // add implementation for BARC and Ghent stand . 
     lastFitPoint = 5;
     
@@ -533,7 +533,7 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<unsigne
 	for (unsigned f = 0 ; f < singleCombination.size() ; f++){
 	  if(this->getChamberNumber(vectorOfReferenceChambers[f])->getSizeOfCluster(singleCombination.at(f)) > 5 ) continue;
 	  // don't insert combination if there is too big cluster. 
-	}	
+	}
 	vectorOfClusterNumberCombinations.push_back(singleCombination);
       
       }
@@ -686,7 +686,7 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<unsigne
 	    }
 	    if(negative){
 	      prevReferencePartition = this->getChamberNumber(1)->getClones();      
-	    }    
+	    }
 	  }
 	  
 	  if (prevReferencePartition && nextReferencePartition == 0){
@@ -695,7 +695,7 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<unsigne
 	    }
 	    if(negative){
 	      nextReferencePartition = 1;      
-	    }    
+	    }
 	  }
 	  
 	  if (partitionPenetrated == 1 ){
@@ -749,7 +749,7 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<unsigne
 	
 	mapOfHits[currentChNumber+1] = vectorOfpartitionsAndHit;
 	
-      }      
+      }
       
       // ---------- scintilators coordinates estimate
       
@@ -758,7 +758,7 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<unsigne
 	  if (scintNum < 10) { scintilatorsCoordinates[scintNum+1] = graphXZ->Eval(0); topScintToString = boost::lexical_cast<string>(scintNum+1); }
 	  else { scintilatorsCoordinates[scintNum+1] = graphXZ->Eval(lastFitPoint+1); botScintToString = boost::lexical_cast<string>(scintNum+1); }
 	}
-      }      
+      }
     }
     
     // get only vertical tracks from the A partition if there are only two scint hits
@@ -780,7 +780,7 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<unsigne
 	  //fileForRecoTracks->ls();
 	  fileForRecoTracks->mkdir(scintCombination.c_str()) ;
 	  fileForRecoTracks->cd("");
-	} 
+	}
 	
 	fileForRecoTracks->cd(scintCombination.c_str());
 	//cout << fileForRecoTracks->GetPath() << endl;
@@ -796,7 +796,7 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<unsigne
     //histXZ->Delete();
     graphXZ->Delete();
     
-  }  
+  }
   
   return mapOfHits;
 }
@@ -847,11 +847,11 @@ vector<vector<int> > RPCChambersCluster::getPartitionsVectorForVectorOfReference
 	prevReferencePartition = this->getChamberNumber(prevReference)->getXYCoordinatesOfCluster(clusterNum[refCheck]).at(1);
 	nextReferencePartition = this->getChamberNumber(nextReference)->getXYCoordinatesOfCluster(clusterNum[refCheck+1]).at(1);
 	break;
-      }      
+      }
     }
     
     if(!currentChamberIsReference){
-      if(!positive && !negative){
+      if(!positive && !negative){// should check if this is 'vertical'
 	  prevReferencePartition = yCoordinate ;
 	  nextReferencePartition = yCoordinate ;
       }
@@ -877,20 +877,20 @@ vector<vector<int> > RPCChambersCluster::getPartitionsVectorForVectorOfReference
       if (positive){ startCounter = prevReferencePartition; endCounter = nextReferencePartition; }
       else { startCounter = nextReferencePartition ; endCounter = prevReferencePartition ; }
       
-      for (unsigned currentCounter = startCounter ; currentCounter <= endCounter; currentCounter ++ ){
-	if (currentCounter == 0 || currentCounter == 4){
+      for (unsigned currentCounter = startCounter ; currentCounter <= endCounter; currentCounter++ ){
+	if ((currentCounter == 0) || (currentCounter == 4)){
 	  cout << "Problem with partition calculation" << endl;
 	}
 	vectorOfpartitionsAndHit.push_back(currentCounter);
 	
-      }      
+      }
     }
     // end of 	    
     else{
       vectorOfpartitionsAndHit.push_back(this->getChamberNumber(currentChNumber+1)->getXYCoordinatesOfCluster(clusterNum[referenceChambersIncrementor]).at(1));
       referenceChambersIncrementor += 1;
-    }    
-  }  
+    }
+  }
 }
 
 int RPCChambersCluster::getTimeReferenceValueForSiteType(ESiteFileType fileType){
@@ -1014,7 +1014,7 @@ bool RPCChambersCluster::isShowerEvent(){
     if ( this->getTriggerObjectNumber(1)->getChannel(i+1+16)->hasHit() ) sumOfScintilatorsWithHitBot ++;
   }
   
-  if ( sumOfScintilatorsWithHitTop > 3 || sumOfScintilatorsWithHitBot > 3) retval = true;
+  if ( (sumOfScintilatorsWithHitTop > 3) || (sumOfScintilatorsWithHitBot > 3)) retval = true;
   
   return retval;
 }
