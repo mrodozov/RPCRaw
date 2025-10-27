@@ -564,12 +564,15 @@ map<int,vector<double> > RPCChambersCluster::getReconstructedHits(vector<unsigne
     
     for (unsigned ii = 0; ii < RefChamberClusterPartition.size() - 1 ; ii++ ){
       direction = (RefChamberClusterPartition.at(ii) - RefChamberClusterPartition.at(ii+1));
-      if (direction) { 
+      if (direction) {
+	isVerticalTrack = false;
 	direction = direction/abs(direction); 
 	partitionPenetrated++;
       } // get only the sign ( +1 or -1)
-      if (direction && direction == -1)  { positive = true; isVerticalTrack = false; }
-      if (direction && direction == 1 )  { negative = true; isVerticalTrack = false; }
+      if (direction == -1)
+	positive = true;      
+      else
+	negative = true;
     }
     
     if ( positive && negative ) continue; // wth is this
