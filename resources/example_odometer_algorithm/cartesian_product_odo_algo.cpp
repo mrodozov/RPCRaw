@@ -4,10 +4,11 @@
 #include <string>
 #include <algorithm>
 #include <sstream>
+#include <fstream>
+#include <stdexcept>
 
 // Define the type for a single index pair (row, column) using size_t
 using IndexPair = std::pair<size_t, size_t>;
-
 // Define the type for the pre-processed input: a vector of vectors of IndexPairs.
 using IndexSet = std::vector<std::vector<IndexPair>>;
 
@@ -21,22 +22,16 @@ private:
     std::vector<size_t> current_indices_;
     bool is_end_ = false;
 
-    /**
-     * @brief Looks up the coordinates and formats them into the requested double-digit string list.
-     */
     std::vector<std::string> getCurrentCombination() const {
         std::vector<std::string> combo;
-        
-        // Use stringstream to build the "ij" string quickly
         std::stringstream ss;
         
         for (size_t i = 0; i < current_indices_.size(); ++i) {
             size_t option_index = current_indices_[i];
             
-            // Access the pair of (row, col) coordinates
             const auto& coords = (*index_options_)[i][option_index];
             
-            // Format as "ij" string
+            // Format as "ij" string (row and column are size_t)
             ss.str("");
             ss << coords.first << coords.second;
             combo.push_back(ss.str());
@@ -50,9 +45,7 @@ public:
     using value_type = std::vector<std::string>;
     using difference_type = std::ptrdiff_t;
 
-    // Constructor for the 'begin()' iterator
     ProductIterator(const IndexSet* options) : index_options_(options) {
-        // Initialize the odometer, but only if all rows have at least one option.
         if (!options->empty()) {
             bool has_empty_row = false;
             for(const auto& row : *options) {
@@ -62,19 +55,17 @@ public:
                 }
             }
             if (has_empty_row) {
-                 is_end_ = true; // Product is zero if any component is zero
+                 is_end_ = true;
             } else {
-                 current_indices_.resize(options->size(), 0); // Start at [0, 0, 0,...]
+                 current_indices_.resize(options->size(), 0);
             }
         } else {
             is_end_ = true;
         }
     }
 
-    // Constructor for the 'end()' sentinel iterator
     ProductIterator() : index_options_(nullptr), is_end_(true) {}
 
-    // Equality check
     bool operator==(const ProductIterator& other) const {
         return is_end_ == other.is_end_;
     }
@@ -82,18 +73,13 @@ public:
         return!(*this == other);
     }
 
-    // Dereference operator
     value_type operator*() const {
         return getCurrentCombination();
     }
 
-    /**
-     * @brief Increment operator (++): Implements the Odometer (carry) logic.
-     */
     ProductIterator& operator++() {
         if (is_end_) return *this;
 
-        // Start at the least significant digit (rightmost row index)
         int D = current_indices_.size();
         int i = D - 1; 
 
@@ -103,22 +89,19 @@ public:
             size_t limit = (*index_options_)[i].size();
 
             if (current_indices_[i] < limit) {
-                break; // Carry absorbed: stop propagating.
+                break; 
             }
             
-            // Carry required: reset and move left.
             current_indices_[i] = 0; 
             i--;
         }
 
         if (i < 0) {
-            // Carry propagated past the first dimension (Row 0), signaling termination.
             is_end_ = true;
         }
         return *this;
     }
 
-    // Postfix increment
     ProductIterator operator++(int) {
         ProductIterator temp = *this;
         ++(*this);
@@ -129,6 +112,7 @@ public:
 // =========================================================================
 // 3. ProductRange: Enables range-based for loops
 // =========================================================================
+// maybe I should simplify that from the clanker output or tell it to simplify it
 
 class ProductRange {
 private:
@@ -144,6 +128,58 @@ public:
         return ProductIterator();
     }
 };
+
+
+/**
+ * @brief Reads a matrix from a file, expecting rows separated by newlines
+ *        and elements separated by spaces or other whitespace.
+ *        maybe teach it to recognize csv of json too
+ */
+std::vector<std::vector<int>> read_matrix_from_file(const std::string& filename) {
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        throw std::runtime_error("Error: Could not open file " + filename);
+    }
+
+    std::vector<std::vector<int>> matrix;
+    std::string line;
+    size_t expected_cols = 0; // To ensure all rows have the same width
+    size_t row_count = 0;
+
+    while (std::getline(file, line)) {
+        std::vector<int> row;
+        std::stringstream ss(line);
+        int value;
+
+        // Read all integers from the line
+        while (ss >> value) {
+            row.push_back(value);
+        }
+
+        // Skip empty lines
+        if (row.empty()) {
+            continue;
+        }
+        
+        // Consistency check for matrix dimensions
+        if (row_count == 0) {
+            expected_cols = row.size();
+        } else if (row.size()!= expected_cols) {
+            throw std::runtime_error("Error: Matrix is ragged. Row " + std::to_string(row_count) + 
+                                     " has " + std::to_string(row.size()) + 
+                                     " elements, expected " + std::to_string(expected_cols));
+        }
+
+        matrix.push_back(row);
+        row_count++;
+    }
+    
+    if (matrix.empty()) {
+        throw std::runtime_error("Error: File contains no valid matrix data.");
+    }
+    
+    return matrix;
+}
 
 // =========================================================================
 // 1. Preprocessing and Main Function
@@ -168,24 +204,32 @@ IndexSet preprocess_matrix(const std::vector<std::vector<int>>& matrix) {
 }
 
 
-int main() {
-    std::vector<std::vector<int>> input_matrix = {
-        {1, 0, 0, 1, 1}, // (0,0), (0,3), (0,4)
-        {0, 0, 0, 1, 0}, // (1,3)
-        {1, 1, 0, 0, 1}, // (2,0), (2,1), (2,4)
-        {0, 0, 1, 0, 0}, // (3,2)
-        {0, 1, 0, 1, 0}  // (4,1), (4,3)
-    };
+int main(int argc, char* argv[]) {
+    if (argc!= 2) {
+        std::cerr << "Usage: " << argv << " <matrix_file_path>\n";
+        return 1;
+    }
+    
+    std::vector<std::vector<int>> input_matrix;
+    try {
+      std::string filename_arg = argv[1];
+      input_matrix = read_matrix_from_file(filename_arg);
+    } catch (const std::runtime_error& e) {
+        std::cerr << e.what() << "\n";
+        return 1;
+    }
 
+    // --- Preprocessing ---
     IndexSet valid_options = preprocess_matrix(input_matrix);
 
+    // --- Iteration using the custom ProductRange ---
     std::cout << "--- Cartesian Product of Indices ---\n";
-    std::cout << "Total expected combinations: 18\n\n";
     
     ProductRange product_range(valid_options);
     
     int count = 0;
     
+    // The loop lazily generates combinations using the Odometer Algorithm
     for (const auto& combination : product_range) {
         std::cout << "Combination " << ++count << ": [";
         for (size_t i = 0; i < combination.size(); ++i) {
