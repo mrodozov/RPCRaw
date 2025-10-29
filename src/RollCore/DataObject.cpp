@@ -147,27 +147,17 @@ int DataObject::getLenght() const{
 }
 
 vector< string > DataObject::getVectorOfValuesForKey(string Key){
-  if(this->ifKeyExist(Key)){
-    return this->SingleKeyMultiValuesMap.find(Key)->second;
-  }
+  return this->SingleKeyMultiValuesMap.find(Key)->second;
 }
 
 
-map< string, vector< string > > DataObject::getMapOfVectors() const {
-  
+map< string, vector< string > > DataObject::getMapOfVectors() const {  
   return this->SingleKeyMultiValuesMap;
-  
 }
 
 
 bool DataObject::ifKeyExist(string keyToCheck) const {
-  bool retval;
-  if(this->KeysValuesMap.find(keyToCheck) != this->KeysValuesMap.end()){
-    retval = true;
-  }
-  else {retval=false;}
-  
-  return retval;
+  return (this->KeysValuesMap.find(keyToCheck) != this->KeysValuesMap.end());
 }
 
 
@@ -186,8 +176,6 @@ void DataObject::transformElementsMapToSingleKeysMap(){
   }
   //cout << " executed !" << endl; // debug
 }
-
-
 
 DataObject::~DataObject(){
   this->KeysValuesMap.clear();
